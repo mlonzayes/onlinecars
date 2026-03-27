@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Edit",
+      "Create",
+      "Delete",
+      "Bash(pnpm *)",
+      "Bash(npx prisma *)",
+      "Bash(git *)",
+      "Bash(curl *)",
+      "Bash(cat *)",
+      "Bash(ls *)",
+      "Bash(mkdir *)"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(sudo *)",
+      "Bash(pnpm publish *)"
+    ]
+  },
+  "preferences": {
+    "language": "es-AR",
+    "codeLanguage": "en",
+    "autofix": true
+  }
+}

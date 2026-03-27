@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm dev)",
+      "Bash(pnpm build)",
+      "Bash(pnpm lint)",
+      "Bash(docker *)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --app --src-dir --import-alias \"@/*\" --no-eslint --use-pnpm --yes)",
+      "Bash(mv CLAUDE.md /tmp/CLAUDE.md)",
+      "Bash(mv CLAUDE.local.md /tmp/CLAUDE.local.md)",
+      "Bash(npm install:*)",
+      "Bash(cp /tmp/CLAUDE.md .)",
+      "Bash(cp /tmp/CLAUDE.local.md .)"
+    ]
+  }
+}

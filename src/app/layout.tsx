@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { Inter, Geist } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
-import "./globals.css";
+import { ThemeProvider } from "next-themes";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import "./globals.css";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,8 +22,12 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="es" className={cn("font-sans", geist.variable)}>
-        <body className={inter.className}>{children}</body>
+      <html lang="es" className={cn("font-sans", geist.variable)} suppressHydrationWarning>
+        <body className={inter.className}>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <TooltipProvider>{children}</TooltipProvider>
+          </ThemeProvider>
+        </body>
       </html>
     </ClerkProvider>
   );

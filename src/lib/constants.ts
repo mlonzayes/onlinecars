@@ -22,6 +22,33 @@ export type Currency = (typeof CURRENCIES)[number];
 export const USER_ROLES = ["admin", "editor", "viewer"] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
+export const PROVINCIAS_ARGENTINA = [
+  "Buenos Aires",
+  "CABA",
+  "Catamarca",
+  "Chaco",
+  "Chubut",
+  "Córdoba",
+  "Corrientes",
+  "Entre Ríos",
+  "Formosa",
+  "Jujuy",
+  "La Pampa",
+  "La Rioja",
+  "Mendoza",
+  "Misiones",
+  "Neuquén",
+  "Río Negro",
+  "Salta",
+  "San Juan",
+  "San Luis",
+  "Santa Cruz",
+  "Santa Fe",
+  "Santiago del Estero",
+  "Tierra del Fuego",
+  "Tucumán",
+] as const;
+
 export const MAX_IMAGES_PER_VEHICLE = 15;
 export const VEHICLES_PER_PAGE = 12;
 export const CACHE_TTL_VEHICLES = 300; // 5 minutos

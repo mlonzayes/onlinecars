@@ -1,0 +1,127 @@
+import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import { getCurrentDealership } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { saleStatusSchema } from "@/lib/validators/sale";
+import { withLogger } from "@/lib/api-handler";
+import { logger } from "@/lib/logger";
+
+type SaleParams = { id: string };
+
+// Flujo de estados válido:
+// draft → reserved → in_progress → completed
+// Cualquier estado → cancelled
+const VALID_TRANSITIONS: Record<string, string[]> = {
+  draft: ["reserved", "cancelled"],
+  reserved: ["in_progress", "cancelled"],
+  in_progress: ["completed", "cancelled"],
+  completed: [],
+  cancelled: [],
+};
+
+// PATCH /api/ventas/[id]/status
+// Avanza o cancela una venta. Maneja side-effects sobre el vehículo en una transacción.
+export const PATCH = withLogger<SaleParams>(async (request, { requestId, params }) => {
+  const { userId } = await auth();
+  if (!userId) {
+    logger.warn(requestId, "sales.status.unauthorized");
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const dealership = await getCurrentDealership();
+  if (!dealership) {
+    logger.warn(requestId, "sales.status.no_dealership", { userId });
+    return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
+  }
+
+  const { id } = params;
+  const body: unknown = await request.json();
+  const parsed = saleStatusSchema.safeParse(body);
+
+  if (!parsed.success) {
+    logger.warn(requestId, "sales.status.invalid_input", {
+      dealershipId: dealership.id,
+      saleId: id,
+      details: parsed.error.flatten(),
+    });
+    return NextResponse.json(
+      { error: "Datos inválidos", details: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
+
+  const sale = await prisma.sale.findFirst({
+    where: { id, dealershipId: dealership.id },
+    select: { id: true, status: true, vehicleId: true },
+  });
+
+  if (!sale) {
+    logger.warn(requestId, "sales.status.not_found", {
+      dealershipId: dealership.id,
+      saleId: id,
+    });
+    return NextResponse.json({ error: "Venta no encontrada" }, { status: 404 });
+  }
+
+  const nextStatus = parsed.data.status;
+  const allowed = VALID_TRANSITIONS[sale.status] ?? [];
+
+  if (!allowed.includes(nextStatus)) {
+    logger.warn(requestId, "sales.status.invalid_transition", {
+      dealershipId: dealership.id,
+      saleId: id,
+      from: sale.status,
+      to: nextStatus,
+    });
+    return NextResponse.json(
+      {
+        error: `No se puede pasar de "${sale.status}" a "${nextStatus}"`,
+      },
+      { status: 422 }
+    );
+  }
+
+  // Determinar el nuevo status del vehículo según la transición.
+  let vehicleStatus: "available" | "reserved" | "sold" | null = null;
+  if (nextStatus === "completed") {
+    vehicleStatus = "sold";
+  } else if (nextStatus === "cancelled") {
+    vehicleStatus = "available";
+  }
+
+  const updateData: Record<string, unknown> = { status: nextStatus };
+  if (nextStatus === "cancelled" && "cancelReason" in parsed.data) {
+    updateData.cancelReason = parsed.data.cancelReason;
+  }
+
+  const updated = await prisma.$transaction(async (tx) => {
+    const updatedSale = await tx.sale.update({
+      where: { id },
+      data: updateData,
+      include: {
+        customer: {
+          select: { id: true, firstName: true, lastName: true, businessName: true },
+        },
+        vehicle: { select: { id: true, title: true, status: true } },
+      },
+    });
+
+    if (vehicleStatus !== null) {
+      await tx.vehicle.update({
+        where: { id: sale.vehicleId },
+        data: { status: vehicleStatus },
+      });
+    }
+
+    return updatedSale;
+  });
+
+  logger.info(requestId, "sales.status.ok", {
+    dealershipId: dealership.id,
+    saleId: id,
+    from: sale.status,
+    to: nextStatus,
+  });
+
+  return NextResponse.json({ data: updated });
+});

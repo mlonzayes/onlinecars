@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Geist } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
-import { ThemeProvider } from "next-themes";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Providers } from "./providers";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 
@@ -24,9 +23,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="es" className={cn("font-sans", geist.variable)} suppressHydrationWarning>
         <body className={inter.className}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <TooltipProvider>{children}</TooltipProvider>
-          </ThemeProvider>
+          <Providers>{children}</Providers>
         </body>
       </html>
     </ClerkProvider>

@@ -61,7 +61,7 @@ export function DashboardHeader() {
           <Moon className="absolute size-4 rotate-90 scale-0 transition-transform dark:rotate-0 dark:scale-100" />
         </Button>
 
-        <UserButton afterSignOutUrl="/" />
+        <UserButton />
       </div>
     </header>
   );

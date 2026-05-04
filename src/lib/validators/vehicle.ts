@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { FUEL_TYPES, TRANSMISSION_TYPES, VEHICLE_CONDITIONS, VEHICLE_STATUSES, CURRENCIES } from "../constants";
+import { FUEL_TYPES, TRANSMISSION_TYPES, VEHICLE_BODY_TYPES, VEHICLE_CONDITIONS, VEHICLE_STATUSES, CURRENCIES } from "../constants";
 
 export const vehicleCreateSchema = z.object({
   title: z.string().min(3, "El título debe tener al menos 3 caracteres").max(200),
@@ -11,16 +11,22 @@ export const vehicleCreateSchema = z.object({
   kilometers: z.number().int().min(0).optional(),
   fuelType: z.enum(FUEL_TYPES).optional(),
   transmission: z.enum(TRANSMISSION_TYPES).optional(),
+  bodyType: z.enum(VEHICLE_BODY_TYPES).optional(),
   color: z.string().max(50).optional(),
   doors: z.number().int().min(2).max(6).optional(),
   engine: z.string().max(50).optional(),
+  vin: z.string().max(50).optional(),
+  motorNumber: z.string().max(50).optional(),
+  licensePlate: z.string().max(20).optional(),
   description: z.string().max(2000).optional(),
   condition: z.enum(VEHICLE_CONDITIONS).default("used"),
   status: z.enum(VEHICLE_STATUSES).default("available"),
   featured: z.boolean().default(false),
 });
 
-export const vehicleUpdateSchema = vehicleCreateSchema.partial();
+export const vehicleUpdateSchema = vehicleCreateSchema.partial().extend({
+  publishedAt: z.string().datetime().nullable().optional(),
+});
 
 export type VehicleCreateInput = z.infer<typeof vehicleCreateSchema>;
 export type VehicleUpdateInput = z.infer<typeof vehicleUpdateSchema>;

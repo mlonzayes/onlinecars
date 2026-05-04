@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { dealershipCreateSchema } from "@/lib/validators/dealership";
+import { withLogger } from "@/lib/api-handler";
+import { logger } from "@/lib/logger";
 
 // POST /api/onboarding
 // Body: DealershipCreateInput
@@ -9,17 +11,18 @@ import { dealershipCreateSchema } from "@/lib/validators/dealership";
 // Response 400: validación fallida
 // Response 401: no autenticado
 // Response 409: slug ya en uso o ya tiene concesionario
-export async function POST(req: Request) {
+export const POST = withLogger(async (req, { requestId }) => {
   const { userId } = await auth();
   if (!userId) {
+    logger.warn(requestId, "onboarding.unauthorized");
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  // Verificar que no tenga concesionario ya
   const existing = await prisma.dealershipUser.findFirst({
     where: { clerkUserId: userId },
   });
   if (existing) {
+    logger.warn(requestId, "onboarding.already_has_dealership", { userId });
     return NextResponse.json(
       { error: "Ya tenés un concesionario creado" },
       { status: 409 }
@@ -29,17 +32,24 @@ export async function POST(req: Request) {
   const body = await req.json();
   const parsed = dealershipCreateSchema.safeParse(body);
   if (!parsed.success) {
+    logger.warn(requestId, "onboarding.invalid_input", {
+      userId,
+      details: parsed.error.flatten(),
+    });
     return NextResponse.json(
       { error: "Datos inválidos", details: parsed.error.flatten() },
       { status: 400 }
     );
   }
 
-  // Verificar slug único
   const slugTaken = await prisma.dealership.findUnique({
     where: { slug: parsed.data.slug },
   });
   if (slugTaken) {
+    logger.warn(requestId, "onboarding.slug_taken", {
+      userId,
+      slug: parsed.data.slug,
+    });
     return NextResponse.json(
       {
         error: "El nombre de sitio ya está en uso. Elegí otro.",
@@ -49,7 +59,6 @@ export async function POST(req: Request) {
     );
   }
 
-  // Crear dealership + dealershipUser en una transacción
   const dealership = await prisma.$transaction(async (tx) => {
     const d = await tx.dealership.create({ data: parsed.data });
     await tx.dealershipUser.create({
@@ -58,8 +67,14 @@ export async function POST(req: Request) {
     return d;
   });
 
+  logger.info(requestId, "onboarding.created", {
+    userId,
+    dealershipId: dealership.id,
+    slug: dealership.slug,
+  });
+
   return NextResponse.json(
     { data: { dealershipId: dealership.id, slug: dealership.slug } },
     { status: 201 }
   );
-}
+});

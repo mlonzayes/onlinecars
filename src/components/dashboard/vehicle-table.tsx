@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Car, MoreHorizontal, Pencil, Star, Trash2 } from "lucide-react";
+import { Car, Eye, EyeOff, Loader2, MoreHorizontal, Pencil, Star, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import {
   Table,
   TableBody,
@@ -60,31 +62,69 @@ const STATUS_LABELS: Record<string, string> = {
   sold: "Vendido",
 };
 
+const TOAST_DURATION = 2000;
+
 export function VehicleTable({ vehicles }: VehicleTableProps) {
   const router = useRouter();
+  const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
+
+  function setLoading(id: string, loading: boolean) {
+    setLoadingIds((prev) => {
+      const next = new Set(prev);
+      loading ? next.add(id) : next.delete(id);
+      return next;
+    });
+  }
 
   async function handlePublishToggle(id: string, isPublished: boolean) {
-    await fetch(`/api/vehiculos/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ publishedAt: isPublished ? null : new Date().toISOString() }),
-    });
-    router.refresh();
+    setLoading(id, true);
+    try {
+      const res = await fetch(`/api/vehiculos/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ publishedAt: isPublished ? null : new Date().toISOString() }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success(isPublished ? "Vehículo despublicado" : "Vehículo publicado", { duration: TOAST_DURATION });
+      router.refresh();
+    } catch {
+      toast.error("Error al cambiar la publicación", { duration: TOAST_DURATION });
+    } finally {
+      setLoading(id, false);
+    }
   }
 
   async function handleFeaturedToggle(id: string, featured: boolean) {
-    await fetch(`/api/vehiculos/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ featured: !featured }),
-    });
-    router.refresh();
+    setLoading(id, true);
+    try {
+      const res = await fetch(`/api/vehiculos/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ featured: !featured }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success(featured ? "Destaque removido" : "Vehículo destacado", { duration: TOAST_DURATION });
+      router.refresh();
+    } catch {
+      toast.error("Error al cambiar el destaque", { duration: TOAST_DURATION });
+    } finally {
+      setLoading(id, false);
+    }
   }
 
   async function handleDelete(id: string) {
     if (!confirm("¿Seguro que querés eliminar este vehículo?")) return;
-    await fetch(`/api/vehiculos/${id}`, { method: "DELETE" });
-    router.refresh();
+    setLoading(id, true);
+    try {
+      const res = await fetch(`/api/vehiculos/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      toast.success("Vehículo eliminado", { duration: TOAST_DURATION });
+      router.refresh();
+    } catch {
+      toast.error("Error al eliminar el vehículo", { duration: TOAST_DURATION });
+    } finally {
+      setLoading(id, false);
+    }
   }
 
   if (vehicles.length === 0) {
@@ -195,23 +235,32 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
                 {/* Acciones */}
                 <TableCell>
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <DropdownMenuTrigger
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-sm hover:bg-muted outline-none disabled:opacity-50"
+                      disabled={loadingIds.has(vehicle.id)}
+                    >
+                      {loadingIds.has(vehicle.id) ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
                         <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Acciones</span>
-                      </Button>
+                      )}
+                      <span className="sr-only">Acciones</span>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem asChild>
-                        <Link href={`/dashboard/vehiculos/${vehicle.id}`}>
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Editar
-                        </Link>
+                      <DropdownMenuItem
+                        render={<Link href={`/dashboard/vehiculos/${vehicle.id}`} />}
+                      >
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Editar
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handlePublishToggle(vehicle.id, isPublished)}
                       >
-                        {isPublished ? "Despublicar" : "Publicar"}
+                        {isPublished ? (
+                          <><EyeOff className="mr-2 h-4 w-4" /> Despublicar</>
+                        ) : (
+                          <><Eye className="mr-2 h-4 w-4" /> Publicar</>
+                        )}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handleFeaturedToggle(vehicle.id, vehicle.featured)}

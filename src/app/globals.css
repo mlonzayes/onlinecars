@@ -128,3 +128,9 @@
     @apply font-sans;
   }
 }
+
+/* Tenant scope: aplica Poppins a todo lo que renderiza bajo /tenant/[slug]/.
+   La variable --font-poppins se inyecta desde el layout del tenant con next/font. */
+.tenant-scope {
+  font-family: var(--font-poppins), system-ui, -apple-system, sans-serif;
+}

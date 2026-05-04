@@ -17,7 +17,9 @@ export const dealershipCreateSchema = z.object({
   website: z.string().url().optional().or(z.literal("")),
 });
 
-export const dealershipUpdateSchema = dealershipCreateSchema.partial().omit({ slug: true });
+export const dealershipUpdateSchema = dealershipCreateSchema.partial().omit({ slug: true }).extend({
+  logo: z.string().url("URL de logo inválida").nullable().optional().or(z.literal("")),
+});
 
 export type DealershipCreateInput = z.infer<typeof dealershipCreateSchema>;
 export type DealershipUpdateInput = z.infer<typeof dealershipUpdateSchema>;

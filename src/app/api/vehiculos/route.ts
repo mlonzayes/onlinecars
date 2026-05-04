@@ -3,18 +3,22 @@ import { getCurrentDealership } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { vehicleCreateSchema } from "@/lib/validators/vehicle";
 import { NextResponse } from "next/server";
+import { withLogger } from "@/lib/api-handler";
+import { logger } from "@/lib/logger";
 
 // GET /api/vehiculos
 // Lista paginada de vehículos del concesionario autenticado.
 // Query params: page (default 1), limit (default 12), status (opcional), search (opcional)
-export async function GET(request: Request) {
+export const GET = withLogger(async (request, { requestId }) => {
   const { userId } = await auth();
   if (!userId) {
+    logger.warn(requestId, "vehicles.list.unauthorized");
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
   const dealership = await getCurrentDealership();
   if (!dealership) {
+    logger.warn(requestId, "vehicles.list.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
 
@@ -49,6 +53,13 @@ export async function GET(request: Request) {
     }),
   ]);
 
+  logger.info(requestId, "vehicles.list.ok", {
+    dealershipId: dealership.id,
+    total,
+    page,
+    limit,
+  });
+
   return NextResponse.json({
     data: vehicles,
     meta: {
@@ -58,19 +69,21 @@ export async function GET(request: Request) {
       totalPages: Math.ceil(total / limit),
     },
   });
-}
+});
 
 // POST /api/vehiculos
 // Crea un nuevo vehículo para el concesionario autenticado.
 // Body: VehicleCreateInput
-export async function POST(request: Request) {
+export const POST = withLogger(async (request, { requestId }) => {
   const { userId } = await auth();
   if (!userId) {
+    logger.warn(requestId, "vehicles.create.unauthorized");
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
   const dealership = await getCurrentDealership();
   if (!dealership) {
+    logger.warn(requestId, "vehicles.create.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
 
@@ -78,6 +91,10 @@ export async function POST(request: Request) {
   const parsed = vehicleCreateSchema.safeParse(body);
 
   if (!parsed.success) {
+    logger.warn(requestId, "vehicles.create.invalid_input", {
+      dealershipId: dealership.id,
+      details: parsed.error.flatten(),
+    });
     return NextResponse.json(
       { error: "Datos inválidos", details: parsed.error.flatten() },
       { status: 400 }
@@ -93,5 +110,10 @@ export async function POST(request: Request) {
     },
   });
 
+  logger.info(requestId, "vehicles.create.ok", {
+    dealershipId: dealership.id,
+    vehicleId: vehicle.id,
+  });
+
   return NextResponse.json({ data: vehicle }, { status: 201 });
-}
+});

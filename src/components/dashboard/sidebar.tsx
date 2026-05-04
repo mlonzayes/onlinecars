@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Car, LayoutDashboard, MessageSquare, Settings } from "lucide-react";
+import {
+  Car,
+  Globe,
+  LayoutDashboard,
+  MessageSquare,
+  Settings,
+  ShoppingCart,
+  Users,
+} from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import {
   Sidebar,
@@ -26,8 +34,10 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Vehículos", href: "/dashboard/vehiculos", icon: Car },
+  { label: "Clientes", href: "/dashboard/clientes", icon: Users },
+  { label: "Ventas", href: "/dashboard/ventas", icon: ShoppingCart },
   { label: "Leads", href: "/dashboard/leads", icon: MessageSquare },
-  { label: "Configuración", href: "/dashboard/configuracion", icon: Settings },
+  { label: "Sitio Web", href: "/dashboard/sitio-web", icon: Globe },
 ];
 
 interface DashboardSidebarProps {
@@ -58,11 +68,12 @@ export function DashboardSidebar({ dealership }: DashboardSidebarProps) {
 
               return (
                 <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={isActive}>
-                    <Link href={item.href}>
-                      <item.icon className="size-4" />
-                      <span>{item.label}</span>
-                    </Link>
+                  <SidebarMenuButton
+                    isActive={isActive}
+                    render={<Link href={item.href} />}
+                  >
+                    <item.icon className="size-4" />
+                    <span>{item.label}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               );
@@ -72,8 +83,19 @@ export function DashboardSidebar({ dealership }: DashboardSidebarProps) {
       </SidebarContent>
 
       <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              isActive={pathname.startsWith("/dashboard/configuracion")}
+              render={<Link href="/dashboard/configuracion" />}
+            >
+              <Settings className="size-4" />
+              <span>Configuración</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
         <div className="flex items-center gap-3 px-2 py-2">
-          <UserButton afterSignOutUrl="/" />
+          <UserButton />
           <div className="flex flex-col min-w-0">
             <span className="text-xs font-medium truncate">{dealership.name}</span>
             <span className="text-xs text-muted-foreground truncate">

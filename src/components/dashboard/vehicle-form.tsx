@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
+import { Lock } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,15 +21,31 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   FUEL_TYPES,
   TRANSMISSION_TYPES,
+  VEHICLE_BODY_TYPES,
+  VEHICLE_BODY_TYPE_LABELS,
   VEHICLE_CONDITIONS,
   VEHICLE_STATUSES,
   CURRENCIES,
 } from "@/lib/constants";
 import type { Vehicle, VehicleImage } from "@prisma/client";
+import type { BlockingSale } from "@/lib/sale-guards";
+import { VehicleImageUploader } from "./vehicle-image-uploader";
+
+// `price` viene serializado como string desde el server porque Prisma usa Decimal
+// y Next 15 no permite pasar objetos no-plain de Server a Client Components.
+type SerializedVehicle = Omit<Vehicle, "price"> & { price: string };
 
 interface VehicleFormProps {
-  vehicle?: Vehicle & { images: VehicleImage[] };
+  vehicle?: SerializedVehicle & { images: VehicleImage[] };
+  // Si hay una venta activa sobre el vehículo, el form se renderiza en modo lectura.
+  blockingSale?: BlockingSale | null;
 }
+
+const BLOCKING_SALE_LABELS: Record<BlockingSale["status"], string> = {
+  reserved: "Reservada",
+  in_progress: "En curso",
+  completed: "Completada",
+};
 
 // Tipo del estado del formulario (todos strings para los inputs)
 interface FormState {
@@ -43,13 +60,14 @@ interface FormState {
   kilometers: string;
   fuelType: string;
   transmission: string;
+  bodyType: string;
   color: string;
   doors: string;
   engine: string;
   description: string;
 }
 
-function buildInitialState(vehicle?: Vehicle): FormState {
+function buildInitialState(vehicle?: SerializedVehicle): FormState {
   return {
     title: vehicle?.title ?? "",
     brand: vehicle?.brand ?? "",
@@ -57,11 +75,12 @@ function buildInitialState(vehicle?: Vehicle): FormState {
     year: vehicle?.year?.toString() ?? "",
     condition: vehicle?.condition ?? "used",
     status: vehicle?.status ?? "available",
-    price: vehicle?.price?.toString() ?? "",
+    price: vehicle?.price ?? "",
     currency: vehicle?.currency ?? "ARS",
     kilometers: vehicle?.kilometers?.toString() ?? "",
     fuelType: vehicle?.fuelType ?? "",
     transmission: vehicle?.transmission ?? "",
+    bodyType: vehicle?.bodyType ?? "",
     color: vehicle?.color ?? "",
     doors: vehicle?.doors?.toString() ?? "",
     engine: vehicle?.engine ?? "",
@@ -73,12 +92,13 @@ function buildInitialState(vehicle?: Vehicle): FormState {
 interface BasicInfoTabProps {
   form: FormState;
   onChange: (field: keyof FormState, value: string) => void;
+  disabled?: boolean;
 }
 
-function BasicInfoTab({ form, onChange }: BasicInfoTabProps) {
+function BasicInfoTab({ form, onChange, disabled }: BasicInfoTabProps) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      <div className="sm:col-span-2 space-y-1.5">
+    <div className="grid gap-4 sm:grid-cols-12">
+      <div className="space-y-1.5 sm:col-span-12">
         <Label htmlFor="title">Título *</Label>
         <Input
           id="title"
@@ -86,9 +106,10 @@ function BasicInfoTab({ form, onChange }: BasicInfoTabProps) {
           onChange={(e) => onChange("title", e.target.value)}
           placeholder="Ej: Toyota Corolla XEI 2.0 2023"
           required
+          disabled={disabled}
         />
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 sm:col-span-6">
         <Label htmlFor="brand">Marca *</Label>
         <Input
           id="brand"
@@ -96,9 +117,10 @@ function BasicInfoTab({ form, onChange }: BasicInfoTabProps) {
           onChange={(e) => onChange("brand", e.target.value)}
           placeholder="Toyota"
           required
+          disabled={disabled}
         />
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 sm:col-span-6">
         <Label htmlFor="model">Modelo *</Label>
         <Input
           id="model"
@@ -106,9 +128,10 @@ function BasicInfoTab({ form, onChange }: BasicInfoTabProps) {
           onChange={(e) => onChange("model", e.target.value)}
           placeholder="Corolla"
           required
+          disabled={disabled}
         />
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="year">Año *</Label>
         <Input
           id="year"
@@ -119,12 +142,17 @@ function BasicInfoTab({ form, onChange }: BasicInfoTabProps) {
           min={1900}
           max={new Date().getFullYear() + 1}
           required
+          disabled={disabled}
         />
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="condition">Condición</Label>
-        <Select value={form.condition} onValueChange={(v) => onChange("condition", v)}>
-          <SelectTrigger id="condition">
+        <Select
+          value={form.condition}
+          onValueChange={(v) => v !== null && onChange("condition", v)}
+          disabled={disabled}
+        >
+          <SelectTrigger id="condition" className="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -136,10 +164,14 @@ function BasicInfoTab({ form, onChange }: BasicInfoTabProps) {
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="status">Estado</Label>
-        <Select value={form.status} onValueChange={(v) => onChange("status", v)}>
-          <SelectTrigger id="status">
+        <Select
+          value={form.status}
+          onValueChange={(v) => v !== null && onChange("status", v)}
+          disabled={disabled}
+        >
+          <SelectTrigger id="status" className="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -159,12 +191,13 @@ function BasicInfoTab({ form, onChange }: BasicInfoTabProps) {
 interface PriceDetailsTabProps {
   form: FormState;
   onChange: (field: keyof FormState, value: string) => void;
+  disabled?: boolean;
 }
 
-function PriceDetailsTab({ form, onChange }: PriceDetailsTabProps) {
+function PriceDetailsTab({ form, onChange, disabled }: PriceDetailsTabProps) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      <div className="space-y-1.5">
+    <div className="grid gap-4 sm:grid-cols-12">
+      <div className="space-y-1.5 sm:col-span-8">
         <Label htmlFor="price">Precio *</Label>
         <Input
           id="price"
@@ -174,12 +207,17 @@ function PriceDetailsTab({ form, onChange }: PriceDetailsTabProps) {
           placeholder="25000000"
           min={0}
           required
+          disabled={disabled}
         />
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="currency">Moneda</Label>
-        <Select value={form.currency} onValueChange={(v) => onChange("currency", v)}>
-          <SelectTrigger id="currency">
+        <Select
+          value={form.currency}
+          onValueChange={(v) => v !== null && onChange("currency", v)}
+          disabled={disabled}
+        >
+          <SelectTrigger id="currency" className="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -191,7 +229,7 @@ function PriceDetailsTab({ form, onChange }: PriceDetailsTabProps) {
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="kilometers">Kilómetros</Label>
         <Input
           id="kilometers"
@@ -200,12 +238,17 @@ function PriceDetailsTab({ form, onChange }: PriceDetailsTabProps) {
           onChange={(e) => onChange("kilometers", e.target.value)}
           placeholder="50000"
           min={0}
+          disabled={disabled}
         />
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="fuelType">Combustible</Label>
-        <Select value={form.fuelType} onValueChange={(v) => onChange("fuelType", v)}>
-          <SelectTrigger id="fuelType">
+        <Select
+          value={form.fuelType}
+          onValueChange={(v) => v !== null && onChange("fuelType", v)}
+          disabled={disabled}
+        >
+          <SelectTrigger id="fuelType" className="w-full">
             <SelectValue placeholder="Seleccionar" />
           </SelectTrigger>
           <SelectContent>
@@ -217,10 +260,14 @@ function PriceDetailsTab({ form, onChange }: PriceDetailsTabProps) {
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="transmission">Transmisión</Label>
-        <Select value={form.transmission} onValueChange={(v) => onChange("transmission", v)}>
-          <SelectTrigger id="transmission">
+        <Select
+          value={form.transmission}
+          onValueChange={(v) => v !== null && onChange("transmission", v)}
+          disabled={disabled}
+        >
+          <SelectTrigger id="transmission" className="w-full">
             <SelectValue placeholder="Seleccionar" />
           </SelectTrigger>
           <SelectContent>
@@ -232,16 +279,36 @@ function PriceDetailsTab({ form, onChange }: PriceDetailsTabProps) {
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 sm:col-span-4">
+        <Label htmlFor="bodyType">Tipo de carrocería</Label>
+        <Select
+          value={form.bodyType}
+          onValueChange={(v) => v !== null && onChange("bodyType", v)}
+          disabled={disabled}
+        >
+          <SelectTrigger id="bodyType" className="w-full">
+            <SelectValue placeholder="Seleccionar" />
+          </SelectTrigger>
+          <SelectContent>
+            {VEHICLE_BODY_TYPES.map((b) => (
+              <SelectItem key={b} value={b}>
+                {VEHICLE_BODY_TYPE_LABELS[b]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="color">Color</Label>
         <Input
           id="color"
           value={form.color}
           onChange={(e) => onChange("color", e.target.value)}
           placeholder="Blanco"
+          disabled={disabled}
         />
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="doors">Puertas</Label>
         <Input
           id="doors"
@@ -251,15 +318,17 @@ function PriceDetailsTab({ form, onChange }: PriceDetailsTabProps) {
           min={2}
           max={6}
           placeholder="4"
+          disabled={disabled}
         />
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="engine">Motor</Label>
         <Input
           id="engine"
           value={form.engine}
           onChange={(e) => onChange("engine", e.target.value)}
           placeholder="2.0L"
+          disabled={disabled}
         />
       </div>
     </div>
@@ -267,12 +336,13 @@ function PriceDetailsTab({ form, onChange }: PriceDetailsTabProps) {
 }
 
 // --- Componente principal ---
-export function VehicleForm({ vehicle }: VehicleFormProps) {
+export function VehicleForm({ vehicle, blockingSale }: VehicleFormProps) {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(() => buildInitialState(vehicle));
   const [loading, setLoading] = useState(false);
 
   const isEditing = Boolean(vehicle);
+  const isLocked = !!blockingSale;
 
   function handleChange(field: keyof FormState, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -280,6 +350,7 @@ export function VehicleForm({ vehicle }: VehicleFormProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (isLocked) return; // doble defensa, el submit ya debería estar disabled
     setLoading(true);
 
     const payload = {
@@ -294,6 +365,7 @@ export function VehicleForm({ vehicle }: VehicleFormProps) {
       kilometers: form.kilometers ? parseInt(form.kilometers, 10) : undefined,
       fuelType: form.fuelType || undefined,
       transmission: form.transmission || undefined,
+      bodyType: form.bodyType || undefined,
       color: form.color || undefined,
       doors: form.doors ? parseInt(form.doors, 10) : undefined,
       engine: form.engine || undefined,
@@ -316,8 +388,21 @@ export function VehicleForm({ vehicle }: VehicleFormProps) {
         return;
       }
 
-      toast.success(isEditing ? "Vehículo actualizado." : "Vehículo creado.");
-      router.push("/dashboard/vehiculos");
+      const result = (await res.json().catch(() => ({}))) as {
+        data?: { id?: string };
+      };
+      const newId = result?.data?.id;
+
+      toast.success(
+        isEditing
+          ? "Vehículo actualizado."
+          : "Vehículo creado. Ahora podés agregar las imágenes."
+      );
+      router.push(
+        isEditing || !newId
+          ? "/dashboard/vehiculos"
+          : `/dashboard/vehiculos/${newId}`
+      );
       router.refresh();
     } catch {
       toast.error("Error de conexión. Intentá de nuevo.");
@@ -328,21 +413,49 @@ export function VehicleForm({ vehicle }: VehicleFormProps) {
 
   return (
     <form onSubmit={handleSubmit}>
+      {isLocked && blockingSale && (
+        <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+          <Lock className="mt-0.5 h-4 w-4 shrink-0" />
+          <div className="flex-1">
+            <p className="font-semibold">Vehículo bloqueado</p>
+            <p className="mt-1">
+              Este vehículo tiene una venta{" "}
+              <span className="font-semibold">
+                {BLOCKING_SALE_LABELS[blockingSale.status]}
+              </span>
+              . No se pueden modificar sus datos hasta que la venta se cancele.
+            </p>
+            <Link
+              href={`/dashboard/ventas/${blockingSale.id}`}
+              className="mt-2 inline-block text-amber-900 underline underline-offset-2 hover:text-amber-700"
+            >
+              Ver venta →
+            </Link>
+          </div>
+        </div>
+      )}
       <Card>
         <CardContent className="pt-6">
           <Tabs defaultValue="basico">
-            <TabsList className="mb-6 grid w-full grid-cols-3">
+            <TabsList
+              className={`mb-6 grid w-full ${
+                isEditing ? "grid-cols-4" : "grid-cols-3"
+              }`}
+            >
               <TabsTrigger value="basico">Información básica</TabsTrigger>
               <TabsTrigger value="precio">Precio y detalles</TabsTrigger>
               <TabsTrigger value="descripcion">Descripción</TabsTrigger>
+              {isEditing && (
+                <TabsTrigger value="imagenes">Imágenes</TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="basico">
-              <BasicInfoTab form={form} onChange={handleChange} />
+              <BasicInfoTab form={form} onChange={handleChange} disabled={isLocked} />
             </TabsContent>
 
             <TabsContent value="precio">
-              <PriceDetailsTab form={form} onChange={handleChange} />
+              <PriceDetailsTab form={form} onChange={handleChange} disabled={isLocked} />
             </TabsContent>
 
             <TabsContent value="descripcion">
@@ -355,22 +468,33 @@ export function VehicleForm({ vehicle }: VehicleFormProps) {
                   placeholder="Describí el vehículo: equipamiento, estado, extras..."
                   rows={8}
                   maxLength={2000}
+                  disabled={isLocked}
                 />
                 <p className="text-xs text-muted-foreground text-right">
                   {form.description.length}/2000
                 </p>
               </div>
             </TabsContent>
+
+            {isEditing && vehicle && (
+              <TabsContent value="imagenes">
+                <VehicleImageUploader
+                  vehicleId={vehicle.id}
+                  initialImages={vehicle.images}
+                  disabled={isLocked}
+                />
+              </TabsContent>
+            )}
           </Tabs>
         </CardContent>
       </Card>
 
       <div className="mt-6 flex gap-3">
-        <Button type="submit" disabled={loading}>
+        <Button type="submit" disabled={loading || isLocked}>
           {loading ? "Guardando..." : "Guardar"}
         </Button>
-        <Button variant="outline" asChild>
-          <Link href="/dashboard/vehiculos">Cancelar</Link>
+        <Button variant="outline" nativeButton={false} render={<Link href="/dashboard/vehiculos" />}>
+          {isLocked ? "Volver" : "Cancelar"}
         </Button>
       </div>
     </form>

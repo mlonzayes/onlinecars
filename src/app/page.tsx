@@ -1,4 +1,5 @@
 import { WaitlistForm } from "@/components/shared/waitlist-form";
+import { Navbar } from "@/components/shared/navbar";
 
 function HeroSection() {
   return (
@@ -188,6 +189,7 @@ function Footer() {
 export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col">
+      <Navbar />
       <HeroSection />
       <ProblemsSection />
       <FeaturesSection />

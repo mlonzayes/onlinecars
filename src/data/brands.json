@@ -1,0 +1,107 @@
+[
+  {
+    "id": "audi",
+    "name": "Audi",
+    "logoUrl": "/brands/audi.png"
+  },
+  {
+    "id": "bmw",
+    "name": "BMW",
+    "logoUrl": "/brands/bmw.png"
+  },
+  {
+    "id": "chevrolet",
+    "name": "Chevrolet",
+    "logoUrl": "/brands/chevrolet.png"
+  },
+  {
+    "id": "citroen",
+    "name": "Citroën",
+    "logoUrl": "/brands/citroen.png"
+  },
+  {
+    "id": "fiat",
+    "name": "Fiat",
+    "logoUrl": "/brands/fiat.png"
+  },
+  {
+    "id": "ford",
+    "name": "Ford",
+    "logoUrl": "/brands/ford.png"
+  },
+  {
+    "id": "honda",
+    "name": "Honda",
+    "logoUrl": "/brands/honda.png"
+  },
+  {
+    "id": "jeep",
+    "name": "Jeep",
+    "logoUrl": "/brands/jeep.png"
+  },
+  {
+    "id": "kia",
+    "name": "Kia",
+    "logoUrl": "/brands/kia.png"
+  },
+  {
+    "id": "mercedes-benz",
+    "name": "Mercedes-Benz",
+    "logoUrl": "/brands/mercedes-benz.png"
+  },
+  {
+    "id": "nissan",
+    "name": "Nissan",
+    "logoUrl": "/brands/nissan.png"
+  },
+  {
+    "id": "peugeot",
+    "name": "Peugeot",
+    "logoUrl": "/brands/peugeot.png"
+  },
+  {
+    "id": "renault",
+    "name": "Renault",
+    "logoUrl": "/brands/renault.png"
+  },
+  {
+    "id": "toyota",
+    "name": "Toyota",
+    "logoUrl": "/brands/toyota.png"
+  },
+  {
+    "id": "volkswagen",
+    "name": "Volkswagen",
+    "logoUrl": "/brands/volkswagen.png"
+  },
+  {
+    "id": "byd",
+    "name": "BYD",
+    "logoUrl": "/brands/byd.png"
+  },
+  {
+    "id": "baic",
+    "name": "BAIC",
+    "logoUrl": "/brands/baic.png"
+  },
+  {
+    "id": "mg",
+    "name": "MG",
+    "logoUrl": "/brands/mg.png"
+  },
+  {
+    "id": "chery",
+    "name": "Chery",
+    "logoUrl": "/brands/chery.png"
+  },
+  {
+    "id": "haval",
+    "name": "Haval",
+    "logoUrl": "/brands/haval.png"
+  },
+  {
+    "id": "geely",
+    "name": "Geely",
+    "logoUrl": "/brands/geely.png"
+  }
+]

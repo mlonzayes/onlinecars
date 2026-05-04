@@ -44,3 +44,6 @@ next-env.d.ts
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# user-uploaded files (storage local en dev — en prod va a S3/R2)
+/public/uploads/

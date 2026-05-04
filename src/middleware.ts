@@ -6,6 +6,8 @@ const isPublicRoute = createRouteMatcher([
   "/",
   "/sign-in(.*)",
   "/sign-up(.*)",
+  "/onboarding(.*)",
+  "/tenant(.*)",
   "/api/public/(.*)",
   "/api/webhooks/(.*)",
 ]);
@@ -14,6 +16,7 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   const url = req.nextUrl;
   const hostname = req.headers.get("host") ?? "";
   const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "onlinecars.com.ar";
+  const isLoginEnabled = process.env.NEXT_PUBLIC_ENABLE_LOGIN === "true";
 
   // En localhost no aplica subdomain routing
   const isLocalhost = hostname.includes("localhost") || hostname.includes("127.0.0.1");
@@ -30,8 +33,8 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
     }
   }
 
-  // Proteger rutas del dashboard
-  if (!isPublicRoute(req)) {
+  // Proteger rutas del dashboard solo si login está habilitado
+  if (isLoginEnabled && !isPublicRoute(req)) {
     await auth.protect();
   }
 });

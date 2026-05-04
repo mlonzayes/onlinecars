@@ -15,3 +15,12 @@ export type ApiError = {
   error: string;
   details?: unknown;
 };
+
+export type DealershipTheme = {
+  colorPrimary: string;
+  darkMode: boolean;
+  heroType: "none" | "image" | "video";
+  heroUrl: string | null;
+  customDomain: string | null;
+  selectedBrandIds?: string[];
+};

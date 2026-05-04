@@ -7,7 +7,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model Dealership {
@@ -31,6 +30,10 @@ model Dealership {
   vehicles    Vehicle[]
   leads       Lead[]
   users       DealershipUser[]
+  customers   Customer[]
+  sales       Sale[]
+  reviews     Review[]
+  financingPlans FinancingPlan[]
 
   @@map("dealerships")
 }
@@ -60,9 +63,13 @@ model Vehicle {
   kilometers   Int?
   fuelType     String?   // nafta | diesel | gnc | electrico | hibrido
   transmission String?   // manual | automatica
+  bodyType     String?   // suv | sedan | hatchback | coupe | pickup | minivan | convertible
   color        String?
   doors        Int?
   engine       String?   // Ej: "2.0L"
+  vin          String?   // Vehicle Identification Number / chasis (17 chars en general)
+  motorNumber  String?
+  licensePlate String?   // patente — relevante para usados
   description  String?
   condition    String    @default("used") // new | used
   status       String    @default("available") // available | reserved | sold
@@ -74,6 +81,10 @@ model Vehicle {
   dealership   Dealership    @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
   images       VehicleImage[]
   leads        Lead[]
+  // Un vehículo puede tener varias Sales históricas (canceladas) + máximo UNA activa.
+  // La unicidad de "sale activa por vehículo" se enforce con un partial unique index
+  // en SQL (ver migración add_partial_unique_active_sale).
+  sales        Sale[]
 
   @@index([dealershipId, status])
   @@index([brand, model, year])
@@ -83,7 +94,8 @@ model Vehicle {
 model VehicleImage {
   id        String  @id @default(cuid())
   vehicleId String
-  url       String
+  url       String  // URL pública para servir la imagen
+  key       String  // Key interno del storage provider (necesario para borrar)
   alt       String?
   order     Int     @default(0)
   isPrimary Boolean @default(false)
@@ -124,4 +136,128 @@ model WaitlistEntry {
   createdAt  DateTime @default(now())
 
   @@map("waitlist_entries")
+}
+
+// Cliente del concesionario (entidad distinta de Lead).
+// Un Lead es una consulta pre-venta. Un Customer es quien firma una operación.
+model Customer {
+  id             String   @id @default(cuid())
+  dealershipId   String
+  type           String   @default("individual") // individual | company
+  documentType   String   // DNI | CUIT | CUIL | PASAPORTE
+  documentNumber String
+  firstName      String   // Si type=company, contacto principal
+  lastName       String?
+  businessName   String?  // Razón social — solo si type=company
+  email          String?
+  phone          String?
+  address        String?
+  city           String?
+  province       String?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  dealership     Dealership @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
+  sales          Sale[]
+
+  @@unique([dealershipId, documentType, documentNumber])
+  @@index([dealershipId])
+  @@map("customers")
+}
+
+// Operación de venta. Un vehículo solo puede tener UNA venta activa a la vez.
+// Si se cancela queda como cancelled con motivo y libera el vehículo — desde ese
+// momento se puede crear una nueva venta con el mismo vehicleId.
+//
+// La unicidad sobre (vehicleId) NO es un @unique total — está implementada como
+// partial unique index en SQL: UNIQUE WHERE status != 'cancelled'. Prisma no
+// soporta partial unique declarativo, ver migración add_partial_unique_active_sale.
+model Sale {
+  id            String    @id @default(cuid())
+  dealershipId  String
+  vehicleId     String
+  customerId    String
+  status        String    @default("draft") // draft | reserved | in_progress | completed | cancelled
+  salePrice     Decimal   @db.Decimal(12, 2)
+  currency      String    @default("ARS")
+  depositAmount Decimal?  @db.Decimal(12, 2)
+  depositDate   DateTime?
+  invoiceNumber String?   // se completa al emitir factura (mock AFIP por ahora)
+  invoiceDate   DateTime?
+  deliveryDate  DateTime?
+  cancelReason  String?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  dealership    Dealership     @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
+  vehicle       Vehicle        @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  customer      Customer       @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  documents     SaleDocument[]
+
+  @@index([dealershipId, status])
+  @@index([customerId])
+  @@map("sales")
+}
+
+// Documento del legajo de venta. Categorizado para agrupar en la UI.
+// El type es texto libre por ahora (DNI, F08, Boleto, etc) — se cerrará cuando se estabilice.
+model SaleDocument {
+  id           String    @id @default(cuid())
+  dealershipId String    // denormalizado para queries rápidas por tenant
+  saleId       String
+  category     String    // customer | vehicle | operation
+  type         String    // texto libre — ej: "DNI Frente", "Título", "Boleto de reserva"
+  url          String    // URL pública del archivo
+  key          String    // Key interno del storage provider
+  fileName     String    // nombre original del archivo subido
+  mimeType     String
+  sizeBytes    Int
+  notes        String?   // notas opcionales sobre el documento
+  issuedAt     DateTime?
+  expiresAt    DateTime?
+  uploadedAt   DateTime  @default(now())
+  uploadedBy   String    // clerkUserId
+
+  sale         Sale      @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  @@index([saleId])
+  @@index([dealershipId])
+  @@map("sale_documents")
+}
+
+// Reseñas/Testimonios públicos de los clientes
+model Review {
+  id           String     @id @default(cuid())
+  dealershipId String
+  name         String     // Nombre del cliente
+  content      String     // Opinión
+  rating       Int        @default(5)
+  status       String     @default("pending") // pending | approved | rejected
+  createdAt    DateTime   @default(now())
+
+  dealership   Dealership @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
+  
+  @@index([dealershipId, status])
+  @@map("reviews")
+}
+
+// Módulo de Financiación — Banners y Videos administrables
+model FinancingPlan {
+  id           String     @id @default(cuid())
+  dealershipId String
+  title        String
+  description  String?
+  assetType    String     // image | video | youtube
+  assetUrl     String
+  order        Int        @default(0)
+  active       Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  dealership   Dealership @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
+
+  @@index([dealershipId, active])
+  @@map("financing_plans")
 }

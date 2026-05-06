@@ -110,15 +110,18 @@ export function CustomerForm({ customer }: CustomerFormProps) {
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         toast.error(data.error ?? "Ocurrió un error. Intentá de nuevo.");
+        setLoading(false);
         return;
       }
 
       toast.success(isEditing ? "Cliente actualizado." : "Cliente creado.");
+      // No reseteamos loading en éxito — el router.push es asíncrono y bajarlo
+      // antes reactiva el botón mientras la página todavía está visible (riesgo
+      // de doble-click → doble creación).
       router.push("/dashboard/clientes");
       router.refresh();
     } catch {
       toast.error("Error de conexión. Intentá de nuevo.");
-    } finally {
       setLoading(false);
     }
   }

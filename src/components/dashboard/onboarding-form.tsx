@@ -56,18 +56,24 @@ export function OnboardingForm() {
         body: JSON.stringify(parsed.data),
       });
 
-      if (res.ok) { router.push("/dashboard"); return; }
+      if (res.ok) {
+        // No reseteamos isSubmitting en éxito — el router.push es asíncrono y
+        // bajarlo antes reactiva el botón mientras la página todavía está visible.
+        router.push("/dashboard");
+        return;
+      }
 
       const json = (await res.json()) as { error: string; details?: { fieldErrors?: Record<string, string[]> } };
 
       if (res.status === 409 && json.details?.fieldErrors?.slug) {
         setFieldErrors({ slug: "El nombre de sitio ya está en uso. Elegí otro." });
+        setIsSubmitting(false);
         return;
       }
       setServerError(json.error ?? "Ocurrió un error inesperado.");
+      setIsSubmitting(false);
     } catch {
       setServerError("No se pudo conectar con el servidor. Intentá de nuevo.");
-    } finally {
       setIsSubmitting(false);
     }
   }

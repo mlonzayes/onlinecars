@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Lock } from "lucide-react";
@@ -336,13 +336,32 @@ function PriceDetailsTab({ form, onChange, disabled }: PriceDetailsTabProps) {
 }
 
 // --- Componente principal ---
+// Tabs disponibles dentro del form. "imagenes" solo aplica en modo edición.
+const VEHICLE_FORM_TABS = ["basico", "precio", "descripcion", "imagenes"] as const;
+type VehicleFormTab = (typeof VEHICLE_FORM_TABS)[number];
+
+function isVehicleFormTab(value: string | null): value is VehicleFormTab {
+  return value !== null && (VEHICLE_FORM_TABS as readonly string[]).includes(value);
+}
+
 export function VehicleForm({ vehicle, blockingSale }: VehicleFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [form, setForm] = useState<FormState>(() => buildInitialState(vehicle));
   const [loading, setLoading] = useState(false);
 
   const isEditing = Boolean(vehicle);
   const isLocked = !!blockingSale;
+
+  // Permite que el redirect post-creación parquee al usuario directamente en
+  // el tab de imágenes (?tab=imagenes). Si el query param viene con un valor
+  // inválido o el tab "imagenes" se pidió en modo creación (sin vehículo),
+  // caemos al default "basico".
+  const requestedTab = searchParams?.get("tab") ?? null;
+  const initialTab: VehicleFormTab =
+    isVehicleFormTab(requestedTab) && (requestedTab !== "imagenes" || isEditing)
+      ? requestedTab
+      : "basico";
 
   function handleChange(field: keyof FormState, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -385,6 +404,7 @@ export function VehicleForm({ vehicle, blockingSale }: VehicleFormProps) {
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         toast.error(data.error ?? "Ocurrió un error. Intentá de nuevo.");
+        setLoading(false);
         return;
       }
 
@@ -398,15 +418,18 @@ export function VehicleForm({ vehicle, blockingSale }: VehicleFormProps) {
           ? "Vehículo actualizado."
           : "Vehículo creado. Ahora podés agregar las imágenes."
       );
+      // No reseteamos loading en éxito — el router.push es asíncrono y si lo
+      // bajamos antes el botón se reactiva mientras la página todavía está visible
+      // (riesgo de doble-click → doble creación). Queda en true hasta que el
+      // componente se desmonte por el redirect.
       router.push(
         isEditing || !newId
           ? "/dashboard/vehiculos"
-          : `/dashboard/vehiculos/${newId}`
+          : `/dashboard/vehiculos/${newId}?tab=imagenes`
       );
       router.refresh();
     } catch {
       toast.error("Error de conexión. Intentá de nuevo.");
-    } finally {
       setLoading(false);
     }
   }
@@ -436,7 +459,7 @@ export function VehicleForm({ vehicle, blockingSale }: VehicleFormProps) {
       )}
       <Card>
         <CardContent className="pt-6">
-          <Tabs defaultValue="basico">
+          <Tabs defaultValue={initialTab}>
             <TabsList
               className={`mb-6 grid w-full ${
                 isEditing ? "grid-cols-4" : "grid-cols-3"

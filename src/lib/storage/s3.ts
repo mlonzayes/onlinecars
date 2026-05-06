@@ -1,19 +1,149 @@
-import type { StorageProvider } from "./types";
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import type { StorageProvider, StorageKind, UploadResult } from "./types";
 
-// Stub — implementar cuando se conecte el bucket R2/S3.
-// Las deps `@aws-sdk/client-s3` y `@aws-sdk/s3-request-presigner` ya están instaladas.
-// Para activarlo: setear STORAGE_DRIVER=s3 + las S3_* env vars.
-const NOT_IMPLEMENTED =
-  "Storage S3 no implementado. Definí STORAGE_DRIVER=local o implementá src/lib/storage/s3.ts";
+// Driver S3-compatible (Cloudflare R2). Maneja DOS buckets:
+//   - S3_PUBLIC_BUCKET: imágenes del catálogo. Servido vía custom domain (S3_PUBLIC_URL).
+//   - S3_PRIVATE_BUCKET: documentos del legajo de venta. Solo accesible por presigned URL.
+//
+// Para R2: region "auto", forcePathStyle true, endpoint = https://<account>.r2.cloudflarestorage.com
+
+const DEFAULT_DOCUMENT_TTL_SECONDS = 300; // 5 min
+
+interface S3Env {
+  endpoint: string;
+  region: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  publicBucket: string;
+  publicUrl: string;
+  privateBucket: string;
+}
+
+let cachedEnv: S3Env | null = null;
+let cachedClient: S3Client | null = null;
+
+function readEnv(): S3Env {
+  if (cachedEnv) return cachedEnv;
+
+  const endpoint = process.env.S3_ENDPOINT;
+  const region = process.env.S3_REGION ?? "auto";
+  const accessKeyId = process.env.S3_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY;
+  const publicBucket = process.env.S3_PUBLIC_BUCKET;
+  const publicUrl = process.env.S3_PUBLIC_URL;
+  const privateBucket = process.env.S3_PRIVATE_BUCKET;
+
+  const missing: string[] = [];
+  if (!endpoint) missing.push("S3_ENDPOINT");
+  if (!accessKeyId) missing.push("S3_ACCESS_KEY_ID");
+  if (!secretAccessKey) missing.push("S3_SECRET_ACCESS_KEY");
+  if (!publicBucket) missing.push("S3_PUBLIC_BUCKET");
+  if (!publicUrl) missing.push("S3_PUBLIC_URL");
+  if (!privateBucket) missing.push("S3_PRIVATE_BUCKET");
+
+  if (missing.length > 0) {
+    throw new Error(
+      `Faltan env vars para STORAGE_DRIVER=s3: ${missing.join(", ")}`
+    );
+  }
+
+  cachedEnv = {
+    endpoint: endpoint!,
+    region,
+    accessKeyId: accessKeyId!,
+    secretAccessKey: secretAccessKey!,
+    publicBucket: publicBucket!,
+    // Normalizamos: sin trailing slash, así concatenar con el key es consistente.
+    publicUrl: publicUrl!.replace(/\/+$/, ""),
+    privateBucket: privateBucket!,
+  };
+  return cachedEnv;
+}
+
+function getClient(): S3Client {
+  if (cachedClient) return cachedClient;
+  const env = readEnv();
+  cachedClient = new S3Client({
+    region: env.region,
+    endpoint: env.endpoint,
+    credentials: {
+      accessKeyId: env.accessKeyId,
+      secretAccessKey: env.secretAccessKey,
+    },
+    forcePathStyle: true,
+    // AWS SDK v3 (>=3.700) agrega un x-amz-sdk-checksum-algorithm a todos los
+    // PutObject por default. Providers S3-compatible (Contabo, Backblaze B2,
+    // MinIO viejo) no lo entienden y responden con error en JSON en lugar de
+    // XML, lo cual rompe el deserializer del SDK ("char '{' is not expected").
+    // WHEN_REQUIRED le dice al SDK que solo calcule checksums cuando la
+    // operación los exige obligatoriamente — para PutObject no es obligatorio.
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
+  });
+  return cachedClient;
+}
+
+function bucketFor(kind: StorageKind): string {
+  const env = readEnv();
+  return kind === "image" ? env.publicBucket : env.privateBucket;
+}
+
+function joinKey(keyPrefix: string, filename: string): string {
+  return `${keyPrefix.replace(/^\/+|\/+$/g, "")}/${filename}`;
+}
+
+async function putObject(
+  bucket: string,
+  key: string,
+  buffer: Buffer,
+  mimeType: string
+): Promise<void> {
+  await getClient().send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: buffer,
+      ContentType: mimeType,
+    })
+  );
+}
 
 export const s3Storage: StorageProvider = {
-  async upload() {
-    throw new Error(NOT_IMPLEMENTED);
+  async upload({ buffer, mimeType, keyPrefix, filename }): Promise<UploadResult> {
+    const env = readEnv();
+    const key = joinKey(keyPrefix, filename);
+    await putObject(env.publicBucket, key, buffer, mimeType);
+    return { url: `${env.publicUrl}/${key}`, key };
   },
-  async uploadDocument() {
-    throw new Error(NOT_IMPLEMENTED);
+
+  async uploadDocument({ buffer, mimeType, keyPrefix, filename }): Promise<UploadResult> {
+    const env = readEnv();
+    const key = joinKey(keyPrefix, filename);
+    await putObject(env.privateBucket, key, buffer, mimeType);
+    // url queda con un identificador interno — el front pide la URL firmada
+    // a /api/ventas/[id]/documentos/[docId]/url. No se sirve directo nunca.
+    return { url: `s3://${env.privateBucket}/${key}`, key };
   },
-  async delete() {
-    throw new Error(NOT_IMPLEMENTED);
+
+  async delete(key, kind) {
+    const bucket = bucketFor(kind);
+    await getClient().send(
+      new DeleteObjectCommand({ Bucket: bucket, Key: key })
+    );
+  },
+
+  async getDocumentUrl(key, ttlSeconds = DEFAULT_DOCUMENT_TTL_SECONDS) {
+    const env = readEnv();
+    const command = new GetObjectCommand({
+      Bucket: env.privateBucket,
+      Key: key,
+    });
+    return getSignedUrl(getClient(), command, { expiresIn: ttlSeconds });
   },
 };

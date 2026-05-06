@@ -1,6 +1,6 @@
 import { mkdir, writeFile, unlink } from "node:fs/promises";
 import path from "node:path";
-import type { StorageProvider } from "./types";
+import type { StorageProvider, StorageKind } from "./types";
 
 const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads");
 
@@ -42,7 +42,8 @@ export const localStorage: StorageProvider = {
     return writeFileToUploads(buffer, keyPrefix, filename);
   },
 
-  async delete(key) {
+  // El driver local guarda todo en un solo árbol — el kind se ignora.
+  async delete(key, _kind: StorageKind) {
     assertSafeKey(key);
 
     const filePath = path.join(UPLOADS_DIR, key);
@@ -56,5 +57,12 @@ export const localStorage: StorageProvider = {
           : undefined;
       if (code !== "ENOENT") throw error;
     }
+  },
+
+  // En local los documentos viven en /public/uploads y son servidos directo
+  // por Next. El TTL no aplica.
+  async getDocumentUrl(key) {
+    assertSafeKey(key);
+    return `/uploads/${key}`;
   },
 };

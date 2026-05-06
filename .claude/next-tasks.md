@@ -122,32 +122,22 @@ cancelled   → (terminal, requiere cancelReason)
 
 ---
 
-## Storage de imágenes — BLOQUEANTE para deploy
+## Storage S3/R2 — RESUELTO (mayo 2026)
 
-Estado actual (abril 2026):
-- Storage abstraction implementada en `src/lib/storage/` con dos providers: `local` y `s3`.
-- El driver `local` escribe a `/public/uploads/` — **solo funciona en dev**.
-- El driver `s3` está como stub: tira "not implemented" si se usa.
-- Endpoints `POST/DELETE/PUT` para imágenes ya andan contra cualquier provider.
-- UI con drag-drop, reorder y delete ya integrada en el form de vehículos (tab "Imágenes" en edit mode).
+Se implementó el driver `s3` en `src/lib/storage/s3.ts` con separación de buckets:
 
-### 4. Implementar `src/lib/storage/s3.ts` antes del deploy
+- **Bucket público** (`S3_PUBLIC_BUCKET` + `S3_PUBLIC_URL`) → imágenes del catálogo. URL directa permanente.
+- **Bucket privado** (`S3_PRIVATE_BUCKET`) → documentos del legajo. Solo accesibles vía presigned URL (TTL default 5 min).
 
-**Por qué bloqueante:** En Vercel Serverless Functions el filesystem es read-only en runtime. Si deployás con `STORAGE_DRIVER=local` (default), cualquier upload va a tirar `EROFS` y romper el form de vehículos.
+Cambios concretos:
+- `StorageProvider` extendido: `delete(key, kind)` recibe `"image" | "document"`, y se sumó `getDocumentUrl(key, ttl?)`.
+- `local.ts` adaptado a la nueva interface (ignora `kind` porque escribe todo en `/public/uploads/`).
+- Endpoint nuevo `GET /api/ventas/[id]/documentos/[docId]/url` para servir presigned URLs autenticadas (multi-tenant).
+- `sale-documents.tsx` ya no usa `doc.url` directo — pega al endpoint anterior y abre la URL devuelta. La columna `SaleDocument.url` quedó como identificador interno.
+- `next.config.ts` arma `images.remotePatterns` dinámicamente desde `S3_PUBLIC_URL`.
 
-**Qué hay que hacer:**
-1. Crear bucket en Cloudflare R2 (recomendado) o S3.
-2. Configurar CORS del bucket para permitir uploads desde el dominio del dashboard (`app.onlinecars.com.ar`).
-3. Setear las env vars `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` en Vercel.
-4. Implementar `s3.ts`:
-   - `upload`: usar `PutObjectCommand` del `@aws-sdk/client-s3` (ya instalado). El `url` retornado debe apuntar al dominio público del bucket.
-   - `delete`: `DeleteObjectCommand`.
-5. En `next.config.ts`, agregar el dominio del bucket a `images.remotePatterns` para que `next/image` pueda servirlas.
-6. Setear `STORAGE_DRIVER=s3` en Vercel.
-7. Considerar también: el helper de delete en `src/app/api/vehiculos/[id]/images/[imageId]/route.ts` deriva el `key` desde la URL haciendo `url.replace(/^\/uploads\//, "")`. Cuando la URL sea de R2 (https://...), ese parsing tiene que cambiar — preferiblemente moverlo a una función en cada provider que extraiga el key desde la URL.
-
-**Estimado:** ~1-2 horas si el bucket ya está creado.
-
-### 5. (Opcional) Agregar columna `key` a `VehicleImage`
-
-Hoy derivamos el storage key desde la URL parseando el prefijo. Una migración que agregue `key String` al modelo elimina el parsing y deja el código más sano. No es urgente — funciona sin esto. Cuando se justifique tocarlo.
+**Pre-deploy a producción:**
+1. Crear los DOS buckets en Cloudflare R2 (uno público con custom domain, uno privado).
+2. Setear las env vars: `S3_ENDPOINT`, `S3_REGION=auto`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_BUCKET`, `S3_PUBLIC_URL`, `S3_PRIVATE_BUCKET`.
+3. Setear `STORAGE_DRIVER=s3`.
+4. Configurar CORS del bucket público si el browser accede directo (hoy todo va server-side, así que solo si en algún momento se hace presigned upload desde el cliente).

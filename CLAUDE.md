@@ -20,10 +20,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Auth | Clerk (`@clerk/nextjs` v7) |
 | Base de datos | Neon (PostgreSQL serverless) vía `@neondatabase/serverless` |
 | ORM | Prisma 7 con `@prisma/adapter-neon` |
-| Cache / rate-limit | Upstash Redis (REST API, `@upstash/redis`) — disponible, no usado todavía |
+| Cache / rate-limit | Upstash Redis (`@upstash/redis`) + `@upstash/ratelimit`. Rate limiting activo en `/api/public/*`. Cache del catálogo aún pendiente. |
 | Estilos | Tailwind CSS v4 + shadcn/ui (Base UI por debajo) |
 | Deploy | Vercel |
-| Storage (imágenes) | Abstracción driver-based en `lib/storage/` (`local` por default, `s3` para prod). S3 vía AWS SDK v3 (`@aws-sdk/client-s3` + presigner). Destino esperado: Cloudflare R2. |
+| Storage (archivos) | Abstracción driver-based en `lib/storage/` (`local` por default, `s3` para prod). S3 vía AWS SDK v3 (`@aws-sdk/client-s3` + presigner). S3-compatible probado con Contabo Object Storage; también soporta R2/AWS. Dos buckets: público (imágenes catálogo) + privado (documentos legajo, presigned URLs). |
 | Email transaccional | Resend (instalado, no integrado todavía) |
 | Validación | Zod 4 |
 | Notifications UI | Sonner |
@@ -104,33 +104,41 @@ src/
 │       ├── concesionario/           # GET/PUT del dealership actual + /theme
 │       ├── vehiculos/               # GET, POST + [id] (GET/PUT/DELETE)
 │       │   └── [id]/
-│       │       ├── publish/         # POST publicar
-│       │       ├── featured/        # POST toggle featured
-│       │       ├── status/          # PUT cambiar status
+│       │       ├── publish/         # PATCH toggle publicado
+│       │       ├── featured/        # PATCH toggle destacado
+│       │       ├── status/          # PATCH cambiar status (bloqueado si hay venta activa)
 │       │       └── images/          # POST + [imageId] (DELETE) + /order (PUT reordenar)
-│       ├── leads/                   # GET + [id] (GET/PUT)
+│       ├── leads/                   # GET + [id] (GET/PATCH/DELETE)
 │       ├── clientes/                # GET, POST + [id] (GET/PUT/DELETE)
-│       ├── ventas/                  # GET, POST + [id] (GET/PUT) + [id]/status
-│       └── public/                  # Endpoints SIN auth para sitio público
+│       ├── ventas/                  # GET, POST + [id] (GET/PATCH/DELETE) + [id]/status
+│       │   └── [id]/documentos/     # GET, POST + [docId] (DELETE) + [docId]/url (GET presigned)
+│       ├── dashboard/reviews/[id]/  # PATCH (moderar) + DELETE
+│       └── public/                  # Endpoints SIN auth — sitio del tenant + landing
 │           └── tenant/[slug]/
 │               ├── vehicles/        # GET catálogo
-│               └── leads/           # POST consulta
+│               ├── leads/           # POST consulta
+│               └── reviews/         # POST opinión (entra como pending)
 ├── components/
 │   ├── ui/                          # shadcn/ui
-│   ├── dashboard/                   # sidebar, header, *-form, *-table, *-detail-sheet, settings/*, vehicle-image-uploader
-│   ├── tenant/                      # Componentes del sitio público
+│   ├── dashboard/                   # sidebar, header, *-form, *-table, *-detail-sheet, settings/*, vehicle-image-uploader, sale-documents
+│   ├── tenant/                      # Componentes del sitio público (catálogo, contact-form, review-form, etc.)
 │   └── shared/                      # navbar, waitlist-form
 ├── lib/
 │   ├── prisma.ts                    # Singleton con PrismaNeon adapter
 │   ├── redis.ts                     # Upstash Redis REST client
+│   ├── rate-limit.ts                # 4 limiters Upstash + applyRateLimit() helper (fail-open)
+│   ├── honeypot.ts                  # HONEYPOT_FIELD + isHoneypotTriggered() para anti-bots
 │   ├── auth.ts                      # getCurrentDealership() — resuelve Dealership del user logueado
 │   ├── tenant.ts                    # Queries para sitio público (getDealershipBySlug, getPublishedVehicles, ...)
 │   ├── api-handler.ts               # withLogger() — wrapper para route handlers (ver sección API)
 │   ├── logger.ts                    # JSON structured logger + generateRequestId()
-│   ├── storage/                     # Abstracción de storage (local | s3) según STORAGE_DRIVER
+│   ├── sale-guards.ts               # findBlockingSale() — bloquea ediciones del vehículo si hay venta activa
+│   ├── storage/                     # Abstracción de storage (local | s3) — index, types, local.ts, s3.ts
 │   ├── utils.ts                     # cn() y helpers
-│   ├── validators/                  # Schemas Zod (vehicle, vehicle-image, lead, customer, sale, dealership, waitlist)
+│   ├── validators/                  # Schemas Zod (vehicle, vehicle-image, lead, customer, sale, sale-document, dealership, review, waitlist)
 │   └── constants.ts                 # `as const` lists (FUEL_TYPES, STATUSES, PROVINCIAS_ARGENTINA, etc.)
+├── hooks/                           # use-mobile.ts (otros se irán sumando)
+├── data/                            # brands.json — datos estáticos de marcas
 ├── types/index.ts                   # ApiResponse, ApiListResponse, ApiError, DealershipTheme
 ├── middleware.ts                    # Subdomain routing + Clerk auth (con flag de login)
 └── prisma/
@@ -139,11 +147,10 @@ src/
 ```
 
 **Pendientes conocidos** (no existen aún en `src/`):
-- Webhooks de Clerk en `/api/webhooks/clerk/` para sync de usuarios.
+- Webhooks de Clerk en `/api/webhooks/clerk/` para sync de usuarios (delete/rename).
 - Cache Redis del catálogo público + invalidación.
-- Rate limiting Redis en `/api/public/*`.
 - Email transaccional con Resend (deps instaladas, sin uso).
-- `hooks/` — todavía no se creó la carpeta.
+- CSP (`Content-Security-Policy`) — los demás headers de seguridad ya están, este queda para una iteración aparte con tuneo Clerk-friendly en modo report-only primero.
 
 ## Convenciones de Código
 
@@ -243,14 +250,70 @@ export const GET = withLogger<RouteParams>(async (request, { requestId, params }
 
 Para logging usar SIEMPRE el `logger` de [src/lib/logger.ts](src/lib/logger.ts) (JSON estructurado), nunca `console.log`. Las claves de evento son `dot.case` (`public.leads.created`, `vehiculos.image.uploaded`, etc.).
 
-### Storage de imágenes
+#### Rate limiting + honeypot en endpoints públicos
+
+Todo handler nuevo bajo `/api/public/*` (y `/api/waitlist`) debe aplicar **rate limiting** Y **honeypot**, en ese orden, antes de cualquier validación o acceso a DB. Helpers:
+
+- [src/lib/rate-limit.ts](src/lib/rate-limit.ts) — 4 limiters preconfigurados (`publicLeadsLimiter`, `publicReviewsLimiter`, `publicVehiclesLimiter`, `waitlistLimiter`). Usan `Ratelimit.slidingWindow` de `@upstash/ratelimit`. Función `applyRateLimit(limiter, key, requestId, context)` devuelve `{ ok, headers }`. **Fail-open**: si Upstash está caído, deja pasar y loggea (preferimos servicio sin rate limit a servicio caído).
+- [src/lib/honeypot.ts](src/lib/honeypot.ts) — `HONEYPOT_FIELD = "website"`, `isHoneypotTriggered(body)`. Si trigger: loggear `*.honeypot_triggered` y devolver **201 fake** con UUID random (NO 4xx — no enseñar al bot).
+
+**Key del rate limit**:
+- Endpoints con tenant: `${ip}:${slug}` para que un tenant no consuma cupo de otro.
+- Endpoints sin tenant (waitlist): solo `${ip}`.
+- IP se extrae con `getClientIp(request)` (lee `x-forwarded-for` con fallback).
+
+**Importante**: los headers `X-RateLimit-*` se devuelven SIEMPRE (éxito y error) en `NextResponse.json(..., { headers: rl.headers })` para que el cliente sepa cuántas requests le quedan. En 429 se suma `Retry-After`.
+
+Patrón completo (ver [src/app/api/public/tenant/[slug]/leads/route.ts](src/app/api/public/tenant/[slug]/leads/route.ts) como referencia):
+
+```ts
+const ip = getClientIp(request);
+const rl = await applyRateLimit(publicLeadsLimiter, `${ip}:${slug}`, requestId, { slug });
+if (!rl.ok) {
+  return NextResponse.json({ error: "..." }, { status: 429, headers: rl.headers });
+}
+
+const body = await request.json();
+
+if (isHoneypotTriggered(body)) {
+  logger.warn(requestId, "public.x.honeypot_triggered", { ... });
+  return NextResponse.json({ data: { id: globalThis.crypto.randomUUID() } }, { status: 201, headers: rl.headers });
+}
+
+// Recién acá: Zod parse, DB, etc.
+```
+
+### Headers de seguridad
+
+Definidos en [next.config.ts](next.config.ts) → función `headers()`. Aplican a TODAS las respuestas:
+
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: SAMEORIGIN` (anti-clickjacking)
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), ...`
+- `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload` — **solo en `NODE_ENV=production`** (en dev rompe localhost).
+
+**`Content-Security-Policy` está pendiente** — armarlo bien con Clerk requiere modo `Report-Only` primero, recopilar violaciones, tunear, y recién después aplicar enforcing.
+
+### Storage de archivos
 
 La abstracción vive en [src/lib/storage/](src/lib/storage/). El driver activo se decide por env:
 
 - `STORAGE_DRIVER=local` (default) → guarda en filesystem local. **No funciona en Vercel** (filesystem read-only en runtime). Sirve solo para dev.
-- `STORAGE_DRIVER=s3` → S3-compatible (Cloudflare R2 esperado). Antes de deploy a prod hay que setearlo.
+- `STORAGE_DRIVER=s3` → S3-compatible (Cloudflare R2 esperado). Antes de deploy a prod hay que setearlo y crear los dos buckets (público + privado).
 
 Nunca importar `s3.ts` o `local.ts` directo desde un handler — usar `import { storage } from "@/lib/storage"` para que el driver sea transparente.
+
+**Separación pública/privada (importante):**
+
+- `storage.upload(...)` → **imágenes del catálogo** → bucket público. La URL devuelta es directa y permanente (custom domain de R2). Se guarda en `VehicleImage.url` y se sirve directo al visitante.
+- `storage.uploadDocument(...)` → **documentos del legajo de venta** (DNI, F08, factura, etc.) → bucket privado. Son datos personales sensibles — NO son accesibles directo. La columna `SaleDocument.url` queda con un identificador interno que NUNCA debe usarse desde el front.
+- `storage.delete(key, kind)` → segundo argumento `"image" | "document"` indica de qué bucket borrar. Es obligatorio.
+- `storage.getDocumentUrl(key, ttl?)` → genera presigned URL para descargar un documento (TTL default 5 min en S3; en local devuelve la ruta pública).
+
+Para servir documentos al front: usar el endpoint `GET /api/ventas/[id]/documentos/[docId]/url` que valida el tenant y devuelve `{ data: { url } }`. **No exponer `SaleDocument.url` directo en componentes** — siempre pasar por ese endpoint para que el driver decida.
+
+Validaciones de formato/tamaño viven en cada endpoint de upload con magic-number check (no confiar solo en el header `Content-Type` del browser). Ver [src/lib/validators/vehicle-image.ts](src/lib/validators/vehicle-image.ts) y [src/lib/validators/sale-document.ts](src/lib/validators/sale-document.ts).
 
 ### Prisma
 
@@ -259,11 +322,11 @@ Nunca importar `s3.ts` o `local.ts` directo desde un handler — usar `import { 
 - Client singleton en [src/lib/prisma.ts](src/lib/prisma.ts) usando `PrismaNeon(neon(DATABASE_URL))` — **siempre usar este import**, no instanciar `PrismaClient` directo.
 - Migraciones con nombres descriptivos: `pnpm exec prisma migrate dev --name add_vehicle_images`.
 - `onDelete` adoptados en el schema:
-  - Relaciones a `Dealership` → `Cascade` (borrar el tenant borra todo lo suyo).
+  - Relaciones a `Dealership` → `Cascade` (borrar el tenant borra todo lo suyo, incluido `Review` y `FinancingPlan`).
   - `Lead.vehicle` → `SetNull` (preservar el lead si se borra el vehículo).
   - `Sale.vehicle` y `Sale.customer` → `Restrict` (no se puede borrar un vehículo o cliente con venta asociada).
   - `SaleDocument.sale` → `Cascade`.
-- `Sale.vehicleId` es `@unique`: un vehículo se vende una sola vez. Si se cancela queda `status: cancelled` con `cancelReason` y libera al vehículo.
+- **`Sale.vehicleId` NO es `@unique` declarativo**: un vehículo puede tener varias ventas históricas canceladas + máximo UNA activa. La unicidad se enforza con un **partial unique index en SQL** (`UNIQUE WHERE status != 'cancelled'`) implementado en la migración [20260429004500_add_partial_unique_active_sale](prisma/migrations/20260429004500_add_partial_unique_active_sale/). Prisma 7 no soporta partial unique declarativo. Si se cancela una venta queda `status: cancelled` con `cancelReason` y libera al vehículo para una nueva venta.
 - `Customer` tiene `@@unique([dealershipId, documentType, documentNumber])`.
 
 ### Git
@@ -282,27 +345,32 @@ Ver schema completo en [prisma/schema.prisma](prisma/schema.prisma). Resumen:
 
 - **`Dealership`** — concesionario (tenant). Identificado por `slug` único. Branding (`logo`, `theme: Json`), contacto, `website` (dominio custom). Tabla: `dealerships`.
 - **`DealershipUser`** — junction Clerk user ↔ Dealership con `role` (`admin | editor | viewer`). Único por `(clerkUserId, dealershipId)`. Tabla: `dealership_users`.
-- **`Vehicle`** — vehículo del catálogo. `price: Decimal(12, 2)`, `currency: ARS | USD`, `condition: new | used`, `status: available | reserved | sold`. Identificadores legales opcionales: `vin`, `motorNumber`, `licensePlate`. Flags `featured` y `publishedAt`. Tabla: `vehicles`.
+- **`Vehicle`** — vehículo del catálogo. `price: Decimal(12, 2)`, `currency: ARS | USD`, `condition: new | used`, `status: available | reserved | sold`, `bodyType: suv | sedan | hatchback | coupe | pickup | minivan | convertible`. Identificadores legales opcionales: `vin`, `motorNumber`, `licensePlate`. Flags `featured` y `publishedAt`. Si tiene venta activa (`reserved | in_progress | completed`), el handler bloquea ediciones — ver [src/lib/sale-guards.ts](src/lib/sale-guards.ts). Tabla: `vehicles`.
 - **`VehicleImage`** — imágenes ordenadas con `order` y flag `isPrimary`. Cascade desde Vehicle. Tabla: `vehicle_images`.
 - **`Lead`** — consulta entrante (pre-venta). Vehículo opcional (`onDelete: SetNull`). `source: web | whatsapp | mercadolibre`, `status: new | contacted | qualified | closed`. Tabla: `leads`.
 - **`Customer`** — cliente del concesionario (entidad distinta de Lead). `type: individual | company`, `documentType: DNI | CUIT | CUIL | PASAPORTE`. Único por `(dealershipId, documentType, documentNumber)`. Tabla: `customers`.
-- **`Sale`** — operación de venta. `vehicleId` es `@unique`. `status: draft | reserved | in_progress | completed | cancelled`. Maneja `salePrice`, `depositAmount`, `invoiceNumber`, fechas (`depositDate`, `invoiceDate`, `deliveryDate`) y `cancelReason`. Tabla: `sales`.
-- **`SaleDocument`** — documento del legajo de venta. Categorizado en `customer | vehicle | operation` con `type` específico (DNI, F08, Boleto, FACTURA_AFIP, etc.). `dealershipId` denormalizado para queries rápidas por tenant. Tabla: `sale_documents`.
+- **`Sale`** — operación de venta. `status: draft | reserved | in_progress | completed | cancelled` con transiciones controladas (`draft → reserved → in_progress → completed`, cualquiera → `cancelled`). Una venta activa por vehículo (partial unique en SQL — ver sección Prisma). Maneja `salePrice`, `depositAmount`, `invoiceNumber`, fechas (`depositDate`, `invoiceDate`, `deliveryDate`) y `cancelReason`. El status del vehículo asociado se sincroniza automáticamente en transacciones. Tabla: `sales`.
+- **`SaleDocument`** — documento del legajo de venta. Categorizado en `customer | vehicle | operation` con `type` específico (DNI, F08, Boleto, FACTURA_AFIP, etc.). `dealershipId` denormalizado para queries rápidas por tenant. **Datos personales sensibles** — viven en bucket privado y se sirven solo vía presigned URL. Tabla: `sale_documents`.
+- **`Review`** — opinión pública del cliente sobre el concesionario. Entra como `pending` desde el form del sitio del tenant; el admin la modera en el dashboard (`pending | approved | rejected`). `rating: 1-5`. Tabla: `reviews`.
+- **`FinancingPlan`** — banner/video de planes de financiación administrable desde el dashboard (`assetType: image | video | youtube`). Se renderizan en el sitio del tenant. Tabla: `financing_plans`.
 - **`WaitlistEntry`** — entradas de la landing pre-launch. `email` único. Tabla: `waitlist_entries`.
 
 **Distinción clave Lead vs Customer:** un `Lead` es una consulta pre-venta (puede no tener email, puede ser anónimo). Un `Customer` es alguien que firma una operación — tiene documento obligatorio. No mezclar.
 
 Todas las constantes de los string-enums viven en [src/lib/constants.ts](src/lib/constants.ts) como `as const` arrays con tipos derivados.
 
-## Caché con Redis (aspiracional — no implementado todavía)
+## Redis (Upstash) — estado actual
 
-El cliente Redis ya está en `lib/redis.ts` pero NO hay caché ni rate limiting wired up. Cuando se implemente, los lugares previstos son:
+**Implementado:**
+- **Rate limiting** en `/api/public/*` y `/api/waitlist` con `@upstash/ratelimit` (sliding window). Ver convención en sección "Rate limiting + honeypot" más arriba.
 
-- **Catálogo público** de vehículos por concesionario (invalidar al crear/editar/eliminar vehículo o imagen).
-- **Datos del concesionario** (config, branding) — TTL de 5 minutos.
-- **Rate limiting** en endpoints `/api/public/*` (leads, contacto).
+**Pendiente (cache-aside del catálogo público):**
 
-Pattern previsto: cache-aside con invalidación manual.
+Los lugares previstos para sumar cache:
+- **Catálogo público** de vehículos por concesionario — invalidar al crear/editar/eliminar/publicar vehículo o reordenar imágenes.
+- **Datos del concesionario** (config, branding) — TTL de 5 minutos, invalidar al PUT de `/api/concesionario` o PATCH de `/api/concesionario/theme`.
+
+Pattern previsto: cache-aside con invalidación manual desde los handlers de mutación.
 
 ```ts
 const cacheKey = `dealership:${slug}:vehicles`;
@@ -334,11 +402,14 @@ UPSTASH_REDIS_REST_TOKEN=
 STORAGE_DRIVER=local                # "local" para dev, "s3" para prod (Vercel NO soporta local)
 
 # Storage S3-compatible (Cloudflare R2 esperado) — solo si STORAGE_DRIVER=s3
-S3_ENDPOINT=
-S3_REGION=
-S3_BUCKET=
+# Dos buckets separados: público (imágenes catálogo) + privado (documentos legajo).
+S3_ENDPOINT=                        # ej: https://<account>.r2.cloudflarestorage.com
+S3_REGION=auto                      # R2 usa "auto"; otros providers según corresponda
 S3_ACCESS_KEY_ID=
 S3_SECRET_ACCESS_KEY=
+S3_PUBLIC_BUCKET=                   # bucket público — imágenes del catálogo
+S3_PUBLIC_URL=                      # custom domain o https://pub-xxx.r2.dev (sin trailing slash)
+S3_PRIVATE_BUCKET=                  # bucket privado — documentos del legajo (presigned URLs)
 
 # Email (Resend)
 RESEND_API_KEY=
@@ -359,22 +430,25 @@ NEXT_PUBLIC_ENABLE_LOGIN=false      # "true" habilita dashboard + protección de
 - Onboarding: usuario sin Dealership cae en `(onboarding)/onboarding` y crea su concesionario.
 - Dashboard layout con sidebar + header.
 - Vehículos: CRUD + `publish`, `featured`, `status` + gestión de imágenes (upload, delete, reorder) con storage abstraction.
-- Leads: list + detail sheet + update de estado.
+- Leads: list + detail sheet + update de estado + delete.
 - Clientes: CRUD completo.
-- Ventas: CRUD + transición de estado + legajo de documentos.
+- Ventas: CRUD + transición de estado controlada + legajo de documentos con presigned URLs.
+- Reviews: form público en sitio del tenant + moderación en dashboard.
 - Configuración: contacto y theme del dealership; sección `sitio-web` para personalización.
-- Sitio público del concesionario (`/tenant/[slug]/...`) con catálogo y detalle.
-- Endpoints públicos `/api/public/tenant/[slug]/vehicles` y `/leads`.
+- Sitio público del concesionario (`/tenant/[slug]/...`) con catálogo, detalle, contact-form, review-form.
+- Endpoints públicos: `/api/public/tenant/[slug]/{vehicles,leads,reviews}` + `/api/waitlist`.
 - Middleware de subdomain routing (rewrite a `/tenant/{slug}` en producción).
+- Storage S3-compatible (Contabo) con dos buckets — público (imágenes) + privado (documentos legajo, presigned 5min TTL).
 - Convención de logging con `withLogger` + request_id propagado.
+- **Seguridad**: headers (X-Frame, nosniff, Referrer-Policy, Permissions-Policy, HSTS-prod), rate limiting Upstash en públicos, honeypot anti-bots en forms públicos.
+- Auditoría manual de `dealershipId` en todos los handlers autenticados (sin agujeros encontrados).
 
 **Pendiente:**
-- Webhooks de Clerk para sync de usuarios.
 - Cache Redis del catálogo público (cache-aside con invalidación).
-- Rate limiting Redis en `/api/public/*`.
+- CSP (Content-Security-Policy) — iteración aparte con Clerk-tuning en modo report-only primero.
+- Webhooks de Clerk para sync de usuarios.
 - Email transaccional con Resend.
 - Testing (Vitest + RTL).
-- Implementación efectiva del driver `s3` en `lib/storage/s3.ts` si todavía es stub.
 
 ## Reglas para Claude
 
@@ -393,3 +467,5 @@ NEXT_PUBLIC_ENABLE_LOGIN=false      # "true" habilita dashboard + protección de
 13. **Preguntar antes de decisiones arquitectónicas grandes.**
 14. **Manejo de estado Loading en Forms:** Cuando un form hace un redirect (`router.push()`) al terminar con éxito, **NO** hagas `setLoading(false)` en un bloque `finally`. El `router.push` es asíncrono y el `finally` se ejecuta antes, habilitando el botón mientras se cambia de página (riesgo de doble-click). Movelo a los bloques de error o usá el hook `useFormStatus` / `isPending` (useTransition) de React.
 15. **Labels Opcionales:** No incluyas el texto "(opcional)" en los labels de los campos que no son requeridos. La convención visual es indicar con un asterisco `*` los que SÍ son obligatorios; por descarte, se asume que los demás son opcionales. Evitar el ruido visual innecesario en la UI.
+16. **Rate limit + honeypot en endpoints públicos:** todo handler nuevo bajo `/api/public/*` o `/api/waitlist` debe aplicar `applyRateLimit(...)` y `isHoneypotTriggered(...)` ANTES de tocar DB. El honeypot devuelve 201 fake (no 4xx — para no enseñarle al bot). Headers `X-RateLimit-*` se incluyen en TODAS las responses (éxito y error).
+17. **AWS SDK v3 + S3-compatible providers:** el cliente S3 en [src/lib/storage/s3.ts](src/lib/storage/s3.ts) usa `requestChecksumCalculation: "WHEN_REQUIRED"` y `responseChecksumValidation: "WHEN_REQUIRED"`. **No sacar estas flags.** Sin ellas, el SDK manda un header `x-amz-sdk-checksum-algorithm` que Contabo/Backblaze B2/MinIO no entienden, responden con error en JSON (no XML), y el deserializer del SDK explota con `char '{' is not expected`.

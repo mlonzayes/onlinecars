@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Star, Loader2, CheckCircle2 } from "lucide-react";
+import { HONEYPOT_FIELD, HONEYPOT_STYLE } from "@/lib/honeypot";
 
 interface ReviewFormProps {
   slug: string;
@@ -25,20 +26,25 @@ export function ReviewForm({ slug, dealershipName }: ReviewFormProps) {
       name: formData.get("name") as string,
       content: formData.get("content") as string,
       rating,
+      // Honeypot — el server lo descarta silenciosamente si viene con valor.
+      [HONEYPOT_FIELD]: (formData.get(HONEYPOT_FIELD) as string) ?? "",
     };
 
     try {
-      const res = await fetch(`/api/tenant/${slug}/reviews`, {
+      const res = await fetch(`/api/public/tenant/${slug}/reviews`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
-      if (!res.ok) throw new Error("Error al enviar la opinión");
+      if (!res.ok) {
+        const json = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(json.error ?? "Error al enviar la opinión");
+      }
 
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.message || "Ocurrió un error inesperado.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Ocurrió un error inesperado.");
     } finally {
       setLoading(false);
     }
@@ -66,6 +72,15 @@ export function ReviewForm({ slug, dealershipName }: ReviewFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Honeypot — humano no lo ve, bot lo rellena. */}
+      <input
+        type="text"
+        name={HONEYPOT_FIELD}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        style={HONEYPOT_STYLE}
+      />
       {error && (
         <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600 border border-red-100">
           {error}

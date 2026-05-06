@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Send, Loader2 } from "lucide-react";
+import { HONEYPOT_FIELD, HONEYPOT_STYLE } from "@/lib/honeypot";
 
 interface TenantContactFormProps {
   slug: string;
@@ -16,6 +17,8 @@ export function TenantContactForm({ slug, vehicleId, vehicleTitle }: TenantConta
     email: "",
     phone: "",
     message: vehicleTitle ? `Hola, me interesa el ${vehicleTitle}. ¿Podrían darme más información?` : "",
+    // Honeypot — el server lo descarta silenciosamente si viene con valor.
+    [HONEYPOT_FIELD]: "",
   });
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -74,6 +77,17 @@ export function TenantContactForm({ slug, vehicleId, vehicleTitle }: TenantConta
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Honeypot — humano no lo ve, bot lo rellena. */}
+      <input
+        type="text"
+        name={HONEYPOT_FIELD}
+        value={form[HONEYPOT_FIELD]}
+        onChange={(e) => handleChange(HONEYPOT_FIELD, e.target.value)}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        style={HONEYPOT_STYLE}
+      />
       <div>
         <label htmlFor="contact-name" className="mb-1.5 block text-sm font-medium text-gray-700">
           Nombre <span className="text-red-500">*</span>

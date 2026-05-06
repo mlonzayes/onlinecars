@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { waitlistSchema } from "@/lib/validators/waitlist";
+import { HONEYPOT_FIELD, HONEYPOT_STYLE } from "@/lib/honeypot";
 
 type FormState = "idle" | "loading" | "success" | "error" | "duplicate";
 
@@ -21,6 +22,9 @@ export function WaitlistForm() {
       name: formData.get("name") as string,
       dealership: formData.get("dealership") as string,
       phone: formData.get("phone") as string,
+      // Honeypot — campo invisible para humanos. Si llega con valor, el server
+      // lo descarta silenciosamente.
+      [HONEYPOT_FIELD]: (formData.get(HONEYPOT_FIELD) as string) ?? "",
     };
 
     const parsed = waitlistSchema.safeParse(data);
@@ -31,10 +35,11 @@ export function WaitlistForm() {
     }
 
     try {
+      // Mandamos `data` raw (no parsed) para que el campo honeypot llegue al server.
       const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsed.data),
+        body: JSON.stringify(data),
       });
 
       if (res.status === 409) {
@@ -72,6 +77,15 @@ export function WaitlistForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Honeypot — humano no lo ve, bot lo rellena. */}
+      <input
+        type="text"
+        name={HONEYPOT_FIELD}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        style={HONEYPOT_STYLE}
+      />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label

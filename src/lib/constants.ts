@@ -86,6 +86,13 @@ export const MAX_IMAGE_SIZE_BYTES = 8 * 1024 * 1024; // 8MB
 export const CUSTOMER_TYPES = ["individual", "company"] as const;
 export type CustomerType = (typeof CUSTOMER_TYPES)[number];
 
+// Labels para mostrar en la UI. Los values internos quedan en inglés porque
+// es lo que vive en la DB; estas labels son SOLO para display.
+export const CUSTOMER_TYPE_LABELS: Record<CustomerType, string> = {
+  individual: "Particular",
+  company: "Empresa",
+};
+
 export const CUSTOMER_DOCUMENT_TYPES = ["DNI", "CUIT", "CUIL", "PASAPORTE"] as const;
 export type CustomerDocumentType = (typeof CUSTOMER_DOCUMENT_TYPES)[number];
 

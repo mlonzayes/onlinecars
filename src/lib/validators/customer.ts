@@ -5,13 +5,14 @@ import {
   PROVINCIAS_ARGENTINA,
 } from "@/lib/constants";
 
-// No verificamos dígito verificador del CUIT/DNI — eso es trabajo de un servicio externo.
-// Esta validación cubre que sea numérico y de longitud razonable.
+// Regex base laxa: acepta dígitos, puntos, guiones y letras (estas últimas
+// solo para PASAPORTE). El formato exacto se valida en validateDocumentNumber
+// según el documentType seleccionado.
 const documentNumberSchema = z
   .string()
-  .min(7, "Mínimo 7 caracteres")
+  .min(6, "Mínimo 6 caracteres")
   .max(20, "Máximo 20 caracteres")
-  .regex(/^[\d.-]+$/, "Solo números, puntos y guiones");
+  .regex(/^[A-Za-z0-9.-]+$/, "Solo letras, números, puntos y guiones");
 
 const customerBaseSchema = z.object({
   type: z.enum(CUSTOMER_TYPES).default("individual"),
@@ -51,14 +52,68 @@ function validateCompanyShape(
   }
 }
 
-export const customerCreateSchema = customerBaseSchema.superRefine(validateCompanyShape);
+// Cross-field: el formato del documentNumber depende del documentType.
+// No verificamos dígito verificador (es trabajo de un servicio externo) — solo
+// que el formato sea consistente con el tipo elegido.
+function validateDocumentNumber(
+  data: z.infer<typeof customerBaseSchema>,
+  ctx: z.RefinementCtx
+) {
+  if (!data.documentType || !data.documentNumber) return;
 
-// Para update permitimos campos parciales pero seguimos validando si type viene seteado.
+  // Para DNI/CUIT/CUIL aceptamos puntos y guiones decorativos pero validamos
+  // sobre los dígitos puros — se normaliza en el handler antes de guardar.
+  const digits = data.documentNumber.replace(/[.-]/g, "");
+
+  switch (data.documentType) {
+    case "DNI": {
+      if (!/^\d{7,8}$/.test(digits)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["documentNumber"],
+          message: "El DNI debe tener 7 u 8 dígitos numéricos",
+        });
+      }
+      break;
+    }
+    case "CUIT":
+    case "CUIL": {
+      if (!/^\d{11}$/.test(digits)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["documentNumber"],
+          message: `El ${data.documentType} debe tener 11 dígitos (con o sin guiones)`,
+        });
+      }
+      break;
+    }
+    case "PASAPORTE": {
+      if (!/^[A-Za-z0-9]{6,12}$/.test(data.documentNumber)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["documentNumber"],
+          message: "El pasaporte debe ser alfanumérico, 6-12 caracteres",
+        });
+      }
+      break;
+    }
+  }
+}
+
+export const customerCreateSchema = customerBaseSchema.superRefine((data, ctx) => {
+  validateCompanyShape(data, ctx);
+  validateDocumentNumber(data, ctx);
+});
+
+// Para update permitimos campos parciales pero seguimos validando si type/document vienen seteados.
 export const customerUpdateSchema = customerBaseSchema
   .partial()
   .superRefine((data, ctx) => {
     if (data.type === "company") {
       validateCompanyShape(data as z.infer<typeof customerBaseSchema>, ctx);
+    }
+    if (data.documentType && data.documentNumber) {
+      validateDocumentNumber(data as z.infer<typeof customerBaseSchema>, ctx);
     }
   });
 

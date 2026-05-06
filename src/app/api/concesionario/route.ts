@@ -5,6 +5,7 @@ import { dealershipUpdateSchema } from "@/lib/validators/dealership";
 import { NextResponse } from "next/server";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
+import { invalidateTenantHomeBundle } from "@/lib/tenant";
 
 // GET /api/concesionario
 // Retorna los datos del concesionario del usuario autenticado.
@@ -61,6 +62,13 @@ export const PUT = withLogger(async (request, { requestId }) => {
     where: { id: dealership.id },
     data: parsed.data,
   });
+
+  // Invalidamos con el slug NUEVO y el viejo — por las dudas que se haya
+  // cambiado el slug en este update (aunque hoy el schema no lo permita).
+  await invalidateTenantHomeBundle(updated.slug);
+  if (updated.slug !== dealership.slug) {
+    await invalidateTenantHomeBundle(dealership.slug);
+  }
 
   logger.info(requestId, "dealership.update.ok", { dealershipId: updated.id });
   return NextResponse.json({ data: updated });

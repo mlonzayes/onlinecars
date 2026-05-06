@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
+import { invalidateTenantHomeBundle } from "@/lib/tenant";
 
 type VehicleParams = { id: string };
 
@@ -44,6 +45,8 @@ export const PATCH = withLogger<VehicleParams>(async (_request, { requestId, par
       data: { featured: !existing.featured },
       select: { id: true, featured: true },
     });
+
+    await invalidateTenantHomeBundle(dealership.slug);
 
     logger.info(requestId, "vehicles.featured.toggled", {
       dealershipId: dealership.id,

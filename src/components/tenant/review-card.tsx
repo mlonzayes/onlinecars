@@ -1,8 +1,11 @@
 import { Star } from "lucide-react";
-import type { Review } from "@prisma/client";
 
 interface ReviewCardProps {
-  review: Review;
+  review: {
+    name: string;
+    content: string;
+    rating: number;
+  };
 }
 
 export function ReviewCard({ review }: ReviewCardProps) {

@@ -100,6 +100,20 @@ const vehicleFormSchema = z.object({
     z.number().int().min(2, "Mínimo 2").max(6, "Máximo 6").optional()
   ),
   engine: z.string().max(50).optional(),
+  // Patente argentina opcional. Acepta formato viejo (AAA000) y nuevo Mercosur
+  // (AA000AA), sin importar mayúsculas/minúsculas ni guiones/espacios.
+  licensePlate: z
+    .string()
+    .max(20)
+    .optional()
+    .refine(
+      (v) => {
+        if (!v) return true;
+        const cleaned = v.replace(/[\s-]/g, "").toUpperCase();
+        return /^[A-Z]{3}\d{3}$/.test(cleaned) || /^[A-Z]{2}\d{3}[A-Z]{2}$/.test(cleaned);
+      },
+      "Formato inválido. Esperado AAA000 (vieja) o AA000AA (Mercosur)."
+    ),
   description: z.string().max(2000).optional(),
 });
 
@@ -122,6 +136,7 @@ function buildDefaults(vehicle?: SerializedVehicle): VehicleFormValues {
     color: vehicle?.color ?? "",
     doors: vehicle?.doors ?? undefined,
     engine: vehicle?.engine ?? "",
+    licensePlate: vehicle?.licensePlate ?? "",
     description: vehicle?.description ?? "",
   };
 }
@@ -248,6 +263,20 @@ function BasicInfoTab({ register, control, errors, disabled }: TabSectionProps) 
           )}
         />
         <FieldError message={errorMessage(errors, "status")} />
+      </div>
+      <div className="space-y-1.5 sm:col-span-12">
+        <Label htmlFor="licensePlate">Patente</Label>
+        <Input
+          id="licensePlate"
+          placeholder="Ej: AC123BD (Mercosur) o ABC123 (vieja)"
+          disabled={disabled}
+          aria-invalid={!!errors.licensePlate}
+          {...register("licensePlate")}
+        />
+        <FieldError message={errorMessage(errors, "licensePlate")} />
+        <p className="text-xs text-muted-foreground">
+          Útil para identificar el vehículo cuando hay varios similares en stock. En 0 km dejala vacía si todavía no se patentó.
+        </p>
       </div>
     </div>
   );
@@ -490,6 +519,10 @@ export function VehicleForm({ vehicle, blockingSale }: VehicleFormProps) {
       color: data.color || undefined,
       doors: data.doors,
       engine: data.engine || undefined,
+      // Normalizamos la patente a mayúsculas sin separadores antes de mandar.
+      licensePlate: data.licensePlate
+        ? data.licensePlate.replace(/[\s-]/g, "").toUpperCase()
+        : undefined,
       description: data.description || undefined,
     };
 

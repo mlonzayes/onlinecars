@@ -31,17 +31,25 @@ export default async function ClientesPage({ searchParams }: ClientesPageProps) 
   const page = parsePage(pageParam);
   const skip = (page - 1) * PAGE_SIZE;
 
+  // Tokenizamos la búsqueda por espacios y exigimos que TODAS las palabras
+  // matcheen en algún campo. Sin esto, "mateo lonzayes" no encuentra a nadie
+  // porque el firstName="Mateo" y el lastName="Lonzayes" están en columnas
+  // distintas — un contains con el string completo nunca matchea.
+  const tokens = search.split(/\s+/).filter(Boolean);
+
   const where: Prisma.CustomerWhereInput = {
     dealershipId: dealership.id,
-    ...(search
+    ...(tokens.length > 0
       ? {
-          OR: [
-            { firstName: { contains: search, mode: "insensitive" } },
-            { lastName: { contains: search, mode: "insensitive" } },
-            { businessName: { contains: search, mode: "insensitive" } },
-            { documentNumber: { contains: search } },
-            { email: { contains: search, mode: "insensitive" } },
-          ],
+          AND: tokens.map((token) => ({
+            OR: [
+              { firstName: { contains: token, mode: "insensitive" as const } },
+              { lastName: { contains: token, mode: "insensitive" as const } },
+              { businessName: { contains: token, mode: "insensitive" as const } },
+              { documentNumber: { contains: token } },
+              { email: { contains: token, mode: "insensitive" as const } },
+            ],
+          })),
         }
       : {}),
   };

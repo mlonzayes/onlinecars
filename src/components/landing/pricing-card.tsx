@@ -38,38 +38,38 @@ export function PricingCard({
 
   return (
     <div
-      className={`relative flex flex-col gap-6 rounded-2xl border p-7 transition-all ${
+      className={`relative flex flex-col gap-4 rounded-xl border p-5 transition-all ${
         highlighted
-          ? "border-blue-600 bg-white shadow-lg shadow-blue-100 sm:scale-[1.03]"
+          ? "border-blue-600 bg-white shadow-lg shadow-blue-100 lg:scale-[1.03]"
           : "border-gray-200 bg-white"
       }`}
     >
       {highlighted && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white shadow">
+        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow">
           {highlightLabel}
         </span>
       )}
       <div>
-        <h3 className="text-lg font-bold text-gray-900">{name}</h3>
-        <p className="mt-1 text-sm text-gray-500">{description}</p>
+        <h3 className="text-base font-bold text-gray-900">{name}</h3>
+        <p className="mt-0.5 text-xs text-gray-500">{description}</p>
       </div>
 
       <div>
         {isEnterprise ? (
-          <p className="text-3xl font-extrabold text-gray-900">Hablemos</p>
+          <p className="text-2xl font-extrabold text-gray-900">Hablemos</p>
         ) : (
-          <p className="text-3xl font-extrabold text-gray-900">
+          <p className="text-2xl font-extrabold text-gray-900">
             ${formatArs(priceArs)}
-            <span className="ml-1 text-sm font-medium text-gray-500">/ mes</span>
+            <span className="ml-1 text-xs font-medium text-gray-500">/ mes</span>
           </p>
         )}
       </div>
 
-      <ul className="flex flex-col gap-2.5">
+      <ul className="flex flex-col gap-2">
         {features.map((f) => (
-          <li key={f} className="flex items-start gap-2.5 text-sm text-gray-600">
+          <li key={f} className="flex items-start gap-2 text-xs text-gray-600 sm:text-sm">
             <Check
-              className={`mt-0.5 h-4 w-4 shrink-0 ${
+              className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${
                 highlighted ? "text-blue-600" : "text-green-500"
               }`}
             />
@@ -80,7 +80,7 @@ export function PricingCard({
 
       <a
         href={ctaHref}
-        className={`mt-auto inline-flex items-center justify-center rounded-xl px-4 py-3 text-sm font-bold transition ${
+        className={`mt-auto inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition ${
           highlighted
             ? "bg-blue-600 text-white hover:bg-blue-700"
             : "border border-gray-300 text-gray-900 hover:border-gray-900"

@@ -14,16 +14,16 @@ export function FaqItem({ question, answer, defaultOpen = false }: FaqItemProps)
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-gray-50"
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-gray-50"
       >
-        <span className="text-base font-semibold text-gray-900">{question}</span>
+        <span className="text-sm font-semibold text-gray-900 sm:text-base">{question}</span>
         <ChevronDown
-          className={`h-5 w-5 shrink-0 text-gray-400 transition-transform duration-200 ${
+          className={`h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200 ${
             open ? "rotate-180" : ""
           }`}
         />
@@ -34,7 +34,7 @@ export function FaqItem({ question, answer, defaultOpen = false }: FaqItemProps)
         }`}
       >
         <div className="overflow-hidden">
-          <div className="px-5 pb-5 pt-0 text-sm leading-relaxed text-gray-600">
+          <div className="px-4 pb-4 pt-0 text-xs leading-relaxed text-gray-600 sm:text-sm">
             {answer}
           </div>
         </div>

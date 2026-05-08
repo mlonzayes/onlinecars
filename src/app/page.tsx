@@ -21,36 +21,35 @@ import { PartnersGrid, type Partner } from "@/components/landing/partners-grid";
 // =====================================================================
 function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-white pt-20 pb-20 px-4">
-      {/* Glow decorativo de fondo */}
+    <section className="relative overflow-hidden bg-white px-4 pt-10 pb-12 sm:pt-14 sm:pb-16">
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-20 left-1/2 h-[400px] w-[700px] -translate-x-1/2 rounded-full bg-blue-200/30 blur-3xl"
+        className="pointer-events-none absolute -top-16 left-1/2 h-[300px] w-[600px] -translate-x-1/2 rounded-full bg-blue-200/30 blur-3xl"
       />
-      <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 lg:grid-cols-2">
-        <ScrollReveal stagger staggerSelector="[data-hero-item]" staggerGap={0.12}>
+      <div className="relative mx-auto grid max-w-5xl grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-10">
+        <ScrollReveal stagger staggerSelector="[data-hero-item]" staggerGap={0.1}>
           <span
             data-hero-item
-            className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-700"
+            className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-blue-700"
           >
             <Sparkle className="h-3 w-3" />
             Acceso anticipado — cupos limitados
           </span>
           <h1
             data-hero-item
-            className="mt-6 text-4xl font-extrabold leading-tight text-gray-900 sm:text-5xl"
+            className="mt-4 text-3xl font-extrabold leading-tight text-gray-900 sm:text-4xl"
           >
             Tu concesionario en internet,{" "}
             <span className="text-blue-600">sin depender de nadie.</span>
           </h1>
-          <p data-hero-item className="mt-5 text-lg leading-relaxed text-gray-500">
-            OnlineCars te da tu propio sitio web profesional con catálogo de
+          <p data-hero-item className="mt-4 text-base leading-relaxed text-gray-500">
+            motorflow te da tu propio sitio web profesional con catálogo de
             vehículos, gestión de stock y captación de leads. Sin MercadoLibre,
             sin comisiones, sin intermediarios.
           </p>
           <div
             data-hero-item
-            className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-400"
+            className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-gray-500"
           >
             <span className="flex items-center gap-1.5">
               <span className="font-bold text-green-500">✓</span> Sin comisiones
@@ -62,29 +61,31 @@ function HeroSection() {
               <span className="font-bold text-green-500">✓</span> Listo en minutos
             </span>
           </div>
-          <div data-hero-item className="mt-8 flex flex-wrap gap-3">
+          <div data-hero-item className="mt-6 flex flex-wrap gap-2.5">
             <a
               href="#pre-registro"
-              className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-blue-700"
+              className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow transition hover:bg-blue-700"
             >
               Anotarme al pre-registro
             </a>
             <a
               href="#planes"
-              className="inline-flex items-center justify-center rounded-xl border border-gray-300 px-6 py-3 text-sm font-bold text-gray-900 transition hover:border-gray-900"
+              className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-900 transition hover:border-gray-900"
             >
               Ver planes
             </a>
           </div>
         </ScrollReveal>
 
-        <ScrollReveal y={20} delay={0.2}>
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-8 shadow-sm">
-            <h2 className="text-xl font-bold text-gray-900">Anotate y accedé primero</h2>
-            <p className="mt-2 text-sm text-gray-500">
+        <ScrollReveal y={20} delay={0.15}>
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-5 shadow-sm sm:p-6">
+            <h2 className="text-base font-bold text-gray-900 sm:text-lg">
+              Anotate y accedé primero
+            </h2>
+            <p className="mt-1 text-xs text-gray-500 sm:text-sm">
               Ingresá tus datos y te contactamos cuando abramos el acceso.
             </p>
-            <div className="mt-6">
+            <div className="mt-4">
               <WaitlistForm />
             </div>
           </div>
@@ -114,7 +115,7 @@ const SERVICES: ServiceCardProps[] = [
     icon: Plug,
     title: "Integraciones",
     description:
-      "Conectá MercadoLibre y otros canales. Publicá una vez, aparecé en todos lados. (Ver sección abajo).",
+      "Conectá MercadoLibre y otros canales. Publicá una vez, aparecé en todos lados.",
     highlighted: true,
   },
   {
@@ -149,20 +150,22 @@ const SERVICES: ServiceCardProps[] = [
 
 function ServicesSection() {
   return (
-    <section id="servicios" className="bg-gray-50 py-20 px-4">
-      <div className="mx-auto max-w-6xl">
+    <section id="servicios" className="bg-gray-50 px-4 py-14 sm:py-16">
+      <div className="mx-auto max-w-5xl">
         <ScrollReveal>
           <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900">Todo lo que necesitás</h2>
-            <p className="mx-auto mt-3 max-w-2xl text-gray-500">
-              OnlineCars cubre el flujo completo del concesionario, desde
+            <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl">
+              Todo lo que necesitás
+            </h2>
+            <p className="mx-auto mt-2 max-w-xl text-sm text-gray-500 sm:text-base">
+              motorflow cubre el flujo completo del concesionario, desde
               publicar el auto hasta cerrar la venta.
             </p>
           </div>
         </ScrollReveal>
 
-        <ScrollReveal stagger staggerGap={0.08} className="mt-12">
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <ScrollReveal stagger staggerGap={0.07} className="mt-10">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {SERVICES.map((s) => (
               <ServiceCard key={s.title} {...s} />
             ))}
@@ -230,19 +233,21 @@ const PLANS: PricingCardProps[] = [
 
 function PricingSection() {
   return (
-    <section id="planes" className="bg-white py-24 px-4">
+    <section id="planes" className="bg-white px-4 py-14 sm:py-16">
       <div className="mx-auto max-w-6xl">
         <ScrollReveal>
           <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900">Planes simples</h2>
-            <p className="mx-auto mt-3 max-w-2xl text-gray-500">
+            <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl">
+              Planes simples
+            </h2>
+            <p className="mx-auto mt-2 max-w-xl text-sm text-gray-500 sm:text-base">
               Pagás por mes, sin comisiones por venta. Cancelás cuando quieras.
             </p>
           </div>
         </ScrollReveal>
 
-        <ScrollReveal stagger staggerGap={0.1} className="mt-14">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <ScrollReveal stagger staggerGap={0.08} className="mt-10">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {PLANS.map((p) => (
               <PricingCard key={p.name} {...p} />
             ))}
@@ -250,7 +255,7 @@ function PricingSection() {
         </ScrollReveal>
 
         <ScrollReveal>
-          <p className="mt-8 text-center text-xs text-gray-400">
+          <p className="mt-6 text-center text-[11px] text-gray-400">
             Precios indicativos en pesos argentinos. Sujetos a confirmación al lanzamiento.
           </p>
         </ScrollReveal>
@@ -286,25 +291,27 @@ const FAQS: { question: string; answer: React.ReactNode }[] = [
   {
     question: "¿Qué pasa con las comisiones por venta?",
     answer:
-      "OnlineCars no cobra comisiones por venta. Solo pagás la suscripción mensual del plan elegido. Lo que vendés es 100% tuyo.",
+      "motorflow no cobra comisiones por venta. Solo pagás la suscripción mensual del plan elegido. Lo que vendés es 100% tuyo.",
   },
 ];
 
 function FaqSection() {
   return (
-    <section id="faq" className="bg-gray-50 py-24 px-4">
+    <section id="faq" className="bg-gray-50 px-4 py-14 sm:py-16">
       <div className="mx-auto max-w-3xl">
         <ScrollReveal>
           <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900">Preguntas frecuentes</h2>
-            <p className="mt-3 text-gray-500">
+            <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl">
+              Preguntas frecuentes
+            </h2>
+            <p className="mt-2 text-sm text-gray-500 sm:text-base">
               Lo que más nos preguntan antes de anotarse.
             </p>
           </div>
         </ScrollReveal>
 
-        <ScrollReveal stagger staggerGap={0.08} className="mt-10">
-          <div className="flex flex-col gap-3">
+        <ScrollReveal stagger staggerGap={0.06} className="mt-8">
+          <div className="flex flex-col gap-2.5">
             {FAQS.map((f) => (
               <FaqItem key={f.question} question={f.question} answer={f.answer} />
             ))}
@@ -329,19 +336,21 @@ const PARTNERS: Partner[] = [
 
 function PartnersSection() {
   return (
-    <section className="bg-white py-24 px-4">
-      <div className="mx-auto max-w-6xl">
+    <section className="bg-white px-4 py-14 sm:py-16">
+      <div className="mx-auto max-w-5xl">
         <ScrollReveal>
           <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900">Integraciones</h2>
-            <p className="mx-auto mt-3 max-w-2xl text-gray-500">
-              Trabajamos para conectar OnlineCars con las plataformas y bancos
+            <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl">
+              Integraciones
+            </h2>
+            <p className="mx-auto mt-2 max-w-xl text-sm text-gray-500 sm:text-base">
+              Trabajamos para conectar motorflow con las plataformas y bancos
               que ya usás todos los días.
             </p>
           </div>
         </ScrollReveal>
 
-        <ScrollReveal className="mt-12">
+        <ScrollReveal className="mt-10">
           <PartnersGrid partners={PARTNERS} />
         </ScrollReveal>
       </div>
@@ -356,30 +365,30 @@ function PreRegistroSection() {
   return (
     <section
       id="pre-registro"
-      className="relative overflow-hidden bg-gradient-to-br from-blue-600 to-blue-800 py-24 px-4"
+      className="relative overflow-hidden bg-gradient-to-br from-blue-600 to-blue-800 px-4 py-16 sm:py-20"
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-blue-400/20 blur-3xl"
+        className="pointer-events-none absolute -top-32 -right-32 h-[400px] w-[400px] rounded-full bg-blue-400/20 blur-3xl"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -bottom-40 -left-40 h-[400px] w-[400px] rounded-full bg-blue-500/20 blur-3xl"
+        className="pointer-events-none absolute -bottom-32 -left-32 h-[320px] w-[320px] rounded-full bg-blue-500/20 blur-3xl"
       />
 
-      <div className="relative mx-auto max-w-2xl text-center">
+      <div className="relative mx-auto max-w-xl text-center">
         <ScrollReveal>
-          <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
+          <h2 className="text-2xl font-extrabold text-white sm:text-3xl">
             Lanzamos pronto. No te quedés afuera.
           </h2>
-          <p className="mt-4 text-lg text-blue-100">
+          <p className="mt-3 text-base text-blue-100">
             Los primeros concesionarios en anotarse tienen acceso prioritario y
             condiciones especiales de lanzamiento.
           </p>
         </ScrollReveal>
 
-        <ScrollReveal y={20} className="mt-10">
-          <div className="rounded-2xl bg-white p-8 shadow-2xl">
+        <ScrollReveal y={20} className="mt-8">
+          <div className="rounded-xl bg-white p-5 shadow-xl sm:p-6">
             <WaitlistForm />
           </div>
         </ScrollReveal>
@@ -393,15 +402,18 @@ function PreRegistroSection() {
 // =====================================================================
 function Footer() {
   return (
-    <footer className="bg-gray-900 py-10 px-4">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-sm text-gray-400 sm:flex-row">
-        <span className="text-base font-semibold text-white">OnlineCars</span>
-        <div className="flex items-center gap-6">
+    <footer className="bg-gray-900 px-4 py-7">
+      <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 text-xs text-gray-400 sm:flex-row">
+        <span className="text-sm font-bold text-white">
+          motor<span className="text-blue-400">flow</span>
+        </span>
+        <div className="flex items-center gap-5">
           <a href="#servicios" className="hover:text-white">Servicios</a>
           <a href="#planes" className="hover:text-white">Planes</a>
           <a href="#faq" className="hover:text-white">FAQ</a>
+          <a href="#pre-registro" className="hover:text-white">Contacto</a>
         </div>
-        <span className="text-xs">© {new Date().getFullYear()} OnlineCars</span>
+        <span>© {new Date().getFullYear()} motorflow</span>
       </div>
     </footer>
   );

@@ -9,7 +9,7 @@ import { PrismaNeon } from "@prisma/adapter-neon";
 function loadEnvFile(filename: string): void {
   const path = resolve(process.cwd(), filename);
   if (!existsSync(path)) return;
-  const text = readFileSync(path, "utf8").replace(/^hola/, "");
+  const text = readFileSync(path, "utf8");
   for (const rawLine of text.split(/\r?\n/)) {
     const line = rawLine.trim();
     if (!line || line.startsWith("#")) continue;
@@ -37,7 +37,10 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient(): PrismaClient {
-  const connectionString = process.env.NEXT_PUBLIC_DATABASE_URL;
+  // SOLO server-only. NUNCA usar prefijo NEXT_PUBLIC_ acá: Next inlinea las
+  // env vars con ese prefijo en el bundle del cliente, lo cual filtraría la
+  // connection string completa (con usuario y password) al browser.
+  const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
     throw new Error("DATABASE_URL environment variable is not set");
   }

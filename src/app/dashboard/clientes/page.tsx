@@ -6,7 +6,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CustomersTable } from "@/components/dashboard/customers-table";
-import { CustomerSearch } from "@/components/dashboard/customer-search";
+import { TableSearch } from "@/components/dashboard/table-search";
 import { Pagination } from "@/components/dashboard/pagination";
 import type { Prisma } from "@prisma/client";
 
@@ -107,7 +107,10 @@ export default async function ClientesPage({ searchParams }: ClientesPageProps) 
         ))}
       </div>
 
-      <CustomerSearch />
+      <TableSearch
+        placeholder="Buscar por nombre, documento o email..."
+        ariaLabel="Buscar clientes"
+      />
 
       {customers.length === 0 && search ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">

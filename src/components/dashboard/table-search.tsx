@@ -7,27 +7,30 @@ import { Input } from "@/components/ui/input";
 
 const DEBOUNCE_MS = 300;
 
-interface CustomerSearchProps {
+interface TableSearchProps {
   placeholder?: string;
+  ariaLabel?: string;
 }
 
-// Input de búsqueda con debounce. Actualiza ?q= en la URL sin scroll.
-// Resetea ?page=1 al buscar — sino quedamos en una página que ya no existe
-// con los resultados filtrados.
-export function CustomerSearch({
-  placeholder = "Buscar por nombre, documento o email...",
-}: CustomerSearchProps) {
+// Input de búsqueda genérico para listas server-rendered. Actualiza ?q= en la
+// URL con debounce y resetea ?page=1 al cambiar la búsqueda. Reusable en
+// cualquier listado (Clientes, Vehículos, Leads, Ventas).
+//
+// type="text" en vez de "search" para evitar la X nativa del browser que se
+// superpone con la X custom y crea lag al borrar.
+export function TableSearch({
+  placeholder = "Buscar...",
+  ariaLabel = "Buscar",
+}: TableSearchProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
 
+  // Inicializamos desde la URL pero NO re-sincronizamos en cambios posteriores
+  // de searchParams: cada keystroke disparaba un render extra cuando router.push
+  // actualizaba la URL y eso se sentía como lag al escribir.
   const initial = searchParams?.get("q") ?? "";
   const [value, setValue] = useState(initial);
-
-  // Si el query param cambia desde afuera (ej: navegación back/forward), sincronizamos.
-  useEffect(() => {
-    setValue(searchParams?.get("q") ?? "");
-  }, [searchParams]);
 
   useEffect(() => {
     const trimmed = value.trim();
@@ -57,12 +60,12 @@ export function CustomerSearch({
     <div className="relative">
       <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <Input
-        type="search"
+        type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder={placeholder}
         className="pl-9 pr-9"
-        aria-label="Buscar clientes"
+        aria-label={ariaLabel}
       />
       {value && (
         <button

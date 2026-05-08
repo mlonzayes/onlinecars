@@ -1,8 +1,21 @@
 export const FUEL_TYPES = ["nafta", "diesel", "gnc", "electrico", "hibrido"] as const;
 export type FuelType = (typeof FUEL_TYPES)[number];
 
+export const FUEL_TYPE_LABELS: Record<FuelType, string> = {
+  nafta: "Nafta",
+  diesel: "Diésel",
+  gnc: "GNC",
+  electrico: "Eléctrico",
+  hibrido: "Híbrido",
+};
+
 export const TRANSMISSION_TYPES = ["manual", "automatica"] as const;
 export type TransmissionType = (typeof TRANSMISSION_TYPES)[number];
+
+export const TRANSMISSION_TYPE_LABELS: Record<TransmissionType, string> = {
+  manual: "Manual",
+  automatica: "Automática",
+};
 
 // Tipos de carrocería — usados para las "categorías" de la home del tenant
 // y para filtrar el catálogo. Los íconos se mapean en el componente correspondiente.
@@ -30,8 +43,19 @@ export const VEHICLE_BODY_TYPE_LABELS: Record<VehicleBodyType, string> = {
 export const VEHICLE_CONDITIONS = ["new", "used"] as const;
 export type VehicleCondition = (typeof VEHICLE_CONDITIONS)[number];
 
+export const VEHICLE_CONDITION_LABELS: Record<VehicleCondition, string> = {
+  new: "Nuevo",
+  used: "Usado",
+};
+
 export const VEHICLE_STATUSES = ["available", "reserved", "sold"] as const;
 export type VehicleStatus = (typeof VEHICLE_STATUSES)[number];
+
+export const VEHICLE_STATUS_LABELS: Record<VehicleStatus, string> = {
+  available: "Disponible",
+  reserved: "Reservado",
+  sold: "Vendido",
+};
 
 export const LEAD_STATUSES = ["new", "contacted", "qualified", "closed"] as const;
 export type LeadStatus = (typeof LEAD_STATUSES)[number];

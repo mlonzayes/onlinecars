@@ -7,18 +7,78 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { VehicleTable } from "@/components/dashboard/vehicle-table";
 import type { SerializedVehicleRow } from "@/components/dashboard/vehicle-table";
+import { TableSearch } from "@/components/dashboard/table-search";
+import { Pagination } from "@/components/dashboard/pagination";
+import type { Prisma } from "@prisma/client";
 
-export default async function VehiculosPage() {
+const PAGE_SIZE = 20;
+
+interface VehiculosPageProps {
+  searchParams: Promise<{ q?: string; page?: string }>;
+}
+
+function parsePage(raw: string | undefined): number {
+  if (!raw) return 1;
+  const n = parseInt(raw, 10);
+  return Number.isFinite(n) && n > 0 ? n : 1;
+}
+
+export default async function VehiculosPage({ searchParams }: VehiculosPageProps) {
   const dealership = await getCurrentDealership();
   if (!dealership) redirect("/onboarding");
 
-  const vehicles = await prisma.vehicle.findMany({
-    where: { dealershipId: dealership.id },
-    include: { images: { where: { isPrimary: true }, take: 1 } },
-    orderBy: { createdAt: "desc" },
-  });
+  const { q, page: pageParam } = await searchParams;
+  const search = q?.trim() ?? "";
+  const page = parsePage(pageParam);
+  const skip = (page - 1) * PAGE_SIZE;
 
-  // Serializar Decimal a string para poder pasar al Client Component
+  // Tokenizamos por espacios y exigimos AND de matches en algún campo de texto.
+  const tokens = search.split(/\s+/).filter(Boolean);
+
+  const where: Prisma.VehicleWhereInput = {
+    dealershipId: dealership.id,
+    ...(tokens.length > 0
+      ? {
+          AND: tokens.map((token) => ({
+            OR: [
+              { title: { contains: token, mode: "insensitive" as const } },
+              { brand: { contains: token, mode: "insensitive" as const } },
+              { model: { contains: token, mode: "insensitive" as const } },
+              { licensePlate: { contains: token, mode: "insensitive" as const } },
+              { vin: { contains: token, mode: "insensitive" as const } },
+            ],
+          })),
+        }
+      : {}),
+  };
+
+  // Stats absolutos del dealership (independientes del search/page) en paralelo
+  // con la query paginada del listado.
+  const [total, vehicles, totalAll, totalPublished, totalReserved, totalSold] =
+    await Promise.all([
+      prisma.vehicle.count({ where }),
+      prisma.vehicle.findMany({
+        where,
+        include: { images: { where: { isPrimary: true }, take: 1 } },
+        skip,
+        take: PAGE_SIZE,
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.vehicle.count({ where: { dealershipId: dealership.id } }),
+      prisma.vehicle.count({
+        where: { dealershipId: dealership.id, publishedAt: { not: null } },
+      }),
+      prisma.vehicle.count({
+        where: { dealershipId: dealership.id, status: "reserved" },
+      }),
+      prisma.vehicle.count({
+        where: { dealershipId: dealership.id, status: "sold" },
+      }),
+    ]);
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  // Serializar Decimal a string para poder pasar al Client Component.
   const serialized: SerializedVehicleRow[] = vehicles.map((v) => ({
     ...v,
     price: v.price.toString(),
@@ -28,18 +88,11 @@ export default async function VehiculosPage() {
     images: v.images.map((img) => ({ ...img })),
   }));
 
-  const stats = {
-    total: vehicles.length,
-    published: vehicles.filter((v) => v.publishedAt !== null).length,
-    reserved: vehicles.filter((v) => v.status === "reserved").length,
-    sold: vehicles.filter((v) => v.status === "sold").length,
-  };
-
   const statCards = [
-    { label: "Total", value: stats.total },
-    { label: "Publicados", value: stats.published },
-    { label: "Reservados", value: stats.reserved },
-    { label: "Vendidos", value: stats.sold },
+    { label: "Total", value: totalAll },
+    { label: "Publicados", value: totalPublished },
+    { label: "Reservados", value: totalReserved },
+    { label: "Vendidos", value: totalSold },
   ];
 
   return (
@@ -67,7 +120,32 @@ export default async function VehiculosPage() {
         ))}
       </div>
 
-      <VehicleTable vehicles={serialized} />
+      <TableSearch
+        placeholder="Buscar por título, marca, modelo, patente o VIN..."
+        ariaLabel="Buscar vehículos"
+      />
+
+      {serialized.length === 0 && search ? (
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
+          <p className="font-medium text-muted-foreground">
+            Sin resultados para &ldquo;{search}&rdquo;
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Probá con otra marca, modelo o patente.
+          </p>
+        </div>
+      ) : (
+        <VehicleTable vehicles={serialized} />
+      )}
+
+      {total > 0 && (
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={total}
+          pageSize={PAGE_SIZE}
+        />
+      )}
     </div>
   );
 }

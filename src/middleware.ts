@@ -14,18 +14,18 @@ const isPublicRoute = createRouteMatcher([
 
 export default clerkMiddleware(async (auth, req: NextRequest) => {
   const url = req.nextUrl;
-  const hostname = req.headers.get("host") ?? "";
+  // Saco el puerto del host (ej: "foo.com.ar:3000" → "foo.com.ar") para que
+  // matchee bien contra appDomain.
+  const hostname = (req.headers.get("host") ?? "").split(":")[0];
   const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "motorflow.com.ar";
   const isLoginEnabled = process.env.NEXT_PUBLIC_ENABLE_LOGIN === "true";
 
-  // En localhost no aplica subdomain routing
-  const isLocalhost = hostname.includes("localhost") || hostname.includes("127.0.0.1");
-
-  if (!isLocalhost) {
-    // Detectar subdominio solo en producción/staging
-    const subdomain = hostname.replace(`.${appDomain}`, "").replace(appDomain, "");
-
-    // Si hay subdominio y no es "app" ni "www", es un sitio de concesionario
+  // Solo aplicamos subdomain routing si el hostname pertenece a NUESTRO dominio.
+  // Cualquier otro host (vercel.app previews, localhost, IPs) se trata como
+  // dominio principal y no se reescribe. Esto evita bugs donde "onlinecars.vercel.app"
+  // se interpretaba como subdomain → rewrite a /tenant/onlinecars.vercel.app → 404.
+  if (hostname.endsWith(`.${appDomain}`)) {
+    const subdomain = hostname.slice(0, -1 * (appDomain.length + 1));
     if (subdomain && subdomain !== "app" && subdomain !== "www") {
       return NextResponse.rewrite(
         new URL(`/tenant/${subdomain}${url.pathname}`, req.url)

@@ -47,3 +47,7 @@ next-env.d.ts
 
 # user-uploaded files (storage local en dev — en prod va a S3/R2)
 /public/uploads/
+
+# Local utility scripts (seeds, migrations ad-hoc, debug tools).
+# No forman parte del producto y pueden quedar desactualizados frente al schema.
+/scripts/

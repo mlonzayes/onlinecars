@@ -71,17 +71,18 @@ export function SubscriptionTab({ dealership }: SubscriptionTabProps) {
         <CardFooter className="bg-muted/30 border-t pt-6">
           <div className="flex w-full items-center justify-between">
             <p className="text-sm text-muted-foreground">¿Necesitás más capacidad?</p>
-            <Button 
-              className="bg-blue-600 hover:bg-blue-700 text-white" 
-              asChild
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              nativeButton={false}
+              render={
+                <a
+                  href={`https://wa.me/5491100000000?text=Hola%20equipo%20de%20Motorflow!%20Me%20gustar%C3%ADa%20mejorar%20el%20plan%20de%20mi%20concesionaria%20(${dealership.name}).`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                />
+              }
             >
-              <a 
-                href={`https://wa.me/5491100000000?text=Hola%20equipo%20de%20Motorflow!%20Me%20gustar%C3%ADa%20mejorar%20el%20plan%20de%20mi%20concesionaria%20(${dealership.name}).`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Hablar con Soporte
-              </a>
+              Hablar con Soporte
             </Button>
           </div>
         </CardFooter>

@@ -123,9 +123,11 @@ export function OnboardingForm() {
             <div className="space-y-1.5">
               <Label htmlFor="province">Provincia</Label>
               <Select
-                onValueChange={(val) =>
-                  val !== null && setFields((prev) => ({ ...prev, province: val }))
-                }
+                onValueChange={(val) => {
+                  if (typeof val === "string") {
+                    setFields((prev) => ({ ...prev, province: val }));
+                  }
+                }}
               >
                 <SelectTrigger id="province">
                   <SelectValue placeholder="Seleccioná" />

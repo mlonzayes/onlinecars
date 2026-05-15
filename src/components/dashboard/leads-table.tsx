@@ -290,7 +290,7 @@ export function LeadsTable({ leads: initialLeads }: LeadsTableProps) {
             <TabsTrigger value="contacted">Contactados ({contactedLeads.length})</TabsTrigger>
           </TabsList>
 
-          <Select value={sourceFilter} onValueChange={setSourceFilter}>
+          <Select value={sourceFilter} onValueChange={(value) => setSourceFilter(value ?? "all")}>
             <SelectTrigger className="w-full sm:w-[200px]">
               <SelectValue placeholder="Todas las fuentes" />
             </SelectTrigger>

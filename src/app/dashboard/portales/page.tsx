@@ -13,7 +13,7 @@ export default async function PortalesPage() {
   const initialStatus: MLAccountStatus = account
     ? {
         connected: true,
-        nickname: account.nickname,
+        nickname: account.nickname ?? undefined,
         mlUserId: account.mlUserId,
         connectedAt: account.createdAt.toISOString(),
         tokenExpiresSoon:

@@ -140,11 +140,11 @@ export function VehicleCard({ vehicle, basePath }: VehicleCardProps) {
                 {vehicle.currency}
               </span>
             </div>
-            {vehicle.originalPrice && (
+            {vehicle.originalPrice ? (
               <span className="text-sm text-slate-400 line-through mt-0.5">
                 {formatPrice(vehicle.originalPrice, vehicle.currency)}
               </span>
-            )}
+            ) : null}
           </div>
           {vehicle.priceTag && (
             <VehicleBadge tag={vehicle.priceTag as VehiclePriceTag} />

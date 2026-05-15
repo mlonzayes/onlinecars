@@ -103,10 +103,13 @@ export default async function InvitePage({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button className="w-full" size="lg" asChild>
-            <Link href={`${signUpUrl}?redirect_url=/invite?token=${token}`}>
-              Crear cuenta y Aceptar Invitación
-            </Link>
+          <Button
+            className="w-full"
+            size="lg"
+            nativeButton={false}
+            render={<Link href={`${signUpUrl}?redirect_url=/invite?token=${token}`} />}
+          >
+            Crear cuenta y Aceptar Invitación
           </Button>
           <div className="text-sm text-muted-foreground">
             ¿Ya tenés cuenta?{" "}

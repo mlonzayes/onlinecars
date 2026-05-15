@@ -11,6 +11,7 @@ import {
   type UseFormRegister,
   type Control,
   type FieldErrors,
+  type Resolver,
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -483,7 +484,7 @@ export function VehicleForm({ vehicle, blockingSale }: VehicleFormProps) {
     watch,
     formState: { errors },
   } = useForm<VehicleFormValues>({
-    resolver: zodResolver(vehicleFormSchema),
+    resolver: zodResolver(vehicleFormSchema) as Resolver<VehicleFormValues>,
     defaultValues: buildDefaults(vehicle),
     mode: "onBlur",
   });

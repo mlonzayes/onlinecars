@@ -18,8 +18,6 @@ export const metadata: Metadata = {
   description: "La plataforma SaaS para que tu concesionario venda más en internet.",
 };
 
-import { esES } from "@clerk/localizations";
-
 export default function RootLayout({
   children,
 }: {

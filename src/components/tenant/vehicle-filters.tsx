@@ -181,8 +181,12 @@ export function VehicleFilters({ brands }: VehicleFiltersProps) {
               max={MAX_SLIDER_VALUE}
               step={SLIDER_STEP}
               value={priceRange}
-              onValueChange={setPriceRange}
-              onValueCommitted={handlePriceCommit}
+              onValueChange={(value) =>
+                setPriceRange(Array.isArray(value) ? [...value] : [value])
+              }
+              onValueCommitted={(value) =>
+                handlePriceCommit(Array.isArray(value) ? [...value] : [value])
+              }
             />
           </div>
           <div className="mt-3 flex items-center justify-between text-xs font-semibold text-slate-600">

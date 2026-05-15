@@ -106,8 +106,9 @@ export function CustomersTable({ customers, limits }: CustomersTableProps) {
         <TableHeader>
           <TableRow>
             <TableHead className="w-[40px] px-4">
-              <Checkbox 
-                checked={isAllSelected || (isSomeSelected ? "indeterminate" : false)}
+              <Checkbox
+                checked={isAllSelected}
+                indeterminate={isSomeSelected}
                 onCheckedChange={(checked) => {
                   if (!limits.allowBulkActions) {
                     return toast("Mejorá tu plan", { description: "Las acciones masivas están disponibles a partir del plan Media." });

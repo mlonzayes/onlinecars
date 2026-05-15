@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,7 +72,7 @@ export function CustomerForm({ customer }: CustomerFormProps) {
     setValue,
     formState: { errors },
   } = useForm<CustomerCreateInput>({
-    resolver: zodResolver(customerCreateSchema),
+    resolver: zodResolver(customerCreateSchema) as Resolver<CustomerCreateInput>,
     defaultValues: buildDefaults(customer),
     mode: "onBlur",
   });

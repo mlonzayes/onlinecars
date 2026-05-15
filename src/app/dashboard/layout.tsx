@@ -4,6 +4,7 @@ import { getCurrentDealership } from "@/lib/auth";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { DashboardHeader } from "@/components/dashboard/header";
+import { DashboardFooter } from "@/components/dashboard/dashboard-footer";
 import { Toaster } from "@/components/ui/sonner";
 
 export default async function DashboardLayout({
@@ -26,8 +27,9 @@ export default async function DashboardLayout({
     <SidebarProvider>
       <DashboardSidebar dealership={dealership} />
       <main className="flex flex-1 flex-col">
-        <DashboardHeader />
+        <DashboardHeader dealershipName={dealership.name} />
         <div className="flex-1 p-6">{children}</div>
+        <DashboardFooter />
       </main>
       <Toaster />
     </SidebarProvider>

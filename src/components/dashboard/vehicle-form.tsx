@@ -1,10 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Lock } from "lucide-react";
+import {
+  useForm,
+  Controller,
+  type UseFormRegister,
+  type Control,
+  type FieldErrors,
+} from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,11 +29,15 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import {
   FUEL_TYPES,
+  FUEL_TYPE_LABELS,
   TRANSMISSION_TYPES,
+  TRANSMISSION_TYPE_LABELS,
   VEHICLE_BODY_TYPES,
   VEHICLE_BODY_TYPE_LABELS,
   VEHICLE_CONDITIONS,
+  VEHICLE_CONDITION_LABELS,
   VEHICLE_STATUSES,
+  VEHICLE_STATUS_LABELS,
   CURRENCIES,
 } from "@/lib/constants";
 import type { Vehicle, VehicleImage } from "@prisma/client";
@@ -47,154 +60,230 @@ const BLOCKING_SALE_LABELS: Record<BlockingSale["status"], string> = {
   completed: "Completada",
 };
 
-// Tipo del estado del formulario (todos strings para los inputs)
-interface FormState {
-  title: string;
-  brand: string;
-  model: string;
-  year: string;
-  condition: string;
-  status: string;
-  price: string;
-  currency: string;
-  kilometers: string;
-  fuelType: string;
-  transmission: string;
-  bodyType: string;
-  color: string;
-  doors: string;
-  engine: string;
-  description: string;
-}
+// Schema interno del form: los inputs HTML devuelven strings, así que coercionamos
+// a number en los campos numéricos. La validación al server vive en
+// vehicleCreateSchema (lib/validators/vehicle.ts) y opera sobre números nativos.
+const optionalIntFromString = z.preprocess(
+  (v) => (v === "" || v === null || v === undefined ? undefined : Number(v)),
+  z.number().int().optional()
+);
 
-function buildInitialState(vehicle?: SerializedVehicle): FormState {
+const vehicleFormSchema = z.object({
+  title: z.string().min(3, "Mínimo 3 caracteres").max(200, "Máximo 200"),
+  brand: z.string().min(1, "La marca es requerida").max(100),
+  model: z.string().min(1, "El modelo es requerido").max(100),
+  year: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? undefined : Number(v)),
+    z
+      .number({ message: "Año requerido" })
+      .int()
+      .min(1900, "Año mínimo: 1900")
+      .max(new Date().getFullYear() + 1, "Año futuro inválido")
+  ),
+  condition: z.enum(VEHICLE_CONDITIONS),
+  status: z.enum(VEHICLE_STATUSES),
+  price: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? undefined : Number(v)),
+    z.number({ message: "Precio requerido" }).positive("El precio debe ser mayor a 0")
+  ),
+  currency: z.enum(CURRENCIES),
+  kilometers: optionalIntFromString.pipe(
+    z.number().int().min(0, "No puede ser negativo").optional()
+  ),
+  // Para los enums opcionales, "" representa "no seleccionado" en el form
+  // y se transforma a undefined al enviar.
+  fuelType: z.union([z.enum(FUEL_TYPES), z.literal("")]).optional(),
+  transmission: z.union([z.enum(TRANSMISSION_TYPES), z.literal("")]).optional(),
+  bodyType: z.union([z.enum(VEHICLE_BODY_TYPES), z.literal("")]).optional(),
+  color: z.string().max(50).optional(),
+  doors: optionalIntFromString.pipe(
+    z.number().int().min(2, "Mínimo 2").max(6, "Máximo 6").optional()
+  ),
+  engine: z.string().max(50).optional(),
+  // Patente argentina opcional. Acepta formato viejo (AAA000) y nuevo Mercosur
+  // (AA000AA), sin importar mayúsculas/minúsculas ni guiones/espacios.
+  licensePlate: z
+    .string()
+    .max(20)
+    .optional()
+    .refine(
+      (v) => {
+        if (!v) return true;
+        const cleaned = v.replace(/[\s-]/g, "").toUpperCase();
+        return /^[A-Z]{3}\d{3}$/.test(cleaned) || /^[A-Z]{2}\d{3}[A-Z]{2}$/.test(cleaned);
+      },
+      "Formato inválido. Esperado AAA000 (vieja) o AA000AA (Mercosur)."
+    ),
+  description: z.string().max(2000).optional(),
+});
+
+type VehicleFormValues = z.infer<typeof vehicleFormSchema>;
+
+function buildDefaults(vehicle?: SerializedVehicle): VehicleFormValues {
   return {
     title: vehicle?.title ?? "",
     brand: vehicle?.brand ?? "",
     model: vehicle?.model ?? "",
-    year: vehicle?.year?.toString() ?? "",
-    condition: vehicle?.condition ?? "used",
-    status: vehicle?.status ?? "available",
-    price: vehicle?.price ?? "",
-    currency: vehicle?.currency ?? "ARS",
-    kilometers: vehicle?.kilometers?.toString() ?? "",
-    fuelType: vehicle?.fuelType ?? "",
-    transmission: vehicle?.transmission ?? "",
-    bodyType: vehicle?.bodyType ?? "",
+    year: vehicle?.year ?? (new Date().getFullYear() as VehicleFormValues["year"]),
+    condition: (vehicle?.condition as VehicleFormValues["condition"]) ?? "used",
+    status: (vehicle?.status as VehicleFormValues["status"]) ?? "available",
+    price: vehicle?.price ? Number(vehicle.price) : (undefined as unknown as VehicleFormValues["price"]),
+    currency: (vehicle?.currency as VehicleFormValues["currency"]) ?? "ARS",
+    kilometers: vehicle?.kilometers ?? undefined,
+    fuelType: (vehicle?.fuelType as VehicleFormValues["fuelType"]) ?? "",
+    transmission: (vehicle?.transmission as VehicleFormValues["transmission"]) ?? "",
+    bodyType: (vehicle?.bodyType as VehicleFormValues["bodyType"]) ?? "",
     color: vehicle?.color ?? "",
-    doors: vehicle?.doors?.toString() ?? "",
+    doors: vehicle?.doors ?? undefined,
     engine: vehicle?.engine ?? "",
+    licensePlate: vehicle?.licensePlate ?? "",
     description: vehicle?.description ?? "",
   };
 }
 
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="text-xs text-red-600 mt-1">{message}</p>;
+}
+
+// Helper para extraer el mensaje de error de un campo del form.
+function errorMessage(
+  errors: FieldErrors<VehicleFormValues>,
+  name: keyof VehicleFormValues
+): string | undefined {
+  return errors[name]?.message;
+}
+
 // --- Sub-componente: Tab de información básica ---
-interface BasicInfoTabProps {
-  form: FormState;
-  onChange: (field: keyof FormState, value: string) => void;
+interface TabSectionProps {
+  register: UseFormRegister<VehicleFormValues>;
+  control: Control<VehicleFormValues>;
+  errors: FieldErrors<VehicleFormValues>;
   disabled?: boolean;
 }
 
-function BasicInfoTab({ form, onChange, disabled }: BasicInfoTabProps) {
+function BasicInfoTab({ register, control, errors, disabled }: TabSectionProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-12">
       <div className="space-y-1.5 sm:col-span-12">
         <Label htmlFor="title">Título *</Label>
         <Input
           id="title"
-          value={form.title}
-          onChange={(e) => onChange("title", e.target.value)}
           placeholder="Ej: Toyota Corolla XEI 2.0 2023"
-          required
           disabled={disabled}
+          aria-invalid={!!errors.title}
+          {...register("title")}
         />
+        <FieldError message={errorMessage(errors, "title")} />
       </div>
       <div className="space-y-1.5 sm:col-span-6">
         <Label htmlFor="brand">Marca *</Label>
         <Input
           id="brand"
-          value={form.brand}
-          onChange={(e) => onChange("brand", e.target.value)}
           placeholder="Toyota"
-          required
           disabled={disabled}
+          aria-invalid={!!errors.brand}
+          {...register("brand")}
         />
+        <FieldError message={errorMessage(errors, "brand")} />
       </div>
       <div className="space-y-1.5 sm:col-span-6">
         <Label htmlFor="model">Modelo *</Label>
         <Input
           id="model"
-          value={form.model}
-          onChange={(e) => onChange("model", e.target.value)}
           placeholder="Corolla"
-          required
           disabled={disabled}
+          aria-invalid={!!errors.model}
+          {...register("model")}
         />
+        <FieldError message={errorMessage(errors, "model")} />
       </div>
       <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="year">Año *</Label>
         <Input
           id="year"
           type="number"
-          value={form.year}
-          onChange={(e) => onChange("year", e.target.value)}
           placeholder="2023"
           min={1900}
           max={new Date().getFullYear() + 1}
-          required
           disabled={disabled}
+          aria-invalid={!!errors.year}
+          {...register("year")}
         />
+        <FieldError message={errorMessage(errors, "year")} />
       </div>
       <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="condition">Condición</Label>
-        <Select
-          value={form.condition}
-          onValueChange={(v) => v !== null && onChange("condition", v)}
-          disabled={disabled}
-        >
-          <SelectTrigger id="condition" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {VEHICLE_CONDITIONS.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c === "new" ? "Nuevo" : "Usado"}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Controller
+          control={control}
+          name="condition"
+          render={({ field }) => (
+            <Select
+              value={field.value}
+              onValueChange={(v) => v !== null && field.onChange(v)}
+              disabled={disabled}
+            >
+              <SelectTrigger id="condition" className="w-full">
+                <SelectValue>{VEHICLE_CONDITION_LABELS[field.value]}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {VEHICLE_CONDITIONS.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {VEHICLE_CONDITION_LABELS[c]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+        <FieldError message={errorMessage(errors, "condition")} />
       </div>
       <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="status">Estado</Label>
-        <Select
-          value={form.status}
-          onValueChange={(v) => v !== null && onChange("status", v)}
+        <Controller
+          control={control}
+          name="status"
+          render={({ field }) => (
+            <Select
+              value={field.value}
+              onValueChange={(v) => v !== null && field.onChange(v)}
+              disabled={disabled}
+            >
+              <SelectTrigger id="status" className="w-full">
+                <SelectValue>{VEHICLE_STATUS_LABELS[field.value]}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {VEHICLE_STATUSES.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {VEHICLE_STATUS_LABELS[s]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+        <FieldError message={errorMessage(errors, "status")} />
+      </div>
+      <div className="space-y-1.5 sm:col-span-12">
+        <Label htmlFor="licensePlate">Patente</Label>
+        <Input
+          id="licensePlate"
+          placeholder="Ej: AC123BD (Mercosur) o ABC123 (vieja)"
           disabled={disabled}
-        >
-          <SelectTrigger id="status" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {VEHICLE_STATUSES.map((s) => (
-              <SelectItem key={s} value={s}>
-                {s === "available" ? "Disponible" : s === "reserved" ? "Reservado" : "Vendido"}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          aria-invalid={!!errors.licensePlate}
+          {...register("licensePlate")}
+        />
+        <FieldError message={errorMessage(errors, "licensePlate")} />
+        <p className="text-xs text-muted-foreground">
+          Útil para identificar el vehículo cuando hay varios similares en stock. En 0 km dejala vacía si todavía no se patentó.
+        </p>
       </div>
     </div>
   );
 }
 
 // --- Sub-componente: Tab de precio y detalles ---
-interface PriceDetailsTabProps {
-  form: FormState;
-  onChange: (field: keyof FormState, value: string) => void;
-  disabled?: boolean;
-}
-
-function PriceDetailsTab({ form, onChange, disabled }: PriceDetailsTabProps) {
+function PriceDetailsTab({ register, control, errors, disabled }: TabSectionProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-12">
       <div className="space-y-1.5 sm:col-span-8">
@@ -202,174 +291,239 @@ function PriceDetailsTab({ form, onChange, disabled }: PriceDetailsTabProps) {
         <Input
           id="price"
           type="number"
-          value={form.price}
-          onChange={(e) => onChange("price", e.target.value)}
           placeholder="25000000"
           min={0}
-          required
           disabled={disabled}
+          aria-invalid={!!errors.price}
+          {...register("price")}
         />
+        <FieldError message={errorMessage(errors, "price")} />
       </div>
       <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="currency">Moneda</Label>
-        <Select
-          value={form.currency}
-          onValueChange={(v) => v !== null && onChange("currency", v)}
-          disabled={disabled}
-        >
-          <SelectTrigger id="currency" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {CURRENCIES.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Controller
+          control={control}
+          name="currency"
+          render={({ field }) => (
+            <Select
+              value={field.value}
+              onValueChange={(v) => v !== null && field.onChange(v)}
+              disabled={disabled}
+            >
+              <SelectTrigger id="currency" className="w-full">
+                <SelectValue>{field.value}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {CURRENCIES.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
       </div>
       <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="kilometers">Kilómetros</Label>
         <Input
           id="kilometers"
           type="number"
-          value={form.kilometers}
-          onChange={(e) => onChange("kilometers", e.target.value)}
           placeholder="50000"
           min={0}
           disabled={disabled}
+          aria-invalid={!!errors.kilometers}
+          {...register("kilometers")}
         />
+        <FieldError message={errorMessage(errors, "kilometers")} />
       </div>
       <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="fuelType">Combustible</Label>
-        <Select
-          value={form.fuelType}
-          onValueChange={(v) => v !== null && onChange("fuelType", v)}
-          disabled={disabled}
-        >
-          <SelectTrigger id="fuelType" className="w-full">
-            <SelectValue placeholder="Seleccionar" />
-          </SelectTrigger>
-          <SelectContent>
-            {FUEL_TYPES.map((f) => (
-              <SelectItem key={f} value={f}>
-                {f.charAt(0).toUpperCase() + f.slice(1)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Controller
+          control={control}
+          name="fuelType"
+          render={({ field }) => (
+            <Select
+              value={field.value ?? ""}
+              onValueChange={(v) => v !== null && field.onChange(v || "")}
+              disabled={disabled}
+            >
+              <SelectTrigger id="fuelType" className="w-full">
+                <SelectValue placeholder="Seleccionar">
+                  {field.value ? FUEL_TYPE_LABELS[field.value as keyof typeof FUEL_TYPE_LABELS] : "Seleccionar"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {FUEL_TYPES.map((f) => (
+                  <SelectItem key={f} value={f}>
+                    {FUEL_TYPE_LABELS[f]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
       </div>
       <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="transmission">Transmisión</Label>
-        <Select
-          value={form.transmission}
-          onValueChange={(v) => v !== null && onChange("transmission", v)}
-          disabled={disabled}
-        >
-          <SelectTrigger id="transmission" className="w-full">
-            <SelectValue placeholder="Seleccionar" />
-          </SelectTrigger>
-          <SelectContent>
-            {TRANSMISSION_TYPES.map((t) => (
-              <SelectItem key={t} value={t}>
-                {t === "manual" ? "Manual" : "Automática"}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Controller
+          control={control}
+          name="transmission"
+          render={({ field }) => (
+            <Select
+              value={field.value ?? ""}
+              onValueChange={(v) => v !== null && field.onChange(v || "")}
+              disabled={disabled}
+            >
+              <SelectTrigger id="transmission" className="w-full">
+                <SelectValue placeholder="Seleccionar">
+                  {field.value
+                    ? TRANSMISSION_TYPE_LABELS[field.value as keyof typeof TRANSMISSION_TYPE_LABELS]
+                    : "Seleccionar"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {TRANSMISSION_TYPES.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {TRANSMISSION_TYPE_LABELS[t]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
       </div>
       <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="bodyType">Tipo de carrocería</Label>
-        <Select
-          value={form.bodyType}
-          onValueChange={(v) => v !== null && onChange("bodyType", v)}
-          disabled={disabled}
-        >
-          <SelectTrigger id="bodyType" className="w-full">
-            <SelectValue placeholder="Seleccionar" />
-          </SelectTrigger>
-          <SelectContent>
-            {VEHICLE_BODY_TYPES.map((b) => (
-              <SelectItem key={b} value={b}>
-                {VEHICLE_BODY_TYPE_LABELS[b]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Controller
+          control={control}
+          name="bodyType"
+          render={({ field }) => (
+            <Select
+              value={field.value ?? ""}
+              onValueChange={(v) => v !== null && field.onChange(v || "")}
+              disabled={disabled}
+            >
+              <SelectTrigger id="bodyType" className="w-full">
+                <SelectValue placeholder="Seleccionar">
+                  {field.value
+                    ? VEHICLE_BODY_TYPE_LABELS[field.value as keyof typeof VEHICLE_BODY_TYPE_LABELS]
+                    : "Seleccionar"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {VEHICLE_BODY_TYPES.map((b) => (
+                  <SelectItem key={b} value={b}>
+                    {VEHICLE_BODY_TYPE_LABELS[b]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
       </div>
       <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="color">Color</Label>
         <Input
           id="color"
-          value={form.color}
-          onChange={(e) => onChange("color", e.target.value)}
           placeholder="Blanco"
           disabled={disabled}
+          {...register("color")}
         />
+        <FieldError message={errorMessage(errors, "color")} />
       </div>
       <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="doors">Puertas</Label>
         <Input
           id="doors"
           type="number"
-          value={form.doors}
-          onChange={(e) => onChange("doors", e.target.value)}
           min={2}
           max={6}
           placeholder="4"
           disabled={disabled}
+          aria-invalid={!!errors.doors}
+          {...register("doors")}
         />
+        <FieldError message={errorMessage(errors, "doors")} />
       </div>
       <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="engine">Motor</Label>
         <Input
           id="engine"
-          value={form.engine}
-          onChange={(e) => onChange("engine", e.target.value)}
           placeholder="2.0L"
           disabled={disabled}
+          {...register("engine")}
         />
+        <FieldError message={errorMessage(errors, "engine")} />
       </div>
     </div>
   );
 }
 
 // --- Componente principal ---
+const VEHICLE_FORM_TABS = ["basico", "precio", "descripcion", "imagenes"] as const;
+type VehicleFormTab = (typeof VEHICLE_FORM_TABS)[number];
+
+function isVehicleFormTab(value: string | null): value is VehicleFormTab {
+  return value !== null && (VEHICLE_FORM_TABS as readonly string[]).includes(value);
+}
+
 export function VehicleForm({ vehicle, blockingSale }: VehicleFormProps) {
   const router = useRouter();
-  const [form, setForm] = useState<FormState>(() => buildInitialState(vehicle));
-  const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const [submitting, setSubmitting] = useState(false);
 
   const isEditing = Boolean(vehicle);
   const isLocked = !!blockingSale;
 
-  function handleChange(field: keyof FormState, value: string) {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  }
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    formState: { errors },
+  } = useForm<VehicleFormValues>({
+    resolver: zodResolver(vehicleFormSchema),
+    defaultValues: buildDefaults(vehicle),
+    mode: "onBlur",
+  });
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (isLocked) return; // doble defensa, el submit ya debería estar disabled
-    setLoading(true);
+  // Para mostrar el contador de chars de la descripción.
+  const description = watch("description") ?? "";
 
+  const requestedTab = searchParams?.get("tab") ?? null;
+  const initialTab: VehicleFormTab =
+    isVehicleFormTab(requestedTab) && (requestedTab !== "imagenes" || isEditing)
+      ? requestedTab
+      : "basico";
+
+  const onSubmit = handleSubmit(async (data) => {
+    if (isLocked) return;
+    setSubmitting(true);
+
+    // Limpiamos enums vacíos a undefined para que el server no intente
+    // guardar "" en columnas con enum string.
     const payload = {
-      title: form.title,
-      brand: form.brand,
-      model: form.model,
-      year: parseInt(form.year, 10),
-      condition: form.condition,
-      status: form.status,
-      price: parseFloat(form.price),
-      currency: form.currency,
-      kilometers: form.kilometers ? parseInt(form.kilometers, 10) : undefined,
-      fuelType: form.fuelType || undefined,
-      transmission: form.transmission || undefined,
-      bodyType: form.bodyType || undefined,
-      color: form.color || undefined,
-      doors: form.doors ? parseInt(form.doors, 10) : undefined,
-      engine: form.engine || undefined,
-      description: form.description || undefined,
+      title: data.title,
+      brand: data.brand,
+      model: data.model,
+      year: data.year,
+      condition: data.condition,
+      status: data.status,
+      price: data.price,
+      currency: data.currency,
+      kilometers: data.kilometers,
+      fuelType: data.fuelType || undefined,
+      transmission: data.transmission || undefined,
+      bodyType: data.bodyType || undefined,
+      color: data.color || undefined,
+      doors: data.doors,
+      engine: data.engine || undefined,
+      // Normalizamos la patente a mayúsculas sin separadores antes de mandar.
+      licensePlate: data.licensePlate
+        ? data.licensePlate.replace(/[\s-]/g, "").toUpperCase()
+        : undefined,
+      description: data.description || undefined,
     };
 
     try {
@@ -383,8 +537,9 @@ export function VehicleForm({ vehicle, blockingSale }: VehicleFormProps) {
       });
 
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        toast.error(data.error ?? "Ocurrió un error. Intentá de nuevo.");
+        const body = await res.json().catch(() => ({}));
+        toast.error(body.error ?? "Ocurrió un error. Intentá de nuevo.");
+        setSubmitting(false);
         return;
       }
 
@@ -398,21 +553,22 @@ export function VehicleForm({ vehicle, blockingSale }: VehicleFormProps) {
           ? "Vehículo actualizado."
           : "Vehículo creado. Ahora podés agregar las imágenes."
       );
+      // No bajamos submitting en éxito — el router.push es asíncrono y el botón
+      // se reactivaría mientras la página todavía está visible (regla 14).
       router.push(
         isEditing || !newId
           ? "/dashboard/vehiculos"
-          : `/dashboard/vehiculos/${newId}`
+          : `/dashboard/vehiculos/${newId}?tab=imagenes`
       );
       router.refresh();
     } catch {
       toast.error("Error de conexión. Intentá de nuevo.");
-    } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
-  }
+  });
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={onSubmit}>
       {isLocked && blockingSale && (
         <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
           <Lock className="mt-0.5 h-4 w-4 shrink-0" />
@@ -436,7 +592,7 @@ export function VehicleForm({ vehicle, blockingSale }: VehicleFormProps) {
       )}
       <Card>
         <CardContent className="pt-6">
-          <Tabs defaultValue="basico">
+          <Tabs defaultValue={initialTab}>
             <TabsList
               className={`mb-6 grid w-full ${
                 isEditing ? "grid-cols-4" : "grid-cols-3"
@@ -451,11 +607,21 @@ export function VehicleForm({ vehicle, blockingSale }: VehicleFormProps) {
             </TabsList>
 
             <TabsContent value="basico">
-              <BasicInfoTab form={form} onChange={handleChange} disabled={isLocked} />
+              <BasicInfoTab
+                register={register}
+                control={control}
+                errors={errors}
+                disabled={isLocked}
+              />
             </TabsContent>
 
             <TabsContent value="precio">
-              <PriceDetailsTab form={form} onChange={handleChange} disabled={isLocked} />
+              <PriceDetailsTab
+                register={register}
+                control={control}
+                errors={errors}
+                disabled={isLocked}
+              />
             </TabsContent>
 
             <TabsContent value="descripcion">
@@ -463,15 +629,16 @@ export function VehicleForm({ vehicle, blockingSale }: VehicleFormProps) {
                 <Label htmlFor="description">Descripción</Label>
                 <Textarea
                   id="description"
-                  value={form.description}
-                  onChange={(e) => handleChange("description", e.target.value)}
                   placeholder="Describí el vehículo: equipamiento, estado, extras..."
                   rows={8}
                   maxLength={2000}
                   disabled={isLocked}
+                  aria-invalid={!!errors.description}
+                  {...register("description")}
                 />
+                <FieldError message={errorMessage(errors, "description")} />
                 <p className="text-xs text-muted-foreground text-right">
-                  {form.description.length}/2000
+                  {description.length}/2000
                 </p>
               </div>
             </TabsContent>
@@ -490,11 +657,15 @@ export function VehicleForm({ vehicle, blockingSale }: VehicleFormProps) {
       </Card>
 
       <div className="mt-6 flex gap-3">
-        <Button type="submit" disabled={loading || isLocked}>
-          {loading ? "Guardando..." : "Guardar"}
+        <Button type="submit" disabled={submitting || isLocked}>
+          {submitting ? "Guardando..." : "Guardar"}
         </Button>
-        <Button variant="outline" nativeButton={false} render={<Link href="/dashboard/vehiculos" />}>
-          {isLocked ? "Volver" : "Cancelar"}
+        <Button
+          variant="outline"
+          nativeButton={false}
+          render={<Link href="/dashboard/vehiculos" />}
+        >
+          Cancelar
         </Button>
       </div>
     </form>

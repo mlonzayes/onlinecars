@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
+import { invalidateTenantHomeBundle } from "@/lib/tenant";
 
 const themeUpdateSchema = z.object({
   colorPrimary: z
@@ -69,6 +70,8 @@ export const PATCH = withLogger(async (request, { requestId }) => {
     data: { theme: newTheme },
     select: { theme: true },
   });
+
+  await invalidateTenantHomeBundle(dealership.slug);
 
   logger.info(requestId, "dealership.theme.updated", {
     dealershipId: dealership.id,

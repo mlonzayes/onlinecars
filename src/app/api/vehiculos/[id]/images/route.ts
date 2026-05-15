@@ -15,6 +15,7 @@ import {
   isAllowedMimeType,
 } from "@/lib/validators/vehicle-image";
 import { blockingSaleErrorBody, findBlockingSale } from "@/lib/sale-guards";
+import { invalidateTenantHomeBundle } from "@/lib/tenant";
 
 type VehicleParams = { id: string };
 
@@ -147,6 +148,8 @@ export const POST = withLogger<VehicleParams>(async (request, { requestId, param
       isPrimary: nextOrder === 0,
     },
   });
+
+  await invalidateTenantHomeBundle(dealership.slug);
 
   logger.info(requestId, "vehicles.images.upload.ok", {
     dealershipId: dealership.id,

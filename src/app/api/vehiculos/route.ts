@@ -5,6 +5,7 @@ import { vehicleCreateSchema } from "@/lib/validators/vehicle";
 import { NextResponse } from "next/server";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
+import { invalidateTenantHomeBundle } from "@/lib/tenant";
 
 // GET /api/vehiculos
 // Lista paginada de vehículos del concesionario autenticado.
@@ -109,6 +110,8 @@ export const POST = withLogger(async (request, { requestId }) => {
       dealershipId: dealership.id,
     },
   });
+
+  await invalidateTenantHomeBundle(dealership.slug);
 
   logger.info(requestId, "vehicles.create.ok", {
     dealershipId: dealership.id,

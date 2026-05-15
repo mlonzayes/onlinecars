@@ -1,4 +1,4 @@
-// OnlineCars — Prisma Schema MVP
+// motorflow — Prisma Schema MVP
 // Docs: https://pris.ly/d/prisma-schema
 
 generator client {
@@ -24,16 +24,20 @@ model Dealership {
   website     String?  // Dominio personalizado
   theme       Json?    // Configuración de colores/branding
   active      Boolean  @default(true)
+  plan        String   @default("base") // base | media | premium | enterprise
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  vehicles    Vehicle[]
-  leads       Lead[]
-  users       DealershipUser[]
-  customers   Customer[]
-  sales       Sale[]
-  reviews     Review[]
-  financingPlans FinancingPlan[]
+  vehicles        Vehicle[]
+  leads           Lead[]
+  users           DealershipUser[]
+  invites         DealershipInvite[]
+  customers       Customer[]
+  sales           Sale[]
+  reviews         Review[]
+  financingPlans  FinancingPlan[]
+  mlAccount       MercadoLibreAccount?
+  mlListings      MercadoLibreListing[]
 
   @@map("dealerships")
 }
@@ -49,6 +53,21 @@ model DealershipUser {
 
   @@unique([clerkUserId, dealershipId])
   @@map("dealership_users")
+}
+
+model DealershipInvite {
+  id           String     @id @default(cuid())
+  email        String?    // Opcional, solo para referencia si se usa link mágico
+  role         String     @default("seller") // admin | seller
+  token        String     @unique
+  dealershipId String
+  createdAt    DateTime   @default(now())
+  expiresAt    DateTime   // Fecha de expiración del link
+
+  dealership   Dealership @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
+
+  @@index([dealershipId])
+  @@map("dealership_invites")
 }
 
 model Vehicle {
@@ -85,6 +104,7 @@ model Vehicle {
   // La unicidad de "sale activa por vehículo" se enforce con un partial unique index
   // en SQL (ver migración add_partial_unique_active_sale).
   sales        Sale[]
+  mlListing    MercadoLibreListing?
 
   @@index([dealershipId, status])
   @@index([brand, model, year])
@@ -260,4 +280,50 @@ model FinancingPlan {
 
   @@index([dealershipId, active])
   @@map("financing_plans")
+}
+
+// ─── Integración Mercado Libre ───────────────────────────────────────────────
+
+// Cuenta ML vinculada a un concesionario (1-a-1).
+// Los tokens se almacenan encriptados con AES-256 (ver src/lib/mercadolibre/crypto.ts).
+model MercadoLibreAccount {
+  id           String    @id @default(cuid())
+  dealershipId String    @unique
+  mlUserId     String               // user_id retornado por ML
+  nickname     String?              // nickname del vendedor (display)
+  // Tokens encriptados — NO guardar en texto plano.
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime             // vencimiento del access_token
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  dealership   Dealership          @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
+  listings     MercadoLibreListing[]
+
+  @@map("ml_accounts")
+}
+
+// Publicación activa/histórica de un vehículo en ML.
+// Un vehículo puede tener solo 1 listing activo (unique vehicleId).
+model MercadoLibreListing {
+  id            String    @id @default(cuid())
+  dealershipId  String
+  vehicleId     String    @unique  // 1 publicación activa por vehículo
+  mlAccountId   String
+  mlItemId      String             // ej: "MLA12345678"
+  status        String    @default("active") // active | paused | closed | error
+  listingTypeId String    @default("silver")
+  permalink     String?            // URL pública en ML
+  lastSyncedAt  DateTime?
+  errorMessage  String?            // mensaje de error de ML si status=error
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  dealership    Dealership          @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
+  vehicle       Vehicle             @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  mlAccount     MercadoLibreAccount @relation(fields: [mlAccountId], references: [id], onDelete: Cascade)
+
+  @@index([dealershipId])
+  @@map("ml_listings")
 }

@@ -179,6 +179,30 @@ export function SaleDocuments({ saleId, initialDocuments }: SaleDocumentsProps) 
     }
   }
 
+  async function handleOpen(docId: string) {
+    // Pre-abrir la pestaña dentro del handler del click — si la abrimos
+    // después del await, el browser la bloquea como popup no solicitado.
+    const target = window.open("", "_blank", "noopener,noreferrer");
+
+    try {
+      const res = await fetch(`/api/ventas/${saleId}/documentos/${docId}/url`);
+      if (!res.ok) {
+        target?.close();
+        toast.error("No se pudo abrir el documento.");
+        return;
+      }
+      const json = (await res.json()) as { data: { url: string } };
+      if (target) {
+        target.location.href = json.data.url;
+      } else {
+        window.location.href = json.data.url;
+      }
+    } catch {
+      target?.close();
+      toast.error("Error de conexión.");
+    }
+  }
+
   async function handleDelete(docId: string) {
     if (!confirm("¿Eliminar este documento? Esta acción no se puede deshacer.")) {
       return;
@@ -220,7 +244,7 @@ export function SaleDocuments({ saleId, initialDocuments }: SaleDocumentsProps) 
               onValueChange={(v) => handleField("category", v as SaleDocumentCategory)}
             >
               <SelectTrigger id="doc-category" className="w-full">
-                <SelectValue />
+                <SelectValue>{SALE_DOCUMENT_CATEGORY_LABELS[form.category]}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {SALE_DOCUMENT_CATEGORIES.map((cat) => (
@@ -373,16 +397,15 @@ export function SaleDocuments({ saleId, initialDocuments }: SaleDocumentsProps) 
                       </div>
 
                       <div className="flex shrink-0 gap-1">
-                        <a
-                          href={doc.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          type="button"
+                          onClick={() => handleOpen(doc.id)}
                           className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
                           aria-label="Abrir documento"
                           title="Abrir"
                         >
                           <ExternalLink className="h-4 w-4" />
-                        </a>
+                        </button>
                         <button
                           type="button"
                           onClick={() => handleDelete(doc.id)}

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentDealership } from "@/lib/auth";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
+import { invalidateTenantHomeBundle } from "@/lib/tenant";
 
 type Params = { id: string };
 
@@ -58,6 +59,8 @@ export const PATCH = withLogger<Params>(async (request, { requestId, params }) =
     data: { status: body.status },
   });
 
+  await invalidateTenantHomeBundle(dealership.slug);
+
   logger.info(requestId, "reviews.update.ok", {
     dealershipId: dealership.id,
     reviewId: id,
@@ -98,6 +101,8 @@ export const DELETE = withLogger<Params>(async (_request, { requestId, params })
   }
 
   await prisma.review.delete({ where: { id } });
+
+  await invalidateTenantHomeBundle(dealership.slug);
 
   logger.info(requestId, "reviews.delete.ok", {
     dealershipId: dealership.id,

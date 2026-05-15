@@ -6,26 +6,89 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CustomersTable } from "@/components/dashboard/customers-table";
+import { TableSearch } from "@/components/dashboard/table-search";
+import { Pagination } from "@/components/dashboard/pagination";
+import { getPlanLimits } from "@/lib/plans";
+import type { Prisma } from "@prisma/client";
+import { unstable_cache } from "next/cache";
 
-export default async function ClientesPage() {
+const getCachedStats = unstable_cache(
+  async (dealershipId: string) => {
+    const [totalAll, totalIndividuals, totalCompanies] = await Promise.all([
+      prisma.customer.count({ where: { dealershipId } }),
+      prisma.customer.count({ where: { dealershipId, type: "individual" } }),
+      prisma.customer.count({ where: { dealershipId, type: "company" } }),
+    ]);
+    return { totalAll, totalIndividuals, totalCompanies };
+  },
+  ["customers-stats"],
+  { tags: ["customers-stats"], revalidate: 3600 }
+);
+
+const PAGE_SIZE = 20;
+
+interface ClientesPageProps {
+  searchParams: Promise<{ q?: string; page?: string }>;
+}
+
+function parsePage(raw: string | undefined): number {
+  if (!raw) return 1;
+  const n = parseInt(raw, 10);
+  return Number.isFinite(n) && n > 0 ? n : 1;
+}
+
+export default async function ClientesPage({ searchParams }: ClientesPageProps) {
   const dealership = await getCurrentDealership();
   if (!dealership) redirect("/onboarding");
 
-  const customers = await prisma.customer.findMany({
-    where: { dealershipId: dealership.id },
-    orderBy: { createdAt: "desc" },
-  });
+  const { q, page: pageParam } = await searchParams;
+  const search = q?.trim() ?? "";
+  const page = parsePage(pageParam);
+  const skip = (page - 1) * PAGE_SIZE;
 
-  const stats = {
-    total: customers.length,
-    individuals: customers.filter((c) => c.type === "individual").length,
-    companies: customers.filter((c) => c.type === "company").length,
+  // Tokenizamos la búsqueda por espacios y exigimos que TODAS las palabras
+  // matcheen en algún campo. Sin esto, "mateo lonzayes" no encuentra a nadie
+  // porque el firstName="Mateo" y el lastName="Lonzayes" están en columnas
+  // distintas — un contains con el string completo nunca matchea.
+  const tokens = search.split(/\s+/).filter(Boolean);
+
+  const where: Prisma.CustomerWhereInput = {
+    dealershipId: dealership.id,
+    ...(tokens.length > 0
+      ? {
+          AND: tokens.map((token) => ({
+            OR: [
+              { firstName: { contains: token, mode: "insensitive" as const } },
+              { lastName: { contains: token, mode: "insensitive" as const } },
+              { businessName: { contains: token, mode: "insensitive" as const } },
+              { documentNumber: { contains: token } },
+              { email: { contains: token, mode: "insensitive" as const } },
+            ],
+          })),
+        }
+      : {}),
   };
 
+  // Stats absolutos del dealership en caché
+  const [total, customers, stats] = await Promise.all([
+    prisma.customer.count({ where }),
+    prisma.customer.findMany({
+      where,
+      skip,
+      take: PAGE_SIZE,
+      orderBy: { createdAt: "desc" },
+    }),
+    getCachedStats(dealership.id),
+  ]);
+
+  const { totalAll, totalIndividuals, totalCompanies } = stats;
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
   const statCards = [
-    { label: "Total", value: stats.total },
-    { label: "Particulares", value: stats.individuals },
-    { label: "Empresas", value: stats.companies },
+    { label: "Total", value: totalAll },
+    { label: "Particulares", value: totalIndividuals },
+    { label: "Empresas", value: totalCompanies },
   ];
 
   return (
@@ -53,7 +116,32 @@ export default async function ClientesPage() {
         ))}
       </div>
 
-      <CustomersTable customers={customers} />
+      <TableSearch
+        placeholder="Buscar por nombre, documento o email..."
+        ariaLabel="Buscar clientes"
+      />
+
+      {customers.length === 0 && search ? (
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
+          <p className="font-medium text-muted-foreground">
+            Sin resultados para &ldquo;{search}&rdquo;
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Probá con otro nombre, documento o email.
+          </p>
+        </div>
+      ) : (
+        <CustomersTable customers={customers} limits={getPlanLimits(dealership)} />
+      )}
+
+      {total > 0 && (
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={total}
+          pageSize={PAGE_SIZE}
+        />
+      )}
     </div>
   );
 }

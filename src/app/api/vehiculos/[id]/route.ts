@@ -7,6 +7,7 @@ import { Prisma } from "@prisma/client";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { blockingSaleErrorBody, findBlockingSale } from "@/lib/sale-guards";
+import { invalidateTenantHomeBundle } from "@/lib/tenant";
 
 type VehicleParams = { id: string };
 
@@ -99,6 +100,8 @@ export const PUT = withLogger<VehicleParams>(async (request, { requestId, params
       data: parsed.data,
     });
 
+    await invalidateTenantHomeBundle(dealership.slug);
+
     logger.info(requestId, "vehicles.update.ok", {
       dealershipId: dealership.id,
       vehicleId: id,
@@ -152,6 +155,8 @@ export const DELETE = withLogger<VehicleParams>(async (_request, { requestId, pa
     await prisma.vehicle.delete({
       where: { id, dealershipId: dealership.id },
     });
+
+    await invalidateTenantHomeBundle(dealership.slug);
 
     logger.info(requestId, "vehicles.delete.ok", {
       dealershipId: dealership.id,

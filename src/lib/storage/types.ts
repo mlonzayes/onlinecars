@@ -8,9 +8,12 @@ export interface UploadParams {
 }
 
 export interface UploadResult {
-  // URL pública para servir el archivo
+  // URL para servir el archivo. Para imágenes (público) es la URL final que se
+  // muestra al visitante. Para documentos del legajo (privado) es un valor
+  // identificativo — no se usa directo desde el front; el front pide la URL
+  // firmada vía getDocumentUrl.
   url: string;
-  // Key interno del provider (necesario para borrar después)
+  // Key interno del provider (necesario para borrar después y para firmar URLs).
   key: string;
 }
 
@@ -26,8 +29,16 @@ export interface UploadDocumentParams {
   filename: string;
 }
 
+// Indica a qué bucket/destino pertenece un key. Necesario para drivers con
+// almacenamiento separado público/privado (ej: S3 con dos buckets).
+export type StorageKind = "image" | "document";
+
 export interface StorageProvider {
   upload(params: UploadParams): Promise<UploadResult>;
   uploadDocument(params: UploadDocumentParams): Promise<UploadResult>;
-  delete(key: string): Promise<void>;
+  delete(key: string, kind: StorageKind): Promise<void>;
+  // Devuelve una URL accesible para servir un documento del legajo (privado).
+  // En S3 genera una presigned URL con expiración corta. En local devuelve la
+  // URL pública directa. ttlSeconds aplica solo a drivers que firman.
+  getDocumentUrl(key: string, ttlSeconds?: number): Promise<string>;
 }

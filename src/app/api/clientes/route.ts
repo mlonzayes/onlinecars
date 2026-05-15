@@ -6,6 +6,7 @@ import { customerCreateSchema } from "@/lib/validators/customer";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { Prisma } from "@prisma/client";
+import { revalidateTag } from "next/cache";
 
 // GET /api/clientes
 // Lista paginada de clientes del concesionario autenticado.
@@ -27,18 +28,23 @@ export const GET = withLogger(async (request, { requestId }) => {
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
   const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") ?? "20", 10)));
   const search = searchParams.get("search")?.trim() ?? "";
+  // Tokenizamos por espacios y exigimos AND de matches — sino "mateo lonzayes"
+  // nunca matchea porque el firstName y lastName viven en columnas distintas.
+  const tokens = search.split(/\s+/).filter(Boolean);
 
   const where: Prisma.CustomerWhereInput = {
     dealershipId: dealership.id,
-    ...(search
+    ...(tokens.length > 0
       ? {
-          OR: [
-            { firstName: { contains: search, mode: "insensitive" } },
-            { lastName: { contains: search, mode: "insensitive" } },
-            { businessName: { contains: search, mode: "insensitive" } },
-            { documentNumber: { contains: search } },
-            { email: { contains: search, mode: "insensitive" } },
-          ],
+          AND: tokens.map((token) => ({
+            OR: [
+              { firstName: { contains: token, mode: "insensitive" as const } },
+              { lastName: { contains: token, mode: "insensitive" as const } },
+              { businessName: { contains: token, mode: "insensitive" as const } },
+              { documentNumber: { contains: token } },
+              { email: { contains: token, mode: "insensitive" as const } },
+            ],
+          })),
         }
       : {}),
   };
@@ -114,6 +120,8 @@ export const POST = withLogger(async (request, { requestId }) => {
       customerId: customer.id,
       documentType: customer.documentType,
     });
+
+    revalidateTag("customers-stats");
 
     return NextResponse.json({ data: customer }, { status: 201 });
   } catch (error) {

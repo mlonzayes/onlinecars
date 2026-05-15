@@ -1,5 +1,8 @@
 import { prisma } from "./prisma";
 import type { Dealership } from "@prisma/client";
+import { redis } from "./redis";
+import { logger } from "./logger";
+import type { DealershipTheme } from "@/types";
 
 /**
  * Obtiene un dealership por su slug.
@@ -183,4 +186,198 @@ export async function getApprovedReviews(dealershipId: string) {
     orderBy: { createdAt: "desc" },
     take: 10,
   });
+}
+
+// ============================================================================
+// Tenant home bundle — cache-aside del paquete completo del home del tenant.
+// ============================================================================
+//
+// Una sola key Redis por slug. Se invalida desde los handlers de mutación que
+// afecten cualquier dato del bundle (vehículos, reviews, theme, etc.) llamando
+// invalidateTenantHomeBundle(slug). TTL es safety net: la fuente de verdad es
+// la invalidación activa.
+//
+// El bundle se almacena ya serializado (Decimal → string, Date → ISO string)
+// para que los Server Components que lo consumen puedan pasarlo a Client
+// Components sin re-procesar.
+
+const TENANT_HOME_TTL_SECONDS = 1800; // 30 min
+
+function tenantHomeKey(slug: string): string {
+  return `tenant:${slug}:home`;
+}
+
+export interface TenantHomeBundleVehicle {
+  id: string;
+  title: string;
+  brand: string;
+  model: string;
+  year: number;
+  price: string;
+  currency: string;
+  kilometers: number | null;
+  fuelType: string | null;
+  transmission: string | null;
+  bodyType: string | null;
+  condition: string;
+  featured: boolean;
+  images: Array<{
+    id: string;
+    url: string;
+    isPrimary: boolean;
+    alt: string | null;
+  }>;
+}
+
+export interface TenantHomeBundleReview {
+  id: string;
+  name: string;
+  content: string;
+  rating: number;
+  createdAt: string;
+}
+
+export interface TenantHomeBundleDealership {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  logo: string | null;
+  phone: string | null;
+  email: string | null;
+  whatsapp: string | null;
+  address: string | null;
+  city: string | null;
+  province: string | null;
+  website: string | null;
+  theme: DealershipTheme | null;
+}
+
+export interface TenantHomeBundle {
+  dealership: TenantHomeBundleDealership;
+  vehicles: TenantHomeBundleVehicle[];
+  stockBrands: string[];
+  displayBrands: { name: string; logoUrl: string | null }[];
+  reviews: TenantHomeBundleReview[];
+}
+
+async function fetchTenantHomeBundleFromDb(
+  slug: string
+): Promise<TenantHomeBundle | null> {
+  const dealership = await getDealershipBySlug(slug);
+  if (!dealership) return null;
+
+  const theme = dealership.theme as DealershipTheme | null;
+
+  const [vehicles, stockBrands, reviews, displayBrands] = await Promise.all([
+    getPublishedVehicles(dealership.id),
+    getAvailableBrands(dealership.id),
+    getApprovedReviews(dealership.id),
+    getDisplayBrands(dealership.id, theme),
+  ]);
+
+  // Mismo cap que la page actual: 18 vehículos en el home (featured + recent).
+  const featured = vehicles.filter((v) => v.featured);
+  const others = vehicles.filter((v) => !v.featured);
+  const candidates = [...featured, ...others].slice(0, 18);
+
+  return {
+    dealership: {
+      id: dealership.id,
+      name: dealership.name,
+      slug: dealership.slug,
+      description: dealership.description,
+      logo: dealership.logo,
+      phone: dealership.phone,
+      email: dealership.email,
+      whatsapp: dealership.whatsapp,
+      address: dealership.address,
+      city: dealership.city,
+      province: dealership.province,
+      website: dealership.website,
+      theme,
+    },
+    vehicles: candidates.map((v) => ({
+      id: v.id,
+      title: v.title,
+      brand: v.brand,
+      model: v.model,
+      year: v.year,
+      price: v.price.toString(),
+      currency: v.currency,
+      kilometers: v.kilometers,
+      fuelType: v.fuelType,
+      transmission: v.transmission,
+      bodyType: v.bodyType,
+      condition: v.condition,
+      featured: v.featured,
+      images: v.images.map((img) => ({
+        id: img.id,
+        url: img.url,
+        isPrimary: img.isPrimary,
+        alt: img.alt,
+      })),
+    })),
+    stockBrands,
+    displayBrands,
+    reviews: reviews.map((r) => ({
+      id: r.id,
+      name: r.name,
+      content: r.content,
+      rating: r.rating,
+      createdAt: r.createdAt.toISOString(),
+    })),
+  };
+}
+
+/**
+ * Devuelve el paquete completo de datos del home del tenant.
+ * Cache-aside con Upstash. Fail-open en errores de Redis (cae a DB).
+ */
+export async function getTenantHomeBundle(
+  slug: string
+): Promise<TenantHomeBundle | null> {
+  const key = tenantHomeKey(slug);
+
+  try {
+    const cached = await redis.get<TenantHomeBundle>(key);
+    if (cached) return cached;
+  } catch (error) {
+    // Cache caído — fail-open. Loggeamos pero no fallamos la request.
+    logger.warn(undefined, "tenant.home.cache_read_failed", {
+      slug,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  const bundle = await fetchTenantHomeBundleFromDb(slug);
+  if (!bundle) return null;
+
+  try {
+    await redis.set(key, bundle, { ex: TENANT_HOME_TTL_SECONDS });
+  } catch (error) {
+    logger.warn(undefined, "tenant.home.cache_write_failed", {
+      slug,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  return bundle;
+}
+
+/**
+ * Invalida el cache del home del tenant. Llamar desde TODOS los handlers que
+ * modifiquen datos visibles en el home: vehículos, reviews, theme, dealership.
+ *
+ * No tira si Redis está caído — solo loggea (mismo principio fail-open).
+ */
+export async function invalidateTenantHomeBundle(slug: string): Promise<void> {
+  try {
+    await redis.del(tenantHomeKey(slug));
+  } catch (error) {
+    logger.warn(undefined, "tenant.home.cache_invalidate_failed", {
+      slug,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 }

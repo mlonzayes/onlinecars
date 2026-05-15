@@ -6,6 +6,7 @@ import { customerUpdateSchema } from "@/lib/validators/customer";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { Prisma } from "@prisma/client";
+import { revalidateTag } from "next/cache";
 
 type CustomerParams = { id: string };
 
@@ -84,6 +85,8 @@ export const PUT = withLogger<CustomerParams>(async (request, { requestId, param
       customerId: id,
     });
 
+    revalidateTag("customers-stats");
+
     return NextResponse.json({ data: customer });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -130,6 +133,8 @@ export const DELETE = withLogger<CustomerParams>(async (_request, { requestId, p
       dealershipId: dealership.id,
       customerId: id,
     });
+
+    revalidateTag("customers-stats");
 
     return NextResponse.json({ data: { id } });
   } catch (error) {

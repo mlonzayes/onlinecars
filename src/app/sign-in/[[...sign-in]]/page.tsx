@@ -9,7 +9,14 @@ export default function SignInPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <SignIn />
+      <SignIn 
+        appearance={{
+          elements: {
+            formButtonPrimary: "bg-blue-600 hover:bg-blue-700 shadow-sm transition-all",
+            card: "shadow-2xl border border-gray-200 rounded-2xl",
+          }
+        }}
+      />
     </div>
   );
 }

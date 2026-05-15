@@ -6,6 +6,7 @@ import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { imageOrderSchema } from "@/lib/validators/vehicle-image";
 import { blockingSaleErrorBody, findBlockingSale } from "@/lib/sale-guards";
+import { invalidateTenantHomeBundle } from "@/lib/tenant";
 
 type VehicleParams = { id: string };
 
@@ -96,6 +97,8 @@ export const PUT = withLogger<VehicleParams>(async (request, { requestId, params
       })
     )
   );
+
+  await invalidateTenantHomeBundle(dealership.slug);
 
   logger.info(requestId, "vehicles.images.order.ok", {
     dealershipId: dealership.id,

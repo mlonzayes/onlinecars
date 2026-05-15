@@ -6,6 +6,7 @@ import { storage } from "@/lib/storage";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { blockingSaleErrorBody, findBlockingSale } from "@/lib/sale-guards";
+import { invalidateTenantHomeBundle } from "@/lib/tenant";
 
 type Params = { id: string; imageId: string };
 
@@ -58,7 +59,7 @@ export const DELETE = withLogger<Params>(async (_request, { requestId, params })
 
   // Borrar el archivo primero. Si esto falla rompemos antes de tocar el DB,
   // así evitamos quedarnos con un registro huérfano de un archivo que sigue existiendo.
-  await storage.delete(image.key);
+  await storage.delete(image.key, "image");
 
   await prisma.$transaction(async (tx) => {
     await tx.vehicleImage.delete({ where: { id: imageId } });
@@ -76,6 +77,8 @@ export const DELETE = withLogger<Params>(async (_request, { requestId, params })
       }
     }
   });
+
+  await invalidateTenantHomeBundle(dealership.slug);
 
   logger.info(requestId, "vehicles.images.delete.ok", {
     dealershipId: dealership.id,

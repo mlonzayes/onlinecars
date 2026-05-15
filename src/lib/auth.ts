@@ -1,12 +1,13 @@
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "./prisma";
 import type { Dealership, DealershipUser } from "@prisma/client";
+import { cache } from "react";
 
 export type DealershipWithUser = Dealership & {
   currentUser: DealershipUser;
 };
 
-export async function getCurrentDealership(): Promise<DealershipWithUser | null> {
+export const getCurrentDealership = cache(async (): Promise<DealershipWithUser | null> => {
   const { userId } = await auth();
   if (!userId) return null;
 
@@ -21,4 +22,4 @@ export async function getCurrentDealership(): Promise<DealershipWithUser | null>
     ...dealershipUser.dealership,
     currentUser: dealershipUser,
   };
-}
+});

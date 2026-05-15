@@ -2,16 +2,32 @@ import { NextResponse } from "next/server";
 import { getDealershipBySlug, getPublishedVehicles } from "@/lib/tenant";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
+import { applyRateLimit, getClientIp, publicVehiclesLimiter } from "@/lib/rate-limit";
 
 type TenantParams = { slug: string };
 
 export const GET = withLogger<TenantParams>(async (request, { requestId, params }) => {
   const { slug } = params;
+
+  // Catálogo público: rate limit por IP solamente. Defensa contra scraping
+  // automatizado. 60 req/min es suficiente para navegación humana normal.
+  const ip = getClientIp(request);
+  const rl = await applyRateLimit(publicVehiclesLimiter, ip, requestId, { slug });
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes. Probá en unos minutos." },
+      { status: 429, headers: rl.headers }
+    );
+  }
+
   const dealership = await getDealershipBySlug(slug);
 
   if (!dealership) {
     logger.warn(requestId, "public.vehicles.tenant_not_found", { slug });
-    return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Concesionario no encontrado" },
+      { status: 404, headers: rl.headers }
+    );
   }
 
   const url = new URL(request.url);
@@ -43,5 +59,5 @@ export const GET = withLogger<TenantParams>(async (request, { requestId, params 
     count: serialized.length,
   });
 
-  return NextResponse.json({ data: serialized });
+  return NextResponse.json({ data: serialized }, { headers: rl.headers });
 });

@@ -27,18 +27,26 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import type { Customer } from "@prisma/client";
+import type { PlanLimits } from "@/lib/plans";
 
 interface CustomersTableProps {
   customers: Customer[];
+  limits: PlanLimits;
 }
 
 const TOAST_DURATION = 2000;
 
-export function CustomersTable({ customers }: CustomersTableProps) {
+export function CustomersTable({ customers, limits }: CustomersTableProps) {
   const router = useRouter();
   const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const isAllSelected = selectedIds.size > 0 && selectedIds.size === customers.length;
+  const isSomeSelected = selectedIds.size > 0 && selectedIds.size < customers.length;
 
   function setLoading(id: string, loading: boolean) {
     setLoadingIds((prev) => {
@@ -80,10 +88,38 @@ export function CustomersTable({ customers }: CustomersTableProps) {
   }
 
   return (
-    <div className="rounded-lg border">
-      <Table>
+    <div className="space-y-4">
+      {selectedIds.size > 0 && (
+        <div className="flex items-center justify-between rounded-lg border bg-muted/50 px-4 py-2">
+          <span className="text-sm font-medium">{selectedIds.size} seleccionados</span>
+          <Button variant="destructive" size="sm" onClick={() => {
+            if (!confirm("¿Eliminar clientes seleccionados?")) return;
+            toast.error("Funcionalidad bulk en desarrollo.");
+          }}>
+            <Trash2 className="mr-2 h-4 w-4" /> Eliminar seleccionados
+          </Button>
+        </div>
+      )}
+
+      <div className="rounded-lg border">
+        <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-[40px] px-4">
+              <Checkbox 
+                checked={isAllSelected || (isSomeSelected ? "indeterminate" : false)}
+                onCheckedChange={(checked) => {
+                  if (!limits.allowBulkActions) {
+                    return toast("Mejorá tu plan", { description: "Las acciones masivas están disponibles a partir del plan Media." });
+                  }
+                  if (checked) {
+                    setSelectedIds(new Set(customers.map((c) => c.id)));
+                  } else {
+                    setSelectedIds(new Set());
+                  }
+                }}
+              />
+            </TableHead>
             <TableHead>Cliente</TableHead>
             <TableHead>Documento</TableHead>
             <TableHead>Tipo</TableHead>
@@ -99,7 +135,21 @@ export function CustomersTable({ customers }: CustomersTableProps) {
                 : [customer.firstName, customer.lastName].filter(Boolean).join(" ");
 
             return (
-              <TableRow key={customer.id}>
+              <TableRow key={customer.id} className={selectedIds.has(customer.id) ? "bg-muted/50" : ""}>
+                <TableCell className="px-4">
+                  <Checkbox 
+                    checked={selectedIds.has(customer.id)}
+                    onCheckedChange={(checked) => {
+                      if (!limits.allowBulkActions) {
+                        return toast("Mejorá tu plan", { description: "Las acciones masivas están disponibles a partir del plan Media." });
+                      }
+                      const next = new Set(selectedIds);
+                      if (checked) next.add(customer.id);
+                      else next.delete(customer.id);
+                      setSelectedIds(next);
+                    }}
+                  />
+                </TableCell>
                 <TableCell>
                   <p className="font-medium leading-tight">{displayName}</p>
                   {customer.type === "company" && (
@@ -178,6 +228,7 @@ export function CustomersTable({ customers }: CustomersTableProps) {
           })}
         </TableBody>
       </Table>
+      </div>
     </div>
   );
 }

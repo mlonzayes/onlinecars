@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Car, Eye, EyeOff, Loader2, MoreHorizontal, Pencil, Star, Trash2 } from "lucide-react";
+import { Car, Eye, EyeOff, Loader2, MoreHorizontal, Pencil, Star, Trash2, ShoppingBag, Lock } from "lucide-react";
 import { toast } from "sonner";
 import {
   Table,
@@ -25,6 +25,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn, formatCurrency } from "@/lib/utils";
 import type { VehicleImage } from "@prisma/client";
+import type { PlanLimits } from "@/lib/plans";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Versión serializada: price como string, fechas como string
 export interface SerializedVehicleRow {
@@ -54,6 +56,7 @@ export interface SerializedVehicleRow {
 
 interface VehicleTableProps {
   vehicles: SerializedVehicleRow[];
+  limits: PlanLimits;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -64,9 +67,13 @@ const STATUS_LABELS: Record<string, string> = {
 
 const TOAST_DURATION = 2000;
 
-export function VehicleTable({ vehicles }: VehicleTableProps) {
+export function VehicleTable({ vehicles, limits }: VehicleTableProps) {
   const router = useRouter();
   const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const isAllSelected = selectedIds.size > 0 && selectedIds.size === vehicles.length;
+  const isSomeSelected = selectedIds.size > 0 && selectedIds.size < vehicles.length;
 
   function setLoading(id: string, loading: boolean) {
     setLoadingIds((prev) => {
@@ -140,10 +147,39 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
   }
 
   return (
-    <div className="rounded-lg border">
-      <Table>
+    <div className="space-y-4">
+      {selectedIds.size > 0 && (
+        <div className="flex items-center justify-between rounded-lg border bg-muted/50 px-4 py-2">
+          <span className="text-sm font-medium">{selectedIds.size} seleccionados</span>
+          <Button variant="destructive" size="sm" onClick={() => {
+            if (!confirm("¿Eliminar vehículos seleccionados?")) return;
+            // Acá iría la llamada a la API bulk (implementación backend pendiente)
+            toast.error("Funcionalidad bulk en desarrollo.");
+          }}>
+            <Trash2 className="mr-2 h-4 w-4" /> Eliminar seleccionados
+          </Button>
+        </div>
+      )}
+      
+      <div className="rounded-lg border">
+        <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-[40px] px-4">
+              <Checkbox 
+                checked={isAllSelected || (isSomeSelected ? "indeterminate" : false)}
+                onCheckedChange={(checked) => {
+                  if (!limits.allowBulkActions) {
+                    return toast("Mejorá tu plan", { description: "Las acciones masivas están disponibles a partir del plan Media." });
+                  }
+                  if (checked) {
+                    setSelectedIds(new Set(vehicles.map((v) => v.id)));
+                  } else {
+                    setSelectedIds(new Set());
+                  }
+                }}
+              />
+            </TableHead>
             <TableHead className="w-[56px]" />
             <TableHead>Vehículo</TableHead>
             <TableHead>Precio</TableHead>
@@ -159,7 +195,23 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
             const isPublished = vehicle.publishedAt !== null;
 
             return (
-              <TableRow key={vehicle.id}>
+              <TableRow key={vehicle.id} className={selectedIds.has(vehicle.id) ? "bg-muted/50" : ""}>
+                {/* Checkbox */}
+                <TableCell className="px-4">
+                  <Checkbox 
+                    checked={selectedIds.has(vehicle.id)}
+                    onCheckedChange={(checked) => {
+                      if (!limits.allowBulkActions) {
+                        return toast("Mejorá tu plan", { description: "Las acciones masivas están disponibles a partir del plan Media." });
+                      }
+                      const next = new Set(selectedIds);
+                      if (checked) next.add(vehicle.id);
+                      else next.delete(vehicle.id);
+                      setSelectedIds(next);
+                    }}
+                  />
+                </TableCell>
+                
                 {/* Imagen */}
                 <TableCell>
                   <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-md border bg-muted">
@@ -259,8 +311,24 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
                         {isPublished ? (
                           <><EyeOff className="mr-2 h-4 w-4" /> Despublicar</>
                         ) : (
-                          <><Eye className="mr-2 h-4 w-4" /> Publicar</>
+                          <><Eye className="mr-2 h-4 w-4" /> Publicar en Web</>
                         )}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          if (!limits.allowMLIntegration) {
+                            return toast("Mejorá tu plan", { description: "Publicar en Mercado Libre requiere el plan Media o Premium." });
+                          }
+                          // Optimistic update redirect
+                          router.push(`/dashboard/vehiculos/${vehicle.id}#ml`);
+                        }}
+                      >
+                        {limits.allowMLIntegration ? (
+                          <ShoppingBag className="mr-2 h-4 w-4" />
+                        ) : (
+                          <Lock className="mr-2 h-4 w-4 text-muted-foreground" />
+                        )}
+                        Publicar en ML
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handleFeaturedToggle(vehicle.id, vehicle.featured)}
@@ -284,6 +352,7 @@ export function VehicleTable({ vehicles }: VehicleTableProps) {
           })}
         </TableBody>
       </Table>
+      </div>
     </div>
   );
 }

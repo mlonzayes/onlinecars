@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,34 +20,22 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import {
   CUSTOMER_TYPES,
+  CUSTOMER_TYPE_LABELS,
   CUSTOMER_DOCUMENT_TYPES,
   PROVINCIAS_ARGENTINA,
 } from "@/lib/constants";
+import { customerCreateSchema, type CustomerCreateInput } from "@/lib/validators/customer";
 import type { Customer } from "@prisma/client";
 
 interface CustomerFormProps {
   customer?: Customer;
 }
 
-interface FormState {
-  type: string;
-  documentType: string;
-  documentNumber: string;
-  firstName: string;
-  lastName: string;
-  businessName: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  province: string;
-  notes: string;
-}
-
-function buildInitialState(customer?: Customer): FormState {
+function buildDefaults(customer?: Customer): CustomerCreateInput {
   return {
-    type: customer?.type ?? "individual",
-    documentType: customer?.documentType ?? "DNI",
+    type: (customer?.type as CustomerCreateInput["type"]) ?? "individual",
+    documentType:
+      (customer?.documentType as CustomerCreateInput["documentType"]) ?? "DNI",
     documentNumber: customer?.documentNumber ?? "",
     firstName: customer?.firstName ?? "",
     lastName: customer?.lastName ?? "",
@@ -54,47 +44,64 @@ function buildInitialState(customer?: Customer): FormState {
     phone: customer?.phone ?? "",
     address: customer?.address ?? "",
     city: customer?.city ?? "",
-    province: customer?.province ?? "",
+    province: customer?.province as CustomerCreateInput["province"],
     notes: customer?.notes ?? "",
   };
 }
 
+// Mensaje de error rojo debajo de un campo. Centralizado para mantener
+// consistencia visual a lo largo del form.
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="text-xs text-red-600 mt-1">{message}</p>;
+}
+
 export function CustomerForm({ customer }: CustomerFormProps) {
   const router = useRouter();
-  const [form, setForm] = useState<FormState>(() => buildInitialState(customer));
-  const [loading, setLoading] = useState(false);
-
   const isEditing = Boolean(customer);
-  const isCompany = form.type === "company";
 
-  function handleChange(field: keyof FormState, value: string) {
-    setForm((prev) => {
-      const next = { ...prev, [field]: value };
-      // Si pasa a empresa, forzamos CUIT
-      if (field === "type" && value === "company") {
-        next.documentType = "CUIT";
-      }
-      return next;
-    });
-  }
+  // Manejamos el loading aparte del isSubmitting de RHF: en éxito no lo
+  // bajamos para evitar el doble-click clásico (ver regla 14 del CLAUDE.md).
+  const [submitting, setSubmitting] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<CustomerCreateInput>({
+    resolver: zodResolver(customerCreateSchema),
+    defaultValues: buildDefaults(customer),
+    mode: "onBlur",
+  });
 
+  const type = watch("type");
+  const documentType = watch("documentType");
+  const isCompany = type === "company";
+
+  // Si pasa a empresa, forzamos CUIT (lo que después valida el schema cross-field).
+  useEffect(() => {
+    if (isCompany && documentType !== "CUIT") {
+      setValue("documentType", "CUIT", { shouldValidate: true });
+    }
+  }, [isCompany, documentType, setValue]);
+
+  const onSubmit = handleSubmit(async (data) => {
+    setSubmitting(true);
+
+    // Limpiamos strings vacíos a undefined antes de enviar — la API espera ese shape.
     const payload = {
-      type: form.type,
-      documentType: form.documentType,
-      documentNumber: form.documentNumber,
-      firstName: form.firstName,
-      lastName: form.lastName || undefined,
-      businessName: form.businessName || undefined,
-      email: form.email || undefined,
-      phone: form.phone || undefined,
-      address: form.address || undefined,
-      city: form.city || undefined,
-      province: form.province || undefined,
-      notes: form.notes || undefined,
+      ...data,
+      lastName: data.lastName || undefined,
+      businessName: data.businessName || undefined,
+      email: data.email || undefined,
+      phone: data.phone || undefined,
+      address: data.address || undefined,
+      city: data.city || undefined,
+      province: data.province || undefined,
+      notes: data.notes || undefined,
     };
 
     try {
@@ -108,8 +115,9 @@ export function CustomerForm({ customer }: CustomerFormProps) {
       });
 
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        toast.error(data.error ?? "Ocurrió un error. Intentá de nuevo.");
+        const body = await res.json().catch(() => ({}));
+        toast.error(body.error ?? "Ocurrió un error. Intentá de nuevo.");
+        setSubmitting(false);
         return;
       }
 
@@ -118,64 +126,89 @@ export function CustomerForm({ customer }: CustomerFormProps) {
       router.refresh();
     } catch {
       toast.error("Error de conexión. Intentá de nuevo.");
-    } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
-  }
+  });
+
+  const documentPlaceholder = (() => {
+    switch (documentType) {
+      case "DNI": return "12345678";
+      case "CUIT":
+      case "CUIL": return "30-12345678-9";
+      case "PASAPORTE": return "AA123456";
+      default: return "";
+    }
+  })();
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={onSubmit}>
       <Card>
         <CardContent className="pt-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="type">Tipo</Label>
-              <Select
-                value={form.type}
-                onValueChange={(v) => v !== null && handleChange("type", v)}
-              >
-                <SelectTrigger id="type">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CUSTOMER_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t === "individual" ? "Particular" : "Empresa"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                control={control}
+                name="type"
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={(v) => v !== null && field.onChange(v)}
+                  >
+                    <SelectTrigger id="type">
+                      {/* SelectValue por default muestra el value crudo (ej: "individual").
+                          Forzamos el label en español pasándolo como children. */}
+                      <SelectValue>{CUSTOMER_TYPE_LABELS[field.value]}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CUSTOMER_TYPES.map((t) => (
+                        <SelectItem key={t} value={t}>
+                          {CUSTOMER_TYPE_LABELS[t]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <FieldError message={errors.type?.message} />
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="documentType">Tipo de documento</Label>
-              <Select
-                value={form.documentType}
-                onValueChange={(v) => v !== null && handleChange("documentType", v)}
-                disabled={isCompany}
-              >
-                <SelectTrigger id="documentType">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CUSTOMER_DOCUMENT_TYPES.map((d) => (
-                    <SelectItem key={d} value={d}>
-                      {d}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                control={control}
+                name="documentType"
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={(v) => v !== null && field.onChange(v)}
+                    disabled={isCompany}
+                  >
+                    <SelectTrigger id="documentType">
+                      <SelectValue>{field.value}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CUSTOMER_DOCUMENT_TYPES.map((d) => (
+                        <SelectItem key={d} value={d}>
+                          {d}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <FieldError message={errors.documentType?.message} />
             </div>
 
             <div className="sm:col-span-2 space-y-1.5">
               <Label htmlFor="documentNumber">Número de documento *</Label>
               <Input
                 id="documentNumber"
-                value={form.documentNumber}
-                onChange={(e) => handleChange("documentNumber", e.target.value)}
-                placeholder={isCompany ? "30-12345678-9" : "12345678"}
-                required
+                placeholder={documentPlaceholder}
+                aria-invalid={!!errors.documentNumber}
+                {...register("documentNumber")}
               />
+              <FieldError message={errors.documentNumber?.message} />
             </div>
 
             {isCompany && (
@@ -183,11 +216,11 @@ export function CustomerForm({ customer }: CustomerFormProps) {
                 <Label htmlFor="businessName">Razón social *</Label>
                 <Input
                   id="businessName"
-                  value={form.businessName}
-                  onChange={(e) => handleChange("businessName", e.target.value)}
                   placeholder="Auto Norte SA"
-                  required
+                  aria-invalid={!!errors.businessName}
+                  {...register("businessName")}
                 />
+                <FieldError message={errors.businessName?.message} />
               </div>
             )}
 
@@ -197,21 +230,24 @@ export function CustomerForm({ customer }: CustomerFormProps) {
               </Label>
               <Input
                 id="firstName"
-                value={form.firstName}
-                onChange={(e) => handleChange("firstName", e.target.value)}
                 placeholder="Juan"
-                required
+                aria-invalid={!!errors.firstName}
+                {...register("firstName")}
               />
+              <FieldError message={errors.firstName?.message} />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="lastName">{isCompany ? "Apellido del contacto" : "Apellido"}</Label>
+              <Label htmlFor="lastName">
+                {isCompany ? "Apellido del contacto" : "Apellido"}
+              </Label>
               <Input
                 id="lastName"
-                value={form.lastName}
-                onChange={(e) => handleChange("lastName", e.target.value)}
                 placeholder="Pérez"
+                aria-invalid={!!errors.lastName}
+                {...register("lastName")}
               />
+              <FieldError message={errors.lastName?.message} />
             </div>
 
             <div className="space-y-1.5">
@@ -219,81 +255,99 @@ export function CustomerForm({ customer }: CustomerFormProps) {
               <Input
                 id="email"
                 type="email"
-                value={form.email}
-                onChange={(e) => handleChange("email", e.target.value)}
                 placeholder="cliente@email.com"
+                aria-invalid={!!errors.email}
+                {...register("email")}
               />
+              <FieldError message={errors.email?.message} />
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="phone">Teléfono</Label>
               <Input
                 id="phone"
-                value={form.phone}
-                onChange={(e) => handleChange("phone", e.target.value)}
                 placeholder="11 1234-5678"
+                aria-invalid={!!errors.phone}
+                {...register("phone")}
               />
+              <FieldError message={errors.phone?.message} />
             </div>
 
             <div className="sm:col-span-2 space-y-1.5">
               <Label htmlFor="address">Dirección</Label>
               <Input
                 id="address"
-                value={form.address}
-                onChange={(e) => handleChange("address", e.target.value)}
                 placeholder="Av. Siempre Viva 742"
+                aria-invalid={!!errors.address}
+                {...register("address")}
               />
+              <FieldError message={errors.address?.message} />
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="city">Localidad</Label>
               <Input
                 id="city"
-                value={form.city}
-                onChange={(e) => handleChange("city", e.target.value)}
                 placeholder="CABA"
+                aria-invalid={!!errors.city}
+                {...register("city")}
               />
+              <FieldError message={errors.city?.message} />
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="province">Provincia</Label>
-              <Select
-                value={form.province}
-                onValueChange={(v) => v !== null && handleChange("province", v)}
-              >
-                <SelectTrigger id="province">
-                  <SelectValue placeholder="Seleccionar" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PROVINCIAS_ARGENTINA.map((p) => (
-                    <SelectItem key={p} value={p}>
-                      {p}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                control={control}
+                name="province"
+                render={({ field }) => (
+                  <Select
+                    value={field.value ?? ""}
+                    onValueChange={(v) => v !== null && field.onChange(v || undefined)}
+                  >
+                    <SelectTrigger id="province">
+                      <SelectValue placeholder="Seleccionar">
+                        {field.value || "Seleccionar"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PROVINCIAS_ARGENTINA.map((p) => (
+                        <SelectItem key={p} value={p}>
+                          {p}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <FieldError message={errors.province?.message} />
             </div>
 
             <div className="sm:col-span-2 space-y-1.5">
               <Label htmlFor="notes">Notas</Label>
               <Textarea
                 id="notes"
-                value={form.notes}
-                onChange={(e) => handleChange("notes", e.target.value)}
                 placeholder="Notas internas sobre el cliente..."
                 rows={4}
                 maxLength={2000}
+                aria-invalid={!!errors.notes}
+                {...register("notes")}
               />
+              <FieldError message={errors.notes?.message} />
             </div>
           </div>
         </CardContent>
       </Card>
 
       <div className="mt-6 flex gap-3">
-        <Button type="submit" disabled={loading}>
-          {loading ? "Guardando..." : "Guardar"}
+        <Button type="submit" disabled={submitting}>
+          {submitting ? "Guardando..." : "Guardar"}
         </Button>
-        <Button variant="outline" nativeButton={false} render={<Link href="/dashboard/clientes" />}>
+        <Button
+          variant="outline"
+          nativeButton={false}
+          render={<Link href="/dashboard/clientes" />}
+        >
           Cancelar
         </Button>
       </div>

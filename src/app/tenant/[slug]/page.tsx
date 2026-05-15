@@ -1,13 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { MessageSquareQuote } from "lucide-react";
-import {
-  getDealershipBySlug,
-  getPublishedVehicles,
-  getAvailableBrands,
-  getApprovedReviews,
-  getDisplayBrands,
-} from "@/lib/tenant";
+import { getTenantHomeBundle } from "@/lib/tenant";
 import { Section } from "@/components/tenant/section";
 import { HeroSearch } from "@/components/tenant/hero-search";
 import { CategoriesGrid } from "@/components/tenant/categories-grid";
@@ -17,7 +11,6 @@ import { WhyChooseUs } from "@/components/tenant/why-choose-us";
 import { DualCTA } from "@/components/tenant/dual-cta";
 import { TenantContactForm } from "@/components/tenant/contact-form";
 import { ReviewCard } from "@/components/tenant/review-card";
-import type { DealershipTheme } from "@/types";
 
 interface TenantHomePageProps {
   params: Promise<{ slug: string }>;
@@ -25,48 +18,13 @@ interface TenantHomePageProps {
 
 export default async function TenantHomePage({ params }: TenantHomePageProps) {
   const { slug } = await params;
-  const dealership = await getDealershipBySlug(slug);
-  if (!dealership) notFound();
+  const bundle = await getTenantHomeBundle(slug);
+  if (!bundle) notFound();
 
-  const theme = dealership.theme as DealershipTheme | null;
+  const { dealership, vehicles: serializedVehicles, stockBrands, displayBrands, reviews } = bundle;
+  const theme = dealership.theme;
   const primaryColor = theme?.colorPrimary ?? "#2563eb";
-
-  const [vehicles, stockBrands, reviews, displayBrands] = await Promise.all([
-    getPublishedVehicles(dealership.id),
-    getAvailableBrands(dealership.id),
-    getApprovedReviews(dealership.id),
-    getDisplayBrands(dealership.id, theme),
-  ]);
-
   const basePath = `/tenant/${slug}`;
-
-  // Featured primero, después el resto. Limitar a una cantidad razonable para los tabs.
-  const featuredVehicles = vehicles.filter((v) => v.featured);
-  const otherVehicles = vehicles.filter((v) => !v.featured);
-  const candidateVehicles = [...featuredVehicles, ...otherVehicles].slice(0, 18);
-
-  // Serializar Decimal/Date para pasar a Client Components.
-  const serializedVehicles = candidateVehicles.map((v) => ({
-    id: v.id,
-    title: v.title,
-    brand: v.brand,
-    model: v.model,
-    year: v.year,
-    price: v.price.toString(),
-    currency: v.currency,
-    kilometers: v.kilometers,
-    fuelType: v.fuelType,
-    transmission: v.transmission,
-    bodyType: v.bodyType,
-    condition: v.condition,
-    featured: v.featured,
-    images: v.images.map((img) => ({
-      id: img.id,
-      url: img.url,
-      isPrimary: img.isPrimary,
-      alt: img.alt,
-    })),
-  }));
 
   return (
     <>

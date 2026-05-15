@@ -15,6 +15,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { LeadDetailSheet } from "./lead-detail-sheet";
 
@@ -206,9 +213,14 @@ export function LeadsTable({ leads: initialLeads }: LeadsTableProps) {
   const [leads, setLeads] = useState<SerializedLead[]>(initialLeads);
   const [selectedLead, setSelectedLead] = useState<SerializedLead | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [sourceFilter, setSourceFilter] = useState("all");
 
-  const unreadLeads = leads.filter((l) => l.status === "new");
-  const contactedLeads = leads.filter((l) => l.status !== "new");
+  const filteredLeads = leads.filter(
+    (l) => sourceFilter === "all" || l.source === sourceFilter
+  );
+
+  const unreadLeads = filteredLeads.filter((l) => l.status === "new");
+  const contactedLeads = filteredLeads.filter((l) => l.status !== "new");
 
   function handleSelect(lead: SerializedLead) {
     setSelectedLead(lead);
@@ -264,22 +276,36 @@ export function LeadsTable({ leads: initialLeads }: LeadsTableProps) {
   return (
     <>
       <Tabs defaultValue="all">
-        <TabsList className="mb-4">
-          <TabsTrigger value="all">Todos ({leads.length})</TabsTrigger>
-          <TabsTrigger value="unread">
-            No leídos
-            {unreadLeads.length > 0 && (
-              <Badge variant="destructive" className="ml-1.5 h-4 px-1 text-[10px]">
-                {unreadLeads.length}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="contacted">Contactados ({contactedLeads.length})</TabsTrigger>
-        </TabsList>
+        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <TabsList>
+            <TabsTrigger value="all">Todos ({filteredLeads.length})</TabsTrigger>
+            <TabsTrigger value="unread">
+              No leídos
+              {unreadLeads.length > 0 && (
+                <Badge variant="destructive" className="ml-1.5 h-4 px-1 text-[10px]">
+                  {unreadLeads.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="contacted">Contactados ({contactedLeads.length})</TabsTrigger>
+          </TabsList>
+
+          <Select value={sourceFilter} onValueChange={setSourceFilter}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectValue placeholder="Todas las fuentes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las fuentes</SelectItem>
+              <SelectItem value="web">Sitio Web</SelectItem>
+              <SelectItem value="mercadolibre">Mercado Libre</SelectItem>
+              <SelectItem value="whatsapp">WhatsApp</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         <TabsContent value="all">
           <LeadsList
-            leads={leads}
+            leads={filteredLeads}
             onSelect={handleSelect}
             onDelete={handleDelete}
             onToggleRead={handleToggleRead}

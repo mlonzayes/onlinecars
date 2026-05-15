@@ -2,11 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-# OnlineCars — Plataforma SaaS para Concesionarios de Autos
+# motorflow — Plataforma SaaS para Concesionarios de Autos
 
 ## Descripción General
 
-**OnlineCars** es una plataforma SaaS multi-tenant que permite a concesionarios de autos tener su propio sitio web profesional con catálogo de vehículos, gestión de stock, captación de leads y operatoria de venta (clientes, ventas, legajo de documentos). Cada concesionario obtiene un sitio personalizado con su branding, dominio propio, y un panel de administración.
+**motorflow** es una plataforma SaaS multi-tenant que permite a concesionarios de autos tener su propio sitio web profesional con catálogo de vehículos, gestión de stock, captación de leads y operatoria de venta (clientes, ventas, legajo de documentos). Cada concesionario obtiene un sitio personalizado con su branding, dominio propio, y un panel de administración.
 
 **Target:** Concesionarios medianos y chicos de Argentina que hoy dependen de MercadoLibre/portales y no tienen presencia web propia.
 
@@ -57,12 +57,12 @@ Hay un `prisma.config.ts` en la raíz del repo. Las migraciones existentes viven
 
 ### Multi-tenancy
 
-El modelo de multi-tenancy se resuelve por **subdomain routing** (default domain `onlinecars.com.ar`, configurable vía `NEXT_PUBLIC_APP_DOMAIN`):
+El modelo de multi-tenancy se resuelve por **subdomain routing** (default domain `motorflow.com.ar`, configurable vía `NEXT_PUBLIC_APP_DOMAIN`):
 
 ```
-{slug}.onlinecars.com.ar  → Sitio público del concesionario (rewrite a /tenant/{slug})
-app.onlinecars.com.ar     → Panel de administración (dashboard)
-onlinecars.com.ar         → Landing pública (waitlist) + onboarding + sign-in
+{slug}.motorflow.com.ar  → Sitio público del concesionario (rewrite a /tenant/{slug})
+app.motorflow.com.ar     → Panel de administración (dashboard)
+motorflow.com.ar         → Landing pública (waitlist) + onboarding + sign-in
 ```
 
 El subdomain rewrite vive en [src/middleware.ts](src/middleware.ts) y **solo se activa fuera de `localhost`**. En dev se trabaja todo desde `localhost:3000` accediendo a `/dashboard`, `/tenant/{slug}`, etc. directamente.
@@ -416,7 +416,7 @@ RESEND_API_KEY=
 
 # App
 NEXT_PUBLIC_APP_URL=
-NEXT_PUBLIC_APP_DOMAIN=onlinecars.com.ar
+NEXT_PUBLIC_APP_DOMAIN=motorflow.com.ar
 
 # Feature flags
 NEXT_PUBLIC_ENABLE_LOGIN=false      # "true" habilita dashboard + protección de rutas

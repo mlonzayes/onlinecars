@@ -32,29 +32,39 @@ export function TableSearch({
   const initial = searchParams?.get("q") ?? "";
   const [value, setValue] = useState(initial);
 
-  useEffect(() => {
-    const trimmed = value.trim();
-    const current = searchParams?.get("q") ?? "";
-    if (trimmed === current) return;
+  function executeSearch(searchTerm: string) {
+    const params = new URLSearchParams(searchParams?.toString() ?? "");
+    const trimmed = searchTerm.trim();
+    
+    // Evitar búsquedas de menos de 3 caracteres (salvo que sea para vaciar)
+    if (trimmed.length > 0 && trimmed.length < 3) {
+      return;
+    }
 
-    const handle = setTimeout(() => {
-      const params = new URLSearchParams(searchParams?.toString() ?? "");
-      if (trimmed) {
-        params.set("q", trimmed);
-      } else {
-        params.delete("q");
-      }
-      // Volvemos a página 1 al cambiar la búsqueda.
-      params.delete("page");
+    if (trimmed) {
+      params.set("q", trimmed);
+    } else {
+      params.delete("q");
+    }
+    params.delete("page");
 
-      const qs = params.toString();
-      startTransition(() => {
-        router.push(qs ? `?${qs}` : "?", { scroll: false });
-      });
-    }, DEBOUNCE_MS);
+    const qs = params.toString();
+    startTransition(() => {
+      router.push(qs ? `?${qs}` : "?", { scroll: false });
+    });
+  }
 
-    return () => clearTimeout(handle);
-  }, [value, searchParams, router]);
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      executeSearch(value);
+    }
+  }
+
+  function clearSearch() {
+    setValue("");
+    executeSearch("");
+  }
 
   return (
     <div className="relative">
@@ -63,14 +73,15 @@ export function TableSearch({
         type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder={placeholder}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder + " (Presioná Enter para buscar)"}
         className="pl-9 pr-9"
         aria-label={ariaLabel}
       />
       {value && (
         <button
           type="button"
-          onClick={() => setValue("")}
+          onClick={clearSearch}
           className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
           aria-label="Limpiar búsqueda"
         >

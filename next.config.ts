@@ -57,7 +57,7 @@ const securityHeaders = [
 
 // HSTS solo en producción — en dev (http://localhost) lo rompe todo porque
 // fuerza al browser a recordar que el dominio debe ser HTTPS.
-// max-age = 2 años, includeSubDomains para cubrir {slug}.onlinecars.com.ar,
+// max-age = 2 años, includeSubDomains para cubrir {slug}.motorflow.com.ar,
 // preload para entrar al HSTS preload list de los browsers.
 if (process.env.NODE_ENV === "production") {
   securityHeaders.push({

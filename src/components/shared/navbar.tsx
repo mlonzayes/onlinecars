@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
-import { LogIn, LayoutDashboard, Mail } from "lucide-react";
+import { PiSignIn, PiSquaresFour, PiEnvelope } from "react-icons/pi";
+import Image from "next/image";
+import { MobileMenu } from "./mobile-menu";
 
 export async function Navbar() {
   const isLoginEnabled = process.env.NEXT_PUBLIC_ENABLE_LOGIN === "true";
@@ -18,7 +20,8 @@ export async function Navbar() {
       <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="flex items-center">
           <span className="text-lg font-extrabold tracking-tight text-gray-900">
-            motor<span className="text-blue-600">flow</span>
+            {/* motor<span className="text-blue-600">flow</span> */}
+            <Image src="/logo/motorflow_light.png" alt="Logo" width={150} height={150} />
           </span>
         </Link>
 
@@ -42,16 +45,22 @@ export async function Navbar() {
           >
             FAQ
           </a>
+          <Link
+            href="/blog"
+            className="text-sm font-medium text-gray-600 transition hover:text-gray-900"
+          >
+            Blog
+          </Link>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-3">
           {/* Contacto — siempre visible (desktop + mobile). Scroll al pre-registro. */}
           <a
             href="#pre-registro"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:border-gray-900 hover:text-gray-900"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-100 px-3 py-1.5 text-sm font-medium text-blue-700 transition hover:bg-blue-200"
           >
-            <Mail className="size-3.5" />
-            <span className="hidden sm:inline">Contacto</span>
+            <PiEnvelope className="size-3.5" />
+            <span>Contacto</span>
           </a>
 
           {isLoginEnabled && (
@@ -60,20 +69,22 @@ export async function Navbar() {
                 href="/dashboard"
                 className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
               >
-                <LayoutDashboard className="size-3.5" />
-                <span className="hidden sm:inline">Ir al panel</span>
+                <PiSquaresFour className="size-3.5" />
+                <span>Ir al panel</span>
               </Link>
             ) : (
               <Link
                 href="/sign-in"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
               >
-                <LogIn className="size-3.5" />
-                <span className="hidden sm:inline">Iniciar sesión</span>
+                <PiSignIn className="size-3.5" />
+                <span>Iniciar sesión</span>
               </Link>
             )
           )}
         </div>
+        
+        <MobileMenu isLoginEnabled={isLoginEnabled} isSignedIn={isSignedIn} />
       </nav>
     </header>
   );

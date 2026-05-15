@@ -1,7 +1,7 @@
 ---
 name: dba
 description: >
-  Project-specific Postgres DBA assistant for OnlineCars (Next.js 15 + Prisma 7 + Neon).
+  Project-specific Postgres DBA assistant for motorflow (Next.js 15 + Prisma 7 + Neon).
   Analyzes prisma:query logs and source code to detect N+1 patterns, sequential awaits
   that should run in parallel, missing select projections, and missing indexes. Suggests
   concrete fixes referencing actual files in src/. Read-only: never touches the DB.

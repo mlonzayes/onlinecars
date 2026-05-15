@@ -1,14 +1,20 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Calculator,
   Car,
+  CreditCard,
   Globe,
+  Landmark,
   LayoutDashboard,
   MessageSquare,
+  Receipt,
   Settings,
   ShoppingCart,
+  Store,
   Users,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
@@ -38,6 +44,11 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Ventas", href: "/dashboard/ventas", icon: ShoppingCart },
   { label: "Leads", href: "/dashboard/leads", icon: MessageSquare },
   { label: "Sitio Web", href: "/dashboard/sitio-web", icon: Globe },
+  { label: "Cotizaciones", href: "/dashboard/cotizaciones", icon: Calculator },
+  { label: "Pagos", href: "/dashboard/pagos", icon: CreditCard },
+  { label: "Portales", href: "/dashboard/portales", icon: Store },
+  { label: "Bancos", href: "/dashboard/bancos", icon: Landmark },
+  { label: "Contabilidad", href: "/dashboard/contabilidad", icon: Receipt },
 ];
 
 interface DashboardSidebarProps {
@@ -50,10 +61,24 @@ export function DashboardSidebar({ dealership }: DashboardSidebarProps) {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-1">
-          <Car className="size-5 text-blue-500 shrink-0" />
-          <span className="font-semibold text-sm truncate">{dealership.name}</span>
-        </div>
+        <Link href="/dashboard" className="flex items-center justify-center px-2 py-2">
+          <Image
+            src="/logo/motorflow_light.png"
+            alt="motorflow"
+            width={140}
+            height={32}
+            className="h-8 w-auto object-contain dark:hidden"
+            priority
+          />
+          <Image
+            src="/logo/motorflow_dark.png"
+            alt="motorflow"
+            width={140}
+            height={32}
+            className="hidden h-8 w-auto object-contain dark:block"
+            priority
+          />
+        </Link>
       </SidebarHeader>
 
       <SidebarContent>
@@ -78,8 +103,22 @@ export function DashboardSidebar({ dealership }: DashboardSidebarProps) {
                 </SidebarMenuItem>
               );
             })}
+
+            {/* Módulo de Vendedores: Solo visible para el owner/admin */}
+            {dealership.currentUser.role === "admin" && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={pathname.startsWith("/dashboard/vendedores")}
+                  render={<Link href="/dashboard/vendedores" />}
+                >
+                  <Users className="size-4" />
+                  <span>Vendedores</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
           </SidebarMenu>
         </SidebarGroup>
+
       </SidebarContent>
 
       <SidebarFooter>

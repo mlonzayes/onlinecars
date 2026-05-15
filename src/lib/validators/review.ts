@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // Schema del POST público de reviews. Aplica desde el sitio del tenant
-// ({slug}.onlinecars.com.ar) — input no confiable, todo con límites duros.
+// ({slug}.motorflow.com.ar) — input no confiable, todo con límites duros.
 export const reviewCreateSchema = z.object({
   name: z
     .string()

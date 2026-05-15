@@ -10,12 +10,22 @@ if (typeof window !== "undefined") {
 
 interface ScrollRevealProps {
   children: React.ReactNode;
-  /** Píxeles de offset inicial (slide). Default: 30 */
+  /** Píxeles de offset inicial vertical (slide). Default: 30 */
   y?: number;
+  /** Píxeles de offset inicial horizontal (slide desde el costado). Default: 0 */
+  x?: number;
+  /** Scale inicial (0.95 = entra ligeramente más chica). Default: 1 (sin scale) */
+  scale?: number;
+  /** Rotación inicial en grados. Default: 0 */
+  rotate?: number;
+  /** Blur inicial en pixels. Default: 0 */
+  blur?: number;
   /** Demora antes de empezar la animación, en segundos */
   delay?: number;
   /** Duración de la animación, en segundos. Default: 0.8 */
   duration?: number;
+  /** Easing function de gsap. Default: "power2.out" */
+  ease?: string;
   /** Si los hijos directos deben revelarse uno tras otro */
   stagger?: boolean;
   /** Selector CSS de los hijos a aplicar stagger (default: hijos directos) */
@@ -25,18 +35,16 @@ interface ScrollRevealProps {
   className?: string;
 }
 
-// Wrapper genérico que aplica fade-in + slide-up cuando entra al viewport.
-// Usa useLayoutEffect para setear el estado inicial antes del paint y evitar
-// el flash. Si JS está deshabilitado, el contenido se ve por defecto (no se
-// aplica el opacity:0 inicial), preservando accesibilidad básica.
-//
-// Internamente usa gsap.context para que el cleanup revierta todos los
-// scrollTriggers creados acá cuando el componente se desmonta.
 export function ScrollReveal({
   children,
   y = 30,
+  x = 0,
+  scale = 1,
+  rotate = 0,
+  blur = 0,
   delay = 0,
   duration = 0.8,
+  ease = "power2.out",
   stagger = false,
   staggerSelector,
   staggerGap = 0.1,
@@ -48,25 +56,35 @@ export function ScrollReveal({
     const el = ref.current;
     if (!el) return;
 
-    // Respetar prefers-reduced-motion: si el user pidió menos animaciones,
-    // mostramos el contenido sin animar.
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       return;
     }
+
+    const fromVars: gsap.TweenVars = { opacity: 0, x, y, scale, rotate };
+    if (blur > 0) fromVars.filter = `blur(${blur}px)`;
+
+    const toVars: gsap.TweenVars = {
+      opacity: 1,
+      x: 0,
+      y: 0,
+      scale: 1,
+      rotate: 0,
+      duration,
+      delay,
+      ease,
+      force3D: true,
+    };
+    if (blur > 0) toVars.filter = "blur(0px)";
 
     const ctx = gsap.context(() => {
       if (stagger) {
         const targets = staggerSelector
           ? el.querySelectorAll(staggerSelector)
           : el.children;
-        gsap.set(targets, { opacity: 0, y });
+        gsap.set(targets, fromVars);
         gsap.to(targets, {
-          opacity: 1,
-          y: 0,
-          duration,
-          delay,
+          ...toVars,
           stagger: staggerGap,
-          ease: "power2.out",
           scrollTrigger: {
             trigger: el,
             start: "top 85%",
@@ -74,13 +92,9 @@ export function ScrollReveal({
           },
         });
       } else {
-        gsap.set(el, { opacity: 0, y });
+        gsap.set(el, fromVars);
         gsap.to(el, {
-          opacity: 1,
-          y: 0,
-          duration,
-          delay,
-          ease: "power2.out",
+          ...toVars,
           scrollTrigger: {
             trigger: el,
             start: "top 85%",
@@ -91,7 +105,7 @@ export function ScrollReveal({
     }, el);
 
     return () => ctx.revert();
-  }, [y, delay, duration, stagger, staggerSelector, staggerGap]);
+  }, [x, y, scale, rotate, blur, delay, duration, ease, stagger, staggerSelector, staggerGap]);
 
   return (
     <div ref={ref} className={className}>

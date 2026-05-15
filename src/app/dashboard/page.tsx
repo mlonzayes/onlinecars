@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Car, MessageSquare, Settings, ShoppingCart, Users } from "lucide-react";
 import { getCurrentDealership } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getDashboardStats } from "@/lib/dashboard-stats";
+import { unstable_cache } from "next/cache";
 import {
   Card,
   CardContent,
@@ -9,25 +11,45 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { SalesByMonthChart } from "@/components/dashboard/charts/sales-by-month-chart";
+import { LeadsBySourceChart } from "@/components/dashboard/charts/leads-by-source-chart";
+import { StockByStatusChart } from "@/components/dashboard/charts/stock-by-status-chart";
+import { ConversionFunnelChart } from "@/components/dashboard/charts/conversion-funnel-chart";
+
+const getCachedDashboardData = unstable_cache(
+  async (dealershipId: string) => {
+    return Promise.all([
+      getDashboardStats(dealershipId),
+      prisma.vehicle.count({ where: { dealershipId } }),
+      prisma.lead.count({ where: { dealershipId } }),
+      prisma.lead.count({
+        where: { dealershipId, status: "new" },
+      }),
+      prisma.customer.count({ where: { dealershipId } }),
+      prisma.sale.count({
+        where: {
+          dealershipId,
+          status: { in: ["draft", "reserved", "in_progress"] },
+        },
+      }),
+    ]);
+  },
+  ["dashboard-home-stats"],
+  { tags: ["dashboard-home-stats"], revalidate: 3600 }
+);
 
 export default async function DashboardHomePage() {
   const dealership = await getCurrentDealership();
   if (!dealership) return null;
 
-  const [vehicleCount, leadCount, newLeadCount, customerCount, activeSaleCount] = await Promise.all([
-    prisma.vehicle.count({ where: { dealershipId: dealership.id } }),
-    prisma.lead.count({ where: { dealershipId: dealership.id } }),
-    prisma.lead.count({
-      where: { dealershipId: dealership.id, status: "new" },
-    }),
-    prisma.customer.count({ where: { dealershipId: dealership.id } }),
-    prisma.sale.count({
-      where: {
-        dealershipId: dealership.id,
-        status: { in: ["draft", "reserved", "in_progress"] },
-      },
-    }),
-  ]);
+  const [
+    stats,
+    vehicleCount,
+    leadCount,
+    newLeadCount,
+    customerCount,
+    activeSaleCount,
+  ] = await getCachedDashboardData(dealership.id);
 
   const sections = [
     {
@@ -78,6 +100,15 @@ export default async function DashboardHomePage() {
         </p>
       </div>
 
+      {/* Charts: 2x2 en desktop, stack en mobile. */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <SalesByMonthChart data={stats.salesByMonth} />
+        <ConversionFunnelChart data={stats.funnel} />
+        <LeadsBySourceChart data={stats.leadsBySource} />
+        <StockByStatusChart data={stats.stockByStatus} />
+      </div>
+
+      {/* Cards de navegación rápida. */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {sections.map((section) => (
           <Link key={section.href} href={section.href} className="group">

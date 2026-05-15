@@ -244,7 +244,7 @@ export function SaleDocuments({ saleId, initialDocuments }: SaleDocumentsProps) 
               onValueChange={(v) => handleField("category", v as SaleDocumentCategory)}
             >
               <SelectTrigger id="doc-category" className="w-full">
-                <SelectValue />
+                <SelectValue>{SALE_DOCUMENT_CATEGORY_LABELS[form.category]}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {SALE_DOCUMENT_CATEGORIES.map((cat) => (

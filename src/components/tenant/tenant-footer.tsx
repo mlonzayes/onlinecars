@@ -159,12 +159,12 @@ export function TenantFooter({
           <p className="text-xs text-slate-500">
             Potenciado por{" "}
             <a
-              href="https://onlinecars.com.ar"
+              href="https://motorflow.com.ar"
               className="font-medium text-[var(--tenant-primary)] hover:underline"
               target="_blank"
               rel="noopener noreferrer"
             >
-              OnlineCars
+              motorflow
             </a>
           </p>
         </div>

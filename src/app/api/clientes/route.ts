@@ -6,6 +6,7 @@ import { customerCreateSchema } from "@/lib/validators/customer";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { Prisma } from "@prisma/client";
+import { revalidateTag } from "next/cache";
 
 // GET /api/clientes
 // Lista paginada de clientes del concesionario autenticado.
@@ -119,6 +120,8 @@ export const POST = withLogger(async (request, { requestId }) => {
       customerId: customer.id,
       documentType: customer.documentType,
     });
+
+    revalidateTag("customers-stats");
 
     return NextResponse.json({ data: customer }, { status: 201 });
   } catch (error) {

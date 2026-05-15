@@ -6,7 +6,6 @@ import { useTheme } from "next-themes";
 import { UserButton } from "@clerk/nextjs";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 
 const SECTION_LABELS: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -28,7 +27,11 @@ function getSectionLabel(pathname: string): string {
   return match ? SECTION_LABELS[match] : "Dashboard";
 }
 
-export function DashboardHeader() {
+interface DashboardHeaderProps {
+  dealershipName: string;
+}
+
+export function DashboardHeader({ dealershipName }: DashboardHeaderProps) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
 
@@ -41,11 +44,12 @@ export function DashboardHeader() {
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
       <SidebarTrigger className="-ml-1" />
-      <Separator orientation="vertical" className="h-4" />
 
-      {/* Breadcrumb simple */}
-      <nav className="flex-1">
-        <span className="text-sm font-medium text-foreground">{sectionLabel}</span>
+      {/* Breadcrumb: dealership / sección */}
+      <nav className="flex flex-1 items-center gap-2 text-sm">
+        <span className="font-semibold text-foreground truncate">{dealershipName}</span>
+        <span className="text-muted-foreground">/</span>
+        <span className="font-medium text-muted-foreground truncate">{sectionLabel}</span>
       </nav>
 
       {/* Acciones del header */}

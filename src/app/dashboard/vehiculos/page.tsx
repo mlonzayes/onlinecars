@@ -9,6 +9,7 @@ import { VehicleTable } from "@/components/dashboard/vehicle-table";
 import type { SerializedVehicleRow } from "@/components/dashboard/vehicle-table";
 import { TableSearch } from "@/components/dashboard/table-search";
 import { Pagination } from "@/components/dashboard/pagination";
+import { getPlanLimits } from "@/lib/plans";
 import type { Prisma } from "@prisma/client";
 
 const PAGE_SIZE = 20;
@@ -135,7 +136,7 @@ export default async function VehiculosPage({ searchParams }: VehiculosPageProps
           </p>
         </div>
       ) : (
-        <VehicleTable vehicles={serialized} />
+        <VehicleTable vehicles={serialized} limits={getPlanLimits(dealership)} />
       )}
 
       {total > 0 && (

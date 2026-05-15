@@ -15,7 +15,7 @@ const isPublicRoute = createRouteMatcher([
 export default clerkMiddleware(async (auth, req: NextRequest) => {
   const url = req.nextUrl;
   const hostname = req.headers.get("host") ?? "";
-  const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "onlinecars.com.ar";
+  const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "motorflow.com.ar";
   const isLoginEnabled = process.env.NEXT_PUBLIC_ENABLE_LOGIN === "true";
 
   // En localhost no aplica subdomain routing

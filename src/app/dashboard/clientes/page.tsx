@@ -8,7 +8,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CustomersTable } from "@/components/dashboard/customers-table";
 import { TableSearch } from "@/components/dashboard/table-search";
 import { Pagination } from "@/components/dashboard/pagination";
+import { getPlanLimits } from "@/lib/plans";
 import type { Prisma } from "@prisma/client";
+import { unstable_cache } from "next/cache";
+
+const getCachedStats = unstable_cache(
+  async (dealershipId: string) => {
+    const [totalAll, totalIndividuals, totalCompanies] = await Promise.all([
+      prisma.customer.count({ where: { dealershipId } }),
+      prisma.customer.count({ where: { dealershipId, type: "individual" } }),
+      prisma.customer.count({ where: { dealershipId, type: "company" } }),
+    ]);
+    return { totalAll, totalIndividuals, totalCompanies };
+  },
+  ["customers-stats"],
+  { tags: ["customers-stats"], revalidate: 3600 }
+);
 
 const PAGE_SIZE = 20;
 
@@ -54,25 +69,19 @@ export default async function ClientesPage({ searchParams }: ClientesPageProps) 
       : {}),
   };
 
-  // Stats absolutos del dealership (independientes del search/page) en paralelo
-  // con la query paginada del listado. Tres counts livianos.
-  const [total, customers, totalAll, totalIndividuals, totalCompanies] =
-    await Promise.all([
-      prisma.customer.count({ where }),
-      prisma.customer.findMany({
-        where,
-        skip,
-        take: PAGE_SIZE,
-        orderBy: { createdAt: "desc" },
-      }),
-      prisma.customer.count({ where: { dealershipId: dealership.id } }),
-      prisma.customer.count({
-        where: { dealershipId: dealership.id, type: "individual" },
-      }),
-      prisma.customer.count({
-        where: { dealershipId: dealership.id, type: "company" },
-      }),
-    ]);
+  // Stats absolutos del dealership en caché
+  const [total, customers, stats] = await Promise.all([
+    prisma.customer.count({ where }),
+    prisma.customer.findMany({
+      where,
+      skip,
+      take: PAGE_SIZE,
+      orderBy: { createdAt: "desc" },
+    }),
+    getCachedStats(dealership.id),
+  ]);
+
+  const { totalAll, totalIndividuals, totalCompanies } = stats;
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -122,7 +131,7 @@ export default async function ClientesPage({ searchParams }: ClientesPageProps) 
           </p>
         </div>
       ) : (
-        <CustomersTable customers={customers} />
+        <CustomersTable customers={customers} limits={getPlanLimits(dealership)} />
       )}
 
       {total > 0 && (

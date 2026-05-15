@@ -97,7 +97,7 @@ export function OnboardingForm() {
             {fields.slug && (
               <p className="text-xs text-muted-foreground">
                 Tu sitio quedará en:{" "}
-                <span className="font-medium text-foreground">{fields.slug}.onlinecars.com.ar</span>
+                <span className="font-medium text-foreground">{fields.slug}.motorflow.com.ar</span>
               </p>
             )}
             {fieldErrors.slug && <p className="text-sm text-destructive">{fieldErrors.slug}</p>}

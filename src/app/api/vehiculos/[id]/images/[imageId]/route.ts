@@ -59,7 +59,7 @@ export const DELETE = withLogger<Params>(async (_request, { requestId, params })
 
   // Borrar el archivo primero. Si esto falla rompemos antes de tocar el DB,
   // así evitamos quedarnos con un registro huérfano de un archivo que sigue existiendo.
-  await storage.delete(image.key, "image");
+  await storage.delete(image.key, "public");
 
   await prisma.$transaction(async (tx) => {
     await tx.vehicleImage.delete({ where: { id: imageId } });

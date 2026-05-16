@@ -1,6 +1,6 @@
 import { mkdir, writeFile, unlink } from "node:fs/promises";
 import path from "node:path";
-import type { StorageProvider, StorageKind } from "./types";
+import type { StorageProvider, StorageBucket } from "./types";
 
 const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads");
 
@@ -42,8 +42,8 @@ export const localStorage: StorageProvider = {
     return writeFileToUploads(buffer, keyPrefix, filename);
   },
 
-  // El driver local guarda todo en un solo árbol — el kind se ignora.
-  async delete(key, _kind: StorageKind) {
+  // El driver local guarda todo en un solo árbol — el bucket se ignora.
+  async delete(key, _bucket: StorageBucket) {
     assertSafeKey(key);
 
     const filePath = path.join(UPLOADS_DIR, key);

@@ -5,7 +5,7 @@ import {
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import type { StorageProvider, StorageKind, UploadResult } from "./types";
+import type { StorageProvider, StorageBucket, UploadResult } from "./types";
 
 // Driver S3-compatible (Cloudflare R2). Maneja DOS buckets:
 //   - S3_PUBLIC_BUCKET: imágenes del catálogo. Servido vía custom domain (S3_PUBLIC_URL).
@@ -89,9 +89,9 @@ function getClient(): S3Client {
   return cachedClient;
 }
 
-function bucketFor(kind: StorageKind): string {
+function bucketFor(bucket: StorageBucket): string {
   const env = readEnv();
-  return kind === "image" ? env.publicBucket : env.privateBucket;
+  return bucket === "public" ? env.publicBucket : env.privateBucket;
 }
 
 function joinKey(keyPrefix: string, filename: string): string {
@@ -131,10 +131,10 @@ export const s3Storage: StorageProvider = {
     return { url: `s3://${env.privateBucket}/${key}`, key };
   },
 
-  async delete(key, kind) {
-    const bucket = bucketFor(kind);
+  async delete(key, bucket) {
+    const targetBucket = bucketFor(bucket);
     await getClient().send(
-      new DeleteObjectCommand({ Bucket: bucket, Key: key })
+      new DeleteObjectCommand({ Bucket: targetBucket, Key: key })
     );
   },
 

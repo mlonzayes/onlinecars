@@ -29,14 +29,16 @@ export interface UploadDocumentParams {
   filename: string;
 }
 
-// Indica a qué bucket/destino pertenece un key. Necesario para drivers con
+// Indica a qué bucket pertenece un key. Necesario para drivers con
 // almacenamiento separado público/privado (ej: S3 con dos buckets).
-export type StorageKind = "image" | "document";
+//   - "public":  imágenes del catálogo, assets del site builder del tenant.
+//   - "private": documentos del legajo de venta (presigned URLs).
+export type StorageBucket = "public" | "private";
 
 export interface StorageProvider {
   upload(params: UploadParams): Promise<UploadResult>;
   uploadDocument(params: UploadDocumentParams): Promise<UploadResult>;
-  delete(key: string, kind: StorageKind): Promise<void>;
+  delete(key: string, bucket: StorageBucket): Promise<void>;
   // Devuelve una URL accesible para servir un documento del legajo (privado).
   // En S3 genera una presigned URL con expiración corta. En local devuelve la
   // URL pública directa. ttlSeconds aplica solo a drivers que firman.

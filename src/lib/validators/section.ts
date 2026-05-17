@@ -14,7 +14,7 @@ export const sectionPatchSchema = z.object({
   title: titleSchema.nullable().optional(),
   subtitle: subtitleSchema.nullable().optional(),
   content: contentSchema.nullable().optional(),
-  config: z.record(z.unknown()).nullable().optional(),
+  config: z.record(z.string(), z.unknown()).nullable().optional(),
 }).strict();
 
 export type SectionPatchInput = z.infer<typeof sectionPatchSchema>;

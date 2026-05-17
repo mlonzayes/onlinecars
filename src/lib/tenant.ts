@@ -1,8 +1,12 @@
 import { prisma } from "./prisma";
-import type { Dealership } from "@prisma/client";
+import type { Dealership, DealershipMedia, DealershipSection } from "@prisma/client";
 import { redis } from "./redis";
 import { logger } from "./logger";
 import type { DealershipTheme } from "@/types";
+import { SECTION_TYPES, type MediaPurpose, type SectionType } from "./constants";
+import { DEFAULT_SECTION_COPY, DEFAULT_SECTION_CONFIG } from "./tenant-defaults";
+import type { SectionConfigByType } from "./sections/config-types";
+import { seedDefaultSections } from "./sections/seed";
 
 /**
  * Obtiene un dealership por su slug.
@@ -285,12 +289,86 @@ export interface TenantHomeBundleDealership {
   theme: DealershipTheme | null;
 }
 
+export interface TenantHomeBundleSection {
+  id: string;
+  type: SectionType;
+  enabled: boolean;
+  order: number;
+  title: string;        // resuelto: DB value || DEFAULT_SECTION_COPY[type].title
+  subtitle: string | null;
+  content: string | null;
+  config: SectionConfigByType[SectionType]; // resuelto: parsed con fallback a default
+}
+
+export interface TenantHomeBundleMedia {
+  id: string;
+  purpose: MediaPurpose;
+  url: string;
+  mimeType: string;
+  order: number;
+}
+
 export interface TenantHomeBundle {
   dealership: TenantHomeBundleDealership;
   vehicles: TenantHomeBundleVehicle[];
   stockBrands: string[];
   displayBrands: { name: string; logoUrl: string | null }[];
   reviews: TenantHomeBundleReview[];
+  sections: TenantHomeBundleSection[];
+  mediaBySection: Record<SectionType, TenantHomeBundleMedia[]>;
+}
+
+export function resolveSection(row: DealershipSection): TenantHomeBundleSection {
+  const type = row.type as SectionType;
+  const defaultCopy = DEFAULT_SECTION_COPY[type];
+  const defaultConfig = DEFAULT_SECTION_CONFIG[type];
+
+  // El config se guarda como Json. Si viene null o tiene shape inválido,
+  // caemos al default sin romper la página pública (silencioso por design).
+  let config = defaultConfig as SectionConfigByType[SectionType];
+  if (row.config !== null && typeof row.config === "object" && !Array.isArray(row.config)) {
+    // Merge superficial: campos del DB pisan defaults. Validación profunda corre en PATCH.
+    config = {
+      ...defaultConfig,
+      ...(row.config as Record<string, unknown>),
+    } as SectionConfigByType[SectionType];
+  }
+
+  return {
+    id: row.id,
+    type,
+    enabled: row.enabled,
+    order: row.order,
+    title: row.title?.trim() || defaultCopy.title,
+    subtitle: row.subtitle?.trim() || defaultCopy.subtitle,
+    content: row.content?.trim() || defaultCopy.content,
+    config,
+  };
+}
+
+function groupMediaBySection(
+  rows: DealershipMedia[]
+): Record<SectionType, TenantHomeBundleMedia[]> {
+  const result = SECTION_TYPES.reduce<Record<SectionType, TenantHomeBundleMedia[]>>(
+    (acc, type) => {
+      acc[type] = [];
+      return acc;
+    },
+    {} as Record<SectionType, TenantHomeBundleMedia[]>
+  );
+
+  for (const m of rows) {
+    const sectionType = m.sectionType as SectionType;
+    if (!result[sectionType]) continue;
+    result[sectionType].push({
+      id: m.id,
+      purpose: m.purpose as MediaPurpose,
+      url: m.url,
+      mimeType: m.mimeType,
+      order: m.order,
+    });
+  }
+  return result;
 }
 
 async function fetchTenantHomeBundleFromDb(
@@ -301,10 +379,31 @@ async function fetchTenantHomeBundleFromDb(
 
   const theme = dealership.theme as DealershipTheme | null;
 
-  const [vehicles, stockBrands, reviews] = await Promise.all([
+  // Lazy seed dentro de una transacción. Idempotente: si ya hay secciones, no hace nada.
+  const seedResult = await prisma.$transaction(async (tx) => {
+    return seedDefaultSections(tx, dealership.id, theme);
+  });
+
+  if (seedResult.seeded) {
+    logger.info(undefined, "tenant.sections.seeded", {
+      dealershipId: dealership.id,
+      slug,
+      migratedHero: seedResult.migratedHero,
+    });
+  }
+
+  const [vehicles, stockBrands, reviews, sectionRows, mediaRows] = await Promise.all([
     getPublishedVehicles(dealership.id),
     getAvailableBrands(dealership.id),
     getApprovedReviews(dealership.id),
+    prisma.dealershipSection.findMany({
+      where: { dealershipId: dealership.id },
+      orderBy: { order: "asc" },
+    }),
+    prisma.dealershipMedia.findMany({
+      where: { dealershipId: dealership.id },
+      orderBy: { order: "asc" },
+    }),
   ]);
 
   // displayBrands se calcula sync a partir de stockBrands ya resueltas + theme.
@@ -362,6 +461,8 @@ async function fetchTenantHomeBundleFromDb(
       rating: r.rating,
       createdAt: r.createdAt.toISOString(),
     })),
+    sections: sectionRows.map(resolveSection),
+    mediaBySection: groupMediaBySection(mediaRows),
   };
 }
 

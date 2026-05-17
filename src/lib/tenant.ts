@@ -6,12 +6,37 @@ import type { DealershipTheme } from "@/types";
 
 /**
  * Obtiene un dealership por su slug.
- * Usado en las páginas públicas del tenant (subdomain).
+ * Usado en las páginas públicas del tenant (subdomain) — cache-aside Upstash.
+ * Misma TTL que el bundle (30 min) y se invalida en conjunto.
  */
 export async function getDealershipBySlug(slug: string): Promise<Dealership | null> {
-  return prisma.dealership.findUnique({
-    where: { slug, active: true },
-  });
+  const key = tenantDealershipKey(slug);
+
+  try {
+    const cached = await redis.get<Dealership>(key);
+    if (cached) return cached;
+  } catch (error) {
+    logger.warn(undefined, "tenant.dealership.cache_read_failed", {
+      slug,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  // findUnique con compound where (slug + active) genera SQL con OR redundante en
+  // Prisma 7. Buscamos solo por slug y filtramos active en JS.
+  const dealership = await prisma.dealership.findUnique({ where: { slug } });
+  if (!dealership || !dealership.active) return null;
+
+  try {
+    await redis.set(key, dealership, { ex: TENANT_HOME_TTL_SECONDS });
+  } catch (error) {
+    logger.warn(undefined, "tenant.dealership.cache_write_failed", {
+      slug,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  return dealership;
 }
 
 /**
@@ -142,9 +167,14 @@ import GLOBAL_BRANDS from "@/data/brands.json";
 /**
  * Combina las marcas en stock con las marcas oficiales configuradas en el theme.
  * Prioriza las marcas oficiales para mostrar sus logos.
+ *
+ * Recibe stockBrands ya resueltas para evitar duplicar la query de marcas cuando
+ * se llama desde fetchTenantHomeBundleFromDb (que ya las obtiene en el Promise.all).
  */
-export async function getDisplayBrands(dealershipId: string, theme: any): Promise<{ name: string; logoUrl: string | null }[]> {
-  const stockBrands = await getAvailableBrands(dealershipId);
+export function getDisplayBrands(
+  stockBrands: string[],
+  theme: { selectedBrandIds?: string[] } | null | undefined
+): { name: string; logoUrl: string | null }[] {
   const selectedIds: string[] = theme?.selectedBrandIds || [];
 
   // Empezar con las marcas oficiales (buscadas en el JSON global)
@@ -157,16 +187,14 @@ export async function getDisplayBrands(dealershipId: string, theme: any): Promis
     }
   }
 
-  // Agregar las marcas en stock que no estén en las oficiales
+  // Agregar las marcas en stock que no estén en las oficiales. Si la marca en stock
+  // matchea una marca global no seleccionada, le ponemos el logo igual.
   for (const brand of stockBrands) {
     if (!displayBrands.some((b) => b.name.toLowerCase() === brand.toLowerCase())) {
-      // Si la marca en stock coincide con una global no seleccionada, podríamos usar su logo, pero
-      // como no la seleccionaron, es mejor dejarla genérica o podemos buscarla igual.
-      // Para darle un toque de magia, si existe en global, le ponemos el logo igual.
       const foundInGlobal = GLOBAL_BRANDS.find((b) => b.name.toLowerCase() === brand.toLowerCase());
-      displayBrands.push({ 
-        name: brand, 
-        logoUrl: foundInGlobal ? foundInGlobal.logoUrl : null 
+      displayBrands.push({
+        name: brand,
+        logoUrl: foundInGlobal ? foundInGlobal.logoUrl : null
       });
     }
   }
@@ -205,6 +233,10 @@ const TENANT_HOME_TTL_SECONDS = 1800; // 30 min
 
 function tenantHomeKey(slug: string): string {
   return `tenant:${slug}:home`;
+}
+
+function tenantDealershipKey(slug: string): string {
+  return `tenant:${slug}:dealership`;
 }
 
 export interface TenantHomeBundleVehicle {
@@ -269,12 +301,15 @@ async function fetchTenantHomeBundleFromDb(
 
   const theme = dealership.theme as DealershipTheme | null;
 
-  const [vehicles, stockBrands, reviews, displayBrands] = await Promise.all([
+  const [vehicles, stockBrands, reviews] = await Promise.all([
     getPublishedVehicles(dealership.id),
     getAvailableBrands(dealership.id),
     getApprovedReviews(dealership.id),
-    getDisplayBrands(dealership.id, theme),
   ]);
+
+  // displayBrands se calcula sync a partir de stockBrands ya resueltas + theme.
+  // Antes esto disparaba una segunda query a vehicles duplicando getAvailableBrands.
+  const displayBrands = getDisplayBrands(stockBrands, theme);
 
   // Mismo cap que la page actual: 18 vehículos en el home (featured + recent).
   const featured = vehicles.filter((v) => v.featured);
@@ -373,7 +408,10 @@ export async function getTenantHomeBundle(
  */
 export async function invalidateTenantHomeBundle(slug: string): Promise<void> {
   try {
-    await redis.del(tenantHomeKey(slug));
+    await Promise.all([
+      redis.del(tenantHomeKey(slug)),
+      redis.del(tenantDealershipKey(slug)),
+    ]);
   } catch (error) {
     logger.warn(undefined, "tenant.home.cache_invalidate_failed", {
       slug,

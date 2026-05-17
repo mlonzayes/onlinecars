@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { Car, MessageSquare, Settings, ShoppingCart, Users } from "lucide-react";
 import { getCurrentDealership } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { getDashboardStats } from "@/lib/dashboard-stats";
-import { unstable_cache } from "next/cache";
+import { getDashboardHomeData } from "@/lib/dashboard-cache";
 import {
   Card,
   CardContent,
@@ -16,40 +14,18 @@ import { LeadsBySourceChart } from "@/components/dashboard/charts/leads-by-sourc
 import { StockByStatusChart } from "@/components/dashboard/charts/stock-by-status-chart";
 import { ConversionFunnelChart } from "@/components/dashboard/charts/conversion-funnel-chart";
 
-const getCachedDashboardData = unstable_cache(
-  async (dealershipId: string) => {
-    return Promise.all([
-      getDashboardStats(dealershipId),
-      prisma.vehicle.count({ where: { dealershipId } }),
-      prisma.lead.count({ where: { dealershipId } }),
-      prisma.lead.count({
-        where: { dealershipId, status: "new" },
-      }),
-      prisma.customer.count({ where: { dealershipId } }),
-      prisma.sale.count({
-        where: {
-          dealershipId,
-          status: { in: ["draft", "reserved", "in_progress"] },
-        },
-      }),
-    ]);
-  },
-  ["dashboard-home-stats"],
-  { tags: ["dashboard-home-stats"], revalidate: 3600 }
-);
-
 export default async function DashboardHomePage() {
   const dealership = await getCurrentDealership();
   if (!dealership) return null;
 
-  const [
+  const {
     stats,
     vehicleCount,
     leadCount,
     newLeadCount,
     customerCount,
     activeSaleCount,
-  ] = await getCachedDashboardData(dealership.id);
+  } = await getDashboardHomeData(dealership.id);
 
   const sections = [
     {

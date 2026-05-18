@@ -38,8 +38,56 @@ model Dealership {
   financingPlans  FinancingPlan[]
   mlAccount       MercadoLibreAccount?
   mlListings      MercadoLibreListing[]
+  sections        DealershipSection[]
+  media           DealershipMedia[]
 
   @@map("dealerships")
+}
+
+// Secciones del sitio público del concesionario. Cada Dealership tiene N secciones
+// (una por type) configurables desde el dashboard: enabled, order, copy, config.
+model DealershipSection {
+  id           String   @id @default(cuid())
+  dealershipId String
+  type         String   // hero | about | catalog | gallery | financing | reviews | contact
+  enabled      Boolean  @default(true)
+  order        Int
+  title        String?
+  subtitle     String?
+  content      String?  @db.Text
+  config       Json?    // Config específica del tipo de sección (ver SectionConfigByType)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  dealership Dealership @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
+
+  @@unique([dealershipId, type])
+  @@index([dealershipId, order])
+  @@map("dealership_sections")
+}
+
+// Medios (imágenes/videos) asociados al site builder del tenant. Reúne tanto los
+// singletons (hero_image, hero_video, about_image, section_image) como los multi
+// (gallery_image). Bucket público — son assets del sitio servidos al visitante.
+model DealershipMedia {
+  id           String   @id @default(cuid())
+  dealershipId String
+  sectionType  String   // hero | about | catalog | gallery | financing | reviews | contact
+  purpose      String   // hero_image | hero_video | about_image | section_image | gallery_image
+  url          String
+  key          String
+  mimeType     String
+  sizeBytes    Int
+  width        Int?
+  height       Int?
+  order        Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  dealership Dealership @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
+
+  @@index([dealershipId, sectionType])
+  @@index([dealershipId, purpose])
+  @@map("dealership_media")
 }
 
 model DealershipUser {

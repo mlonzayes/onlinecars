@@ -161,3 +161,67 @@ export const SALE_LEGAL_THRESHOLDS = {
   // Sobre este monto se requiere certificado CETA (AFIP).
   CETA_ARS: 100_000_000,
 } as const;
+
+// --- Tenant site builder ---
+export const SECTION_TYPES = [
+  "hero",
+  "about",
+  "catalog",
+  "gallery",
+  "financing",
+  "reviews",
+  "contact",
+] as const;
+export type SectionType = (typeof SECTION_TYPES)[number];
+
+export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
+  hero: "Portada",
+  about: "Sobre nosotros",
+  catalog: "Catálogo",
+  gallery: "Galería",
+  financing: "Financiación",
+  reviews: "Opiniones",
+  contact: "Contacto",
+};
+
+export const MEDIA_PURPOSES = [
+  "hero_image",
+  "hero_video",
+  "about_image",
+  "section_image",
+  "gallery_image",
+] as const;
+export type MediaPurpose = (typeof MEDIA_PURPOSES)[number];
+
+export const SINGLETON_MEDIA_PURPOSES = [
+  "hero_image",
+  "hero_video",
+  "about_image",
+  "section_image",
+] as const satisfies readonly MediaPurpose[];
+
+export type SingletonMediaPurpose = (typeof SINGLETON_MEDIA_PURPOSES)[number];
+
+export const MAX_GALLERY_IMAGES = 20;
+export const MAX_TENANT_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
+export const MAX_HERO_VIDEO_BYTES = 20 * 1024 * 1024; // 20MB
+
+export const ALLOWED_TENANT_IMAGE_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+] as const;
+export type AllowedTenantImageMimeType = (typeof ALLOWED_TENANT_IMAGE_MIME_TYPES)[number];
+
+export const ALLOWED_VIDEO_MIME_TYPES = [
+  "video/mp4",
+  "video/webm",
+] as const;
+export type AllowedVideoMimeType = (typeof ALLOWED_VIDEO_MIME_TYPES)[number];
+
+export const SECTION_TEXT_LIMITS = {
+  titleMin: 1,
+  titleMax: 80,
+  subtitleMax: 200,
+  contentMax: 2000,
+} as const;

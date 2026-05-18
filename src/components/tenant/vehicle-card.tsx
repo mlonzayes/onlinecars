@@ -58,7 +58,7 @@ export function VehicleCard({ vehicle, basePath }: VehicleCardProps) {
   return (
     <Link
       href={`${basePath}/vehiculo/${vehicle.id}`}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:ring-1 hover:ring-[var(--tenant-primary)]/30"
     >
       {/* Featured Badge */}
       {vehicle.featured && (

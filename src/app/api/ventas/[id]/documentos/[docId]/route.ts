@@ -43,7 +43,7 @@ export const DELETE = withLogger<Params>(async (_request, { requestId, params })
     return NextResponse.json({ error: "Documento no encontrado" }, { status: 404 });
   }
 
-  await storage.delete(document.key, "document");
+  await storage.delete(document.key, "private");
   await prisma.saleDocument.delete({ where: { id: docId } });
 
   logger.info(requestId, "sales.documents.delete.ok", {

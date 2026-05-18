@@ -32,7 +32,7 @@ export function CategoriesGrid({ basePath }: CategoriesGridProps) {
           <Link
             key={type}
             href={`${basePath}/catalogo?bodyType=${type}`}
-            className="group flex flex-col items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[var(--tenant-primary)] hover:shadow-md"
+            className="group flex flex-col items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[var(--tenant-primary)] hover:shadow-lg hover:ring-1 hover:ring-[var(--tenant-primary)]/20"
           >
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-colors group-hover:bg-[var(--tenant-primary)] group-hover:text-white">
               <Icon className="h-6 w-6" />

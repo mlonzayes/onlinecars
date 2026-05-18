@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Globe, Image as ImageIcon, Video, Palette, Link2, Loader2 } from "lucide-react";
+import { Globe, Image as ImageIcon, Palette, Link2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,13 +19,10 @@ const DEFAULT_COLOR = "#2563eb";
 
 export function WebsiteSettings({ dealership, theme }: WebsiteSettingsProps) {
   const [colorPrimary, setColorPrimary] = useState(theme?.colorPrimary ?? DEFAULT_COLOR);
-  const [heroType, setHeroType] = useState<"none" | "image" | "video">(theme?.heroType ?? "none");
-  const [heroUrl, setHeroUrl] = useState(theme?.heroUrl ?? "");
   const [customDomain, setCustomDomain] = useState(theme?.customDomain ?? "");
   const [logo, setLogo] = useState(dealership.logo ?? "");
   const [savingLogo, setSavingLogo] = useState(false);
   const [savingDomain, setSavingDomain] = useState(false);
-  const [savingHero, setSavingHero] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const appDomain = "motorflow.com.ar";
@@ -62,26 +59,6 @@ export function WebsiteSettings({ dealership, theme }: WebsiteSettingsProps) {
       toast.error("No se pudo guardar el logo");
     } finally {
       setSavingLogo(false);
-    }
-  }
-
-  async function handleSaveHero() {
-    setSavingHero(true);
-    try {
-      const res = await fetch("/api/concesionario/theme", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          heroType,
-          heroUrl: heroUrl || null,
-        }),
-      });
-      if (!res.ok) throw new Error();
-      toast.success("Hero actualizado", { duration: 2000 });
-    } catch {
-      toast.error("No se pudo guardar el hero");
-    } finally {
-      setSavingHero(false);
     }
   }
 
@@ -177,58 +154,6 @@ export function WebsiteSettings({ dealership, theme }: WebsiteSettingsProps) {
               <span className="font-mono text-sm text-muted-foreground">{colorPrimary}</span>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Hero — full width */}
-      <Card className="lg:col-span-2">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Video className="h-5 w-5 text-orange-500" />
-            Sección Hero
-          </CardTitle>
-          <CardDescription>Imagen o video de fondo en la portada de tu sitio.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Tipo de fondo</Label>
-            <div className="flex gap-2">
-              {(["none", "image", "video"] as const).map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setHeroType(type)}
-                  className={`flex-1 rounded-lg border px-4 py-2.5 text-sm font-medium transition-all sm:flex-none ${
-                    heroType === type
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-background hover:bg-muted"
-                  }`}
-                >
-                  {type === "none" ? "Sin fondo" : type === "image" ? "Imagen" : "Video"}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {heroType !== "none" && (
-            <div className="space-y-2">
-              <Label htmlFor="hero-url">
-                URL de {heroType === "image" ? "la imagen" : "el video"}
-              </Label>
-              <Input
-                id="hero-url"
-                value={heroUrl}
-                onChange={(e) => setHeroUrl(e.target.value)}
-                placeholder={heroType === "image"
-                  ? "https://ejemplo.com/hero.jpg"
-                  : "https://ejemplo.com/hero.mp4"
-                }
-              />
-            </div>
-          )}
-
-          <Button onClick={handleSaveHero} disabled={savingHero} className="w-full sm:w-auto">
-            {savingHero ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Guardando...</> : "Guardar hero"}
-          </Button>
         </CardContent>
       </Card>
 

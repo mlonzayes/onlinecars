@@ -37,18 +37,44 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Vehículos", href: "/dashboard/vehiculos", icon: Car },
-  { label: "Clientes", href: "/dashboard/clientes", icon: Users },
-  { label: "Ventas", href: "/dashboard/ventas", icon: ShoppingCart },
-  { label: "Leads", href: "/dashboard/leads", icon: MessageSquare },
-  { label: "Sitio Web", href: "/dashboard/sitio-web", icon: Globe },
-  { label: "Cotizaciones", href: "/dashboard/cotizaciones", icon: Calculator },
-  { label: "Pagos", href: "/dashboard/pagos", icon: CreditCard },
-  { label: "Portales", href: "/dashboard/portales", icon: Store },
-  { label: "Bancos", href: "/dashboard/bancos", icon: Landmark },
-  { label: "Contabilidad", href: "/dashboard/contabilidad", icon: Receipt },
+interface NavGroup {
+  // null = grupo sin header visible (típicamente el primero con Dashboard).
+  label: string | null;
+  items: NavItem[];
+}
+
+// Agrupado por dominio. Comercial sigue el flujo del negocio: stock → consulta →
+// cliente → operación → financiación. Footer queda para acciones de admin.
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: null,
+    items: [{ label: "Dashboard", href: "/dashboard", icon: LayoutDashboard }],
+  },
+  {
+    label: "Comercial",
+    items: [
+      { label: "Vehículos", href: "/dashboard/vehiculos", icon: Car },
+      { label: "Leads", href: "/dashboard/leads", icon: MessageSquare },
+      { label: "Clientes", href: "/dashboard/clientes", icon: Users },
+      { label: "Ventas", href: "/dashboard/ventas", icon: ShoppingCart },
+      { label: "Cotizaciones", href: "/dashboard/cotizaciones", icon: Calculator },
+    ],
+  },
+  {
+    label: "Sitio público",
+    items: [
+      { label: "Sitio Web", href: "/dashboard/sitio-web", icon: Globe },
+      { label: "Portales", href: "/dashboard/portales", icon: Store },
+    ],
+  },
+  {
+    label: "Finanzas",
+    items: [
+      { label: "Pagos", href: "/dashboard/pagos", icon: CreditCard },
+      { label: "Bancos", href: "/dashboard/bancos", icon: Landmark },
+      { label: "Contabilidad", href: "/dashboard/contabilidad", icon: Receipt },
+    ],
+  },
 ];
 
 interface DashboardSidebarProps {
@@ -57,6 +83,12 @@ interface DashboardSidebarProps {
 
 export function DashboardSidebar({ dealership }: DashboardSidebarProps) {
   const pathname = usePathname();
+
+  function isItemActive(href: string): boolean {
+    return href === "/dashboard"
+      ? pathname === "/dashboard"
+      : pathname.startsWith(href);
+  }
 
   return (
     <Sidebar>
@@ -82,47 +114,40 @@ export function DashboardSidebar({ dealership }: DashboardSidebarProps) {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Menú</SidebarGroupLabel>
-          <SidebarMenu>
-            {NAV_ITEMS.map((item) => {
-              const isActive =
-                item.href === "/dashboard"
-                  ? pathname === "/dashboard"
-                  : pathname.startsWith(item.href);
-
-              return (
+        {NAV_GROUPS.map((group, groupIdx) => (
+          <SidebarGroup key={group.label ?? `group-${groupIdx}`}>
+            {group.label && <SidebarGroupLabel>{group.label}</SidebarGroupLabel>}
+            <SidebarMenu>
+              {group.items.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
-                    isActive={isActive}
+                    isActive={isItemActive(item.href)}
                     render={<Link href={item.href} />}
                   >
                     <item.icon className="size-4" />
                     <span>{item.label}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              );
-            })}
-
-            {/* Módulo de Vendedores: Solo visible para el owner/admin */}
-            {dealership.currentUser.role === "admin" && (
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={pathname.startsWith("/dashboard/vendedores")}
-                  render={<Link href="/dashboard/vendedores" />}
-                >
-                  <Users className="size-4" />
-                  <span>Vendedores</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )}
-          </SidebarMenu>
-        </SidebarGroup>
-
+              ))}
+            </SidebarMenu>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
       <SidebarFooter>
         <SidebarMenu>
+          {/* Vendedores: solo visible para el admin. */}
+          {dealership.currentUser.role === "admin" && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={pathname.startsWith("/dashboard/vendedores")}
+                render={<Link href="/dashboard/vendedores" />}
+              >
+                <Users className="size-4" />
+                <span>Vendedores</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
           <SidebarMenuItem>
             <SidebarMenuButton
               isActive={pathname.startsWith("/dashboard/configuracion")}

@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { VEHICLE_CONDITIONS } from "@/lib/constants";
 import type { TenantHomeBundleMedia, TenantHomeBundleSection } from "@/lib/tenant";
 import type { HeroConfig } from "@/lib/sections/config-types";
+import { DURATION, EASE, gsap, useIsomorphicLayoutEffect } from "@/lib/gsap";
 
 interface HeroSearchProps {
   basePath: string;
@@ -64,9 +65,51 @@ export function HeroSearch({
   subhead,
 }: HeroSearchProps) {
   const router = useRouter();
+  const scopeRef = useRef<HTMLElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const subtitleRef = useRef<HTMLParagraphElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const [brand, setBrand] = useState("");
   const [condition, setCondition] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+
+  // Animacion de entrada del hero: solo el contenido (titulo + subtitulo + form).
+  // El fondo (image/video/gradient) queda intacto para no provocar parpadeos.
+  useIsomorphicLayoutEffect(() => {
+    const scope = scopeRef.current;
+    if (!scope) return;
+
+    const ctx = gsap.context(() => {
+      const candidates: Array<HTMLElement | null> = [
+        titleRef.current,
+        subtitleRef.current,
+        formRef.current,
+      ];
+      const targets = candidates.filter(
+        (el): el is HTMLElement => el !== null
+      );
+      if (targets.length === 0) return;
+
+      const mm = gsap.matchMedia();
+
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap.set(targets, { autoAlpha: 0, y: 24 });
+        gsap.to(targets, {
+          autoAlpha: 1,
+          y: 0,
+          duration: DURATION,
+          ease: EASE,
+          stagger: 0.08,
+        });
+      });
+
+      mm.add("(prefers-reduced-motion: reduce)", () => {
+        gsap.set(targets, { autoAlpha: 1, y: 0 });
+      });
+    }, scope);
+
+    return () => ctx.revert();
+  }, []);
 
   // Resolver headline/subhead/config desde la sección si vino, si no usar props legacy.
   const resolvedHeadline = section?.title ?? headline ?? "Encontrá tu próximo auto";
@@ -103,7 +146,7 @@ export function HeroSearch({
     config.align === "left" ? "max-w-3xl" : "mx-auto max-w-3xl text-center";
 
   return (
-    <section className="relative isolate overflow-hidden ">
+    <section ref={scopeRef} className="relative isolate overflow-hidden ">
       {/* Background media */}
       {heroSource.kind === "image" && heroSource.url && (
         <div
@@ -143,12 +186,14 @@ export function HeroSearch({
       <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-32">
         <div className={headlineWrapperClass}>
           <h1
+            ref={titleRef}
             className={`text-3xl font-bold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl ${alignClass}`}
           >
             {resolvedHeadline}
           </h1>
           {resolvedSubhead && (
             <p
+              ref={subtitleRef}
               className={`mt-4 max-w-xl text-base text-slate-300 sm:text-lg ${
                 config.align === "center" ? "mx-auto text-center" : ""
               }`}
@@ -161,6 +206,7 @@ export function HeroSearch({
         {/* Search bar — ocultable por config */}
         {config.showSearch && (
           <form
+            ref={formRef}
             onSubmit={handleSubmit}
             className="mx-auto mt-10 max-w-4xl rounded-2xl bg-white/95 p-3 shadow-2xl backdrop-blur-sm sm:mt-12 sm:p-2"
           >

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { ImageIcon } from "lucide-react";
 import { Section } from "./section";
+import { AnimateOnScroll } from "./animate-on-scroll";
 import type {
   TenantHomeBundleMedia,
   TenantHomeBundleSection,
@@ -57,7 +58,11 @@ export function GallerySection({ section, media }: GallerySectionProps) {
       title={section.title}
       description={section.subtitle ?? undefined}
     >
-      <div className={`grid gap-3 sm:gap-4 ${COLUMNS_CLASS[config.columns]}`}>
+      <AnimateOnScroll
+        preset="stagger"
+        staggerDelay={0.05}
+        className={`grid gap-3 sm:gap-4 ${COLUMNS_CLASS[config.columns]}`}
+      >
         {galleryImages.map((image) => (
           <div
             key={image.id}
@@ -72,7 +77,7 @@ export function GallerySection({ section, media }: GallerySectionProps) {
             />
           </div>
         ))}
-      </div>
+      </AnimateOnScroll>
     </Section>
   );
 }

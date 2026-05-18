@@ -1,5 +1,6 @@
 import { Section } from "./section";
 import { TenantContactForm } from "./contact-form";
+import { AnimateOnScroll } from "./animate-on-scroll";
 import type {
   TenantHomeBundleDealership,
   TenantHomeBundleSection,
@@ -22,9 +23,9 @@ export function ContactSection({ section, dealership }: ContactSectionProps) {
       title={section.title}
       description={section.subtitle ?? section.content ?? undefined}
     >
-      <div className="mx-auto max-w-2xl">
+      <AnimateOnScroll preset="fadeUp" className="mx-auto max-w-2xl">
         <TenantContactForm slug={dealership.slug} />
-      </div>
+      </AnimateOnScroll>
     </Section>
   );
 }

@@ -19,7 +19,7 @@ export function BrandsGrid({ brands, basePath, limit = 6 }: BrandsGridProps) {
         <Link
           key={brand.name}
           href={`${basePath}/catalogo?brand=${encodeURIComponent(brand.name)}`}
-          className="group flex aspect-[3/2] flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-[var(--tenant-primary)] hover:shadow-md"
+          className="group flex aspect-[3/2] flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-[var(--tenant-primary)] hover:shadow-lg hover:ring-1 hover:ring-[var(--tenant-primary)]/20"
         >
           {brand.logoUrl ? (
             <div className="flex h-10 flex-1 items-center justify-center">

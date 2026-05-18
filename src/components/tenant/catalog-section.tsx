@@ -4,6 +4,7 @@ import { FeaturedTabs } from "./featured-tabs";
 import { BrandsGrid } from "./brands-grid";
 import { DualCTA } from "./dual-cta";
 import { WhyChooseUs } from "./why-choose-us";
+import { AnimateOnScroll } from "./animate-on-scroll";
 import type {
   TenantHomeBundle,
   TenantHomeBundleSection,
@@ -30,7 +31,9 @@ export function CatalogSection({ section, bundle, basePath }: CatalogSectionProp
         title="Categorías"
         description="Filtrá rápido por el tipo de vehículo que buscás."
       >
-        <CategoriesGrid basePath={basePath} />
+        <AnimateOnScroll preset="stagger" staggerDelay={0.06}>
+          <CategoriesGrid basePath={basePath} />
+        </AnimateOnScroll>
       </Section>
 
       {/* Vehículos destacados con tabs — usa copy de la sección */}
@@ -53,13 +56,17 @@ export function CatalogSection({ section, bundle, basePath }: CatalogSectionProp
           title="Marcas premium"
           description="Acceso directo a las marcas más buscadas del mercado."
         >
-          <BrandsGrid brands={displayBrands} basePath={basePath} />
+          <AnimateOnScroll preset="stagger" staggerDelay={0.05}>
+            <BrandsGrid brands={displayBrands} basePath={basePath} />
+          </AnimateOnScroll>
         </Section>
       )}
 
       {/* Doble CTA: comprar (catálogo) o vender (cotización) */}
       <Section background="white" padding="tight">
-        <DualCTA basePath={basePath} />
+        <AnimateOnScroll preset="fadeUp">
+          <DualCTA basePath={basePath} />
+        </AnimateOnScroll>
       </Section>
 
       {/* Why Choose Us */}
@@ -69,7 +76,9 @@ export function CatalogSection({ section, bundle, basePath }: CatalogSectionProp
         title="Cuidamos cada detalle"
         description="No vendemos solo autos. Acompañamos toda la operación."
       >
-        <WhyChooseUs />
+        <AnimateOnScroll preset="stagger" staggerDelay={0.08}>
+          <WhyChooseUs />
+        </AnimateOnScroll>
       </Section>
     </>
   );

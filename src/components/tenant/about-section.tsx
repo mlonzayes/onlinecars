@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Section } from "./section";
+import { AnimateOnScroll } from "./animate-on-scroll";
 import type {
   TenantHomeBundleMedia,
   TenantHomeBundleSection,
@@ -57,23 +58,25 @@ export function AboutSection({ section, media }: AboutSectionProps) {
       title={section.title}
       align={showImage ? "left" : "center"}
     >
-      {showImage ? (
-        <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
-          {layout === "image-left" ? (
-            <>
-              {imageBlock}
-              {textBlock}
-            </>
-          ) : (
-            <>
-              {textBlock}
-              {imageBlock}
-            </>
-          )}
-        </div>
-      ) : (
-        <div className="mx-auto max-w-3xl text-center">{textBlock}</div>
-      )}
+      <AnimateOnScroll preset="fadeUp">
+        {showImage ? (
+          <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+            {layout === "image-left" ? (
+              <>
+                {imageBlock}
+                {textBlock}
+              </>
+            ) : (
+              <>
+                {textBlock}
+                {imageBlock}
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="mx-auto max-w-3xl text-center">{textBlock}</div>
+        )}
+      </AnimateOnScroll>
     </Section>
   );
 }

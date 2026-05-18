@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Banknote, ArrowRight } from "lucide-react";
 import { Section } from "./section";
+import { AnimateOnScroll } from "./animate-on-scroll";
 import type { TenantHomeBundleSection } from "@/lib/tenant";
 import type { FinancingConfig } from "@/lib/sections/config-types";
 
@@ -23,7 +24,10 @@ export function FinancingSection({ section, basePath }: FinancingSectionProps) {
       title={section.title}
       description={section.subtitle ?? undefined}
     >
-      <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-slate-50 p-8 text-center sm:p-12">
+      <AnimateOnScroll
+        preset="fadeUp"
+        className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-slate-50 p-8 text-center sm:p-12"
+      >
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--tenant-primary)]/10 text-[var(--tenant-primary)]">
           <Banknote className="h-7 w-7" />
         </div>
@@ -52,7 +56,7 @@ export function FinancingSection({ section, basePath }: FinancingSectionProps) {
             <ArrowRight className="h-4 w-4" />
           </Link>
         )}
-      </div>
+      </AnimateOnScroll>
     </Section>
   );
 }

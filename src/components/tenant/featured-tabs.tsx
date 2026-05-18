@@ -1,10 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VehicleCard } from "./vehicle-card";
+import {
+  DEFAULT_START,
+  DURATION,
+  EASE,
+  Y_OFFSET,
+  gsap,
+  useIsomorphicLayoutEffect,
+} from "@/lib/gsap";
 
 interface FeaturedVehicle {
   id: string;
@@ -40,6 +48,53 @@ const TAB_LABELS: Record<TabKey, string> = {
 
 export function FeaturedTabs({ vehicles, basePath, limit = 6 }: FeaturedTabsProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("all");
+  const scopeRef = useRef<HTMLDivElement>(null);
+  const hasAnimatedRef = useRef<boolean>(false);
+
+  // Animacion de stagger SOLO la primera vez que el grid entra al viewport.
+  // En cambios de tab posteriores las cards aparecen instantaneas (no las tocamos).
+  useIsomorphicLayoutEffect(() => {
+    const scope = scopeRef.current;
+    if (!scope) return;
+
+    const ctx = gsap.context(() => {
+      const mm = gsap.matchMedia();
+
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        const grid = scope.querySelector<HTMLElement>("[data-featured-grid]");
+        if (!grid) return;
+        const cards = Array.from(grid.children) as HTMLElement[];
+        if (cards.length === 0) return;
+
+        gsap.set(cards, { autoAlpha: 0, y: Y_OFFSET });
+        gsap.to(cards, {
+          autoAlpha: 1,
+          y: 0,
+          duration: DURATION,
+          ease: EASE,
+          stagger: 0.06,
+          scrollTrigger: {
+            trigger: grid,
+            start: DEFAULT_START,
+            once: true,
+            onEnter: () => {
+              hasAnimatedRef.current = true;
+            },
+          },
+        });
+      });
+
+      mm.add("(prefers-reduced-motion: reduce)", () => {
+        const grid = scope.querySelector<HTMLElement>("[data-featured-grid]");
+        if (!grid) return;
+        const cards = Array.from(grid.children) as HTMLElement[];
+        gsap.set(cards, { autoAlpha: 1, y: 0 });
+        hasAnimatedRef.current = true;
+      });
+    }, scope);
+
+    return () => ctx.revert();
+  }, []);
 
   // Pre-filtrar y limitar por tab. useMemo para evitar recalcular en cada render.
   const filteredByTab = useMemo(() => {
@@ -55,7 +110,7 @@ export function FeaturedTabs({ vehicles, basePath, limit = 6 }: FeaturedTabsProp
       : `${basePath}/catalogo?condition=${activeTab}`;
 
   return (
-    <div>
+    <div ref={scopeRef}>
       <Tabs
         value={activeTab}
         onValueChange={(v) => v !== null && setActiveTab(v as TabKey)}
@@ -83,7 +138,10 @@ export function FeaturedTabs({ vehicles, basePath, limit = 6 }: FeaturedTabsProp
                 Sin vehículos en esta categoría todavía.
               </p>
             ) : (
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              <div
+                data-featured-grid={key === "all" ? "" : undefined}
+                className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
+              >
                 {filteredByTab[key].map((vehicle) => (
                   <VehicleCard
                     key={vehicle.id}

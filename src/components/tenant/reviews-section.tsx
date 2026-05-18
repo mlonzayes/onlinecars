@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MessageSquareQuote } from "lucide-react";
 import { Section } from "./section";
 import { ReviewCard } from "./review-card";
+import { AnimateOnScroll } from "./animate-on-scroll";
 import type {
   TenantHomeBundleReview,
   TenantHomeBundleSection,
@@ -27,35 +28,37 @@ export function ReviewsSection({ section, reviews, basePath }: ReviewsSectionPro
       eyebrow="Lo que dicen nuestros clientes"
       title={section.title}
     >
-      {config.showCta && (
-        <div className="flex justify-center pb-6">
-          <Link
-            href={`${basePath}/opinion`}
-            className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
-          >
-            <MessageSquareQuote className="h-4 w-4" />
-            Dejar mi opinión
-          </Link>
-        </div>
-      )}
+      <AnimateOnScroll preset="fadeUp">
+        {config.showCta && (
+          <div className="flex justify-center pb-6">
+            <Link
+              href={`${basePath}/opinion`}
+              className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+            >
+              <MessageSquareQuote className="h-4 w-4" />
+              Dejar mi opinión
+            </Link>
+          </div>
+        )}
 
-      {visible.length > 0 ? (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {visible.map((review) => (
-            <ReviewCard key={review.id} review={review} />
-          ))}
-        </div>
-      ) : (
-        <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-10 text-center">
-          <MessageSquareQuote className="mx-auto mb-3 h-8 w-8 text-slate-300" />
-          <p className="text-sm font-semibold text-slate-700">
-            Aún no hay opiniones públicas
-          </p>
-          <p className="mt-1 text-xs text-slate-500">
-            Sé el primero en compartir tu experiencia.
-          </p>
-        </div>
-      )}
+        {visible.length > 0 ? (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {visible.map((review) => (
+              <ReviewCard key={review.id} review={review} />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-10 text-center">
+            <MessageSquareQuote className="mx-auto mb-3 h-8 w-8 text-slate-300" />
+            <p className="text-sm font-semibold text-slate-700">
+              Aún no hay opiniones públicas
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              Sé el primero en compartir tu experiencia.
+            </p>
+          </div>
+        )}
+      </AnimateOnScroll>
     </Section>
   );
 }

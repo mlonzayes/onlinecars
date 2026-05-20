@@ -22,9 +22,17 @@ export async function getSectionsPageData(
   legacyTheme: DealershipTheme | null
 ): Promise<SectionsPageData> {
   // Lazy seed por las dudas — para dealers que aún no abrieron su sitio público.
-  await prisma.$transaction(async (tx) => {
-    await seedDefaultSections(tx, dealershipId, legacyTheme);
+  // Solo abrimos transacción si realmente hay que sembrar; el count fuera de tx
+  // evita el P2028 (Transaction not found) en cold starts de Neon.
+  const existingSections = await prisma.dealershipSection.count({
+    where: { dealershipId },
   });
+  if (existingSections === 0) {
+    await prisma.$transaction(
+      async (tx) => seedDefaultSections(tx, dealershipId, legacyTheme),
+      { timeout: 15_000 }
+    );
+  }
 
   const [sectionRows, mediaRows] = await Promise.all([
     prisma.dealershipSection.findMany({

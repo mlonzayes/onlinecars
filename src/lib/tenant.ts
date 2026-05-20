@@ -379,17 +379,26 @@ async function fetchTenantHomeBundleFromDb(
 
   const theme = dealership.theme as DealershipTheme | null;
 
-  // Lazy seed dentro de una transacción. Idempotente: si ya hay secciones, no hace nada.
-  const seedResult = await prisma.$transaction(async (tx) => {
-    return seedDefaultSections(tx, dealership.id, theme);
+  // Lazy seed. El count va fuera de la transacción para evitar timeouts de
+  // $transaction en cold starts de Neon (P2028: Transaction not found). Solo
+  // abrimos transacción cuando realmente hay que sembrar. Timeout extendido
+  // a 15s para tolerar el cold start.
+  const existingSections = await prisma.dealershipSection.count({
+    where: { dealershipId: dealership.id },
   });
 
-  if (seedResult.seeded) {
-    logger.info(undefined, "tenant.sections.seeded", {
-      dealershipId: dealership.id,
-      slug,
-      migratedHero: seedResult.migratedHero,
-    });
+  if (existingSections === 0) {
+    const seedResult = await prisma.$transaction(
+      async (tx) => seedDefaultSections(tx, dealership.id, theme),
+      { timeout: 15_000 }
+    );
+    if (seedResult.seeded) {
+      logger.info(undefined, "tenant.sections.seeded", {
+        dealershipId: dealership.id,
+        slug,
+        migratedHero: seedResult.migratedHero,
+      });
+    }
   }
 
   const [vehicles, stockBrands, reviews, sectionRows, mediaRows] = await Promise.all([

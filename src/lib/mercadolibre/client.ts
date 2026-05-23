@@ -155,14 +155,47 @@ export async function getMLUserInfo(dealershipId: string): Promise<MLUserInfo> {
 
 // ─── Items ────────────────────────────────────────────────────────────────────
 
+/**
+ * Crea una publicación en ML. Maneja el caso especial 402 (payment_required):
+ * para clasificados de vehículos, ML crea el item igual pero requiere pago para
+ * activarlo. Tratamos ese 402 como éxito-con-pago-pendiente y devolvemos el item.
+ */
 export async function publishItem(
   dealershipId: string,
   payload: MLCreateItemPayload
 ): Promise<MLItemResponse> {
-  return mlFetch<MLItemResponse>(dealershipId, "/items", {
+  const token = await getValidAccessToken(dealershipId);
+  const res = await fetch(`${ML_API_BASE}/items`, {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(payload),
   });
+
+  const body = await res.json().catch(() => ({}));
+
+  // 402 = item creado pero pendiente de pago. NO es un error: devolvemos el item
+  // para que el caller decida (típicamente: guardar con status payment_required).
+  if (res.status === 402 && body.id) {
+    return body as MLItemResponse;
+  }
+
+  if (!res.ok) {
+    const parts: string[] = [];
+    if (body.message) parts.push(body.message);
+    if (Array.isArray(body.cause) && body.cause.length > 0) {
+      parts.push(JSON.stringify(body.cause));
+    }
+    if (Array.isArray(body.errors) && body.errors.length > 0) {
+      parts.push(JSON.stringify(body.errors));
+    }
+    const detail = parts.length > 0 ? parts.join(" | ") : JSON.stringify(body);
+    throw new Error(`ML API ${res.status}: ${detail}`);
+  }
+
+  return body as MLItemResponse;
 }
 
 export async function updateItemStatus(

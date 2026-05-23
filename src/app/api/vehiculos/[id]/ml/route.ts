@@ -132,6 +132,22 @@ export const POST = withLogger<Params>(async (request, ctx) => {
     return NextResponse.json({ error: friendlyMessage }, { status: 422 });
   }
 
+  // Mapear status de ML a nuestro enum. `payment_required` es válido para
+  // clasificados de vehículos — el item existe pero el dealer tiene que pagar.
+  const mappedStatus =
+    mlItem.status === "active"
+      ? "active"
+      : mlItem.status === "payment_required"
+      ? "payment_required"
+      : "paused";
+
+  logger.info(requestId, "ml.publish.success", {
+    vehicleId,
+    mlItemId: mlItem.id,
+    mlStatus: mlItem.status,
+    mappedStatus,
+  });
+
   // Persistir el listing
   const listing = await prisma.mercadoLibreListing.upsert({
     where: { vehicleId },
@@ -140,7 +156,7 @@ export const POST = withLogger<Params>(async (request, ctx) => {
       vehicleId,
       mlAccountId: mlAccount.id,
       mlItemId: mlItem.id,
-      status: mlItem.status === "active" ? "active" : "paused",
+      status: mappedStatus,
       listingTypeId,
       permalink: mlItem.permalink,
       lastSyncedAt: new Date(),
@@ -148,7 +164,7 @@ export const POST = withLogger<Params>(async (request, ctx) => {
     },
     update: {
       mlItemId: mlItem.id,
-      status: mlItem.status === "active" ? "active" : "paused",
+      status: mappedStatus,
       listingTypeId,
       permalink: mlItem.permalink,
       lastSyncedAt: new Date(),
@@ -156,7 +172,14 @@ export const POST = withLogger<Params>(async (request, ctx) => {
     },
   });
 
-  return NextResponse.json({ listing, preview: buildMLPreview(vehicle) }, { status: 201 });
+  return NextResponse.json(
+    {
+      listing,
+      preview: buildMLPreview(vehicle),
+      paymentRequired: mlItem.status === "payment_required",
+    },
+    { status: 201 }
+  );
 });
 
 // ─── DELETE — Cerrar publicación ──────────────────────────────────────────────

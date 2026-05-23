@@ -21,6 +21,9 @@ import type {
 
 const ML_API_BASE = "https://api.mercadolibre.com";
 const ML_AUTH_BASE = "https://auth.mercadolibre.com.ar";
+// El token endpoint vive en api.mercadolibre.com/oauth/token, NO en auth.*.
+// El host auth.* es solo para la pantalla de autorización del usuario.
+const ML_TOKEN_URL = `${ML_API_BASE}/oauth/token`;
 const REFRESH_BUFFER_MS = 5 * 60 * 1000; // 5 minutos antes de que venza
 
 function getAppCredentials() {
@@ -50,9 +53,12 @@ async function getValidAccessToken(dealershipId: string): Promise<string> {
 
   // Refresh
   const { clientId, clientSecret } = getAppCredentials();
-  const res = await fetch(`${ML_AUTH_BASE}/jms/oauth/token`, {
+  const res = await fetch(ML_TOKEN_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Accept: "application/json",
+    },
     body: new URLSearchParams({
       grant_type: "refresh_token",
       client_id: clientId,
@@ -77,9 +83,12 @@ async function getValidAccessToken(dealershipId: string): Promise<string> {
  */
 export async function exchangeCode(code: string, redirectUri: string): Promise<MLTokenResponse> {
   const { clientId, clientSecret } = getAppCredentials();
-  const res = await fetch(`${ML_AUTH_BASE}/jms/oauth/token`, {
+  const res = await fetch(ML_TOKEN_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Accept: "application/json",
+    },
     body: new URLSearchParams({
       grant_type: "authorization_code",
       client_id: clientId,

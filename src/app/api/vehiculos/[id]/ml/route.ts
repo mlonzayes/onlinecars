@@ -7,6 +7,7 @@
  */
 import { NextResponse } from "next/server";
 import { withLogger } from "@/lib/api-handler";
+import { logger } from "@/lib/logger";
 import { getCurrentDealership } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { buildMLPayload, buildMLPreview } from "@/lib/mercadolibre/mapper";
@@ -21,6 +22,7 @@ type Params = { id: string };
 // ─── POST — Publicar ──────────────────────────────────────────────────────────
 
 export const POST = withLogger<Params>(async (request, ctx) => {
+  const { requestId } = ctx;
   const dealership = await getCurrentDealership();
   if (!dealership) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
@@ -74,11 +76,27 @@ export const POST = withLogger<Params>(async (request, ctx) => {
   // Construir payload y publicar
   const payload = buildMLPayload(vehicle, listingTypeId);
 
+  logger.info(requestId, "ml.publish.payload", {
+    vehicleId,
+    title: payload.title,
+    categoryId: payload.category_id,
+    listingTypeId: payload.listing_type_id,
+    attributesCount: payload.attributes?.length ?? 0,
+    picturesCount: payload.pictures?.length ?? 0,
+  });
+
   let mlItem;
   try {
     mlItem = await publishItem(dealership.id, payload);
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : "Error publicando en ML";
+
+    logger.error(requestId, "ml.publish.failed", {
+      vehicleId,
+      categoryId: payload.category_id,
+      listingTypeId: payload.listing_type_id,
+      mlError: errorMessage,
+    });
 
     // Si ya había un listing (en estado error/closed), actualizar el mensaje
     if (existingListing) {

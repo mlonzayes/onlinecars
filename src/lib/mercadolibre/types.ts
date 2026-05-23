@@ -31,12 +31,20 @@ export interface MLPicture {
   source: string; // URL pública accesible por ML
 }
 
+// Location requerida por ML para vehículos. country + state + city son obligatorios.
+export interface MLLocation {
+  country: { name: string };
+  state: { name: string };
+  city: { name: string };
+}
+
 // Payload mínimo para crear una publicación de vehículo en ML
 export interface MLCreateItemPayload {
   title: string;
   category_id: string;
   price: number;
   currency_id: "ARS" | "USD";
+  available_quantity: number;
   buying_mode: "classified";
   listing_type_id: string; // ej: "silver"
   condition: "new" | "used";
@@ -46,6 +54,7 @@ export interface MLCreateItemPayload {
   pictures?: MLPicture[];
   attributes: MLAttribute[];
   sale_terms?: { id: string; value_name: string }[];
+  location?: MLLocation;
 }
 
 export interface MLItemResponse {

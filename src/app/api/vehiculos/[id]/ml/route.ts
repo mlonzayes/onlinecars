@@ -10,7 +10,11 @@ import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { getCurrentDealership } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { buildMLPayload, buildMLPreview } from "@/lib/mercadolibre/mapper";
+import {
+  buildMLPayload,
+  buildMLPreview,
+  validateForMLPublish,
+} from "@/lib/mercadolibre/mapper";
 import {
   publishItem,
   updateItemStatus,
@@ -73,8 +77,24 @@ export const POST = withLogger<Params>(async (request, ctx) => {
     // body vacío — OK
   }
 
+  // Pre-validar datos obligatorios para ML — evita un 422 críptico de la API.
+  const validationErrors = validateForMLPublish(vehicle, dealership);
+  if (validationErrors.length > 0) {
+    logger.warn(requestId, "ml.publish.validation_failed", {
+      vehicleId,
+      errors: validationErrors,
+    });
+    return NextResponse.json(
+      {
+        error: "Faltan datos para publicar en Mercado Libre",
+        details: validationErrors,
+      },
+      { status: 400 }
+    );
+  }
+
   // Construir payload y publicar
-  const payload = buildMLPayload(vehicle, listingTypeId);
+  const payload = buildMLPayload(vehicle, dealership, listingTypeId);
 
   logger.info(requestId, "ml.publish.payload", {
     vehicleId,
@@ -89,24 +109,27 @@ export const POST = withLogger<Params>(async (request, ctx) => {
   try {
     mlItem = await publishItem(dealership.id, payload);
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : "Error publicando en ML";
+    const rawError = err instanceof Error ? err.message : "Error publicando en ML";
 
     logger.error(requestId, "ml.publish.failed", {
       vehicleId,
       categoryId: payload.category_id,
       listingTypeId: payload.listing_type_id,
-      mlError: errorMessage,
+      mlError: rawError,
     });
 
-    // Si ya había un listing (en estado error/closed), actualizar el mensaje
+    // Parseamos el detalle de ML para devolver algo legible al usuario en lugar
+    // del JSON crudo. El raw queda en logs para diagnóstico.
+    const friendlyMessage = humanizeMLError(rawError);
+
     if (existingListing) {
       await prisma.mercadoLibreListing.update({
         where: { vehicleId },
-        data: { status: "error", errorMessage },
+        data: { status: "error", errorMessage: rawError.slice(0, 500) },
       });
     }
 
-    return NextResponse.json({ error: errorMessage }, { status: 422 });
+    return NextResponse.json({ error: friendlyMessage }, { status: 422 });
   }
 
   // Persistir el listing
@@ -224,3 +247,30 @@ export const PATCH = withLogger<Params>(async (request, ctx) => {
 
   return NextResponse.json({ listing: updated });
 });
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+interface MLErrorCause {
+  type?: string;
+  code?: string;
+  message?: string;
+}
+
+/**
+ * Convierte el JSON crudo de error de ML en un mensaje legible para el usuario.
+ * El raw queda en logs para diagnóstico; al frontend le mandamos algo entendible.
+ */
+function humanizeMLError(raw: string): string {
+  // Buscar el primer "[" para extraer el JSON array que mete mlFetch en el mensaje.
+  const jsonStart = raw.indexOf("[");
+  if (jsonStart === -1) return raw.length > 200 ? raw.slice(0, 200) + "..." : raw;
+
+  try {
+    const parsed: MLErrorCause[] = JSON.parse(raw.slice(jsonStart));
+    const errors = parsed.filter((p) => p.type === "error" && p.message);
+    if (errors.length === 0) return "Mercado Libre rechazó la publicación. Revisá los datos del vehículo.";
+    return errors.map((e) => `• ${e.message}`).join("\n");
+  } catch {
+    return raw.length > 200 ? raw.slice(0, 200) + "..." : raw;
+  }
+}

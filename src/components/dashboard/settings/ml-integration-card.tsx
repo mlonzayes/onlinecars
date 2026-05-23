@@ -12,6 +12,7 @@ import { ExternalLink, Link2, Link2Off, Loader2, AlertCircle, CheckCircle2 } fro
 import { toast } from "sonner";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export interface MLAccountStatus {
   connected: boolean;
@@ -28,6 +29,7 @@ interface MLIntegrationCardProps {
 export function MLIntegrationCard({ initialStatus }: MLIntegrationCardProps) {
   const [status, setStatus] = useState<MLAccountStatus>(initialStatus);
   const [disconnecting, setDisconnecting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -54,7 +56,6 @@ export function MLIntegrationCard({ initialStatus }: MLIntegrationCardProps) {
   }, [searchParams, pathname, router]);
 
   async function handleDisconnect() {
-    if (!confirm("¿Desconectar la cuenta de Mercado Libre? Se eliminarán todos los datos de integración.")) return;
     setDisconnecting(true);
     try {
       const res = await fetch("/api/mercadolibre/status", { method: "DELETE" });
@@ -99,12 +100,22 @@ export function MLIntegrationCard({ initialStatus }: MLIntegrationCardProps) {
       {status.connected ? (
         <ConnectedState
           status={status}
-          onDisconnect={handleDisconnect}
+          onDisconnect={() => setConfirmOpen(true)}
           disconnecting={disconnecting}
         />
       ) : (
         <DisconnectedState onConnect={handleConnect} />
       )}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Desconectar Mercado Libre"
+        description="Se eliminarán todos los datos de integración. Vas a tener que volver a autorizar la app si querés reconectar más adelante."
+        confirmLabel="Desconectar"
+        destructive
+        onConfirm={handleDisconnect}
+      />
     </div>
   );
 }
@@ -149,7 +160,7 @@ function ConnectedState({
       {/* Acciones */}
       <div className="flex items-center gap-3 pt-1">
         <a
-          href="https://www.mercadolibre.com.ar/myml/mysales"
+          href="https://www.mercadolibre.com.ar/anuncios/listado"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"

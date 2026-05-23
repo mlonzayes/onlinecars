@@ -127,7 +127,17 @@ async function mlFetch<T>(
     let errorBody: string;
     try {
       const errJson = await res.json();
-      errorBody = errJson.message ?? JSON.stringify(errJson);
+      // ML mete el detalle de qué validación falló en `cause` (array) o `errors`.
+      // Si solo agarramos `.message`, perdemos la info clave (ej: "attribute YEAR is missing").
+      const parts: string[] = [];
+      if (errJson.message) parts.push(errJson.message);
+      if (Array.isArray(errJson.cause) && errJson.cause.length > 0) {
+        parts.push(JSON.stringify(errJson.cause));
+      }
+      if (Array.isArray(errJson.errors) && errJson.errors.length > 0) {
+        parts.push(JSON.stringify(errJson.errors));
+      }
+      errorBody = parts.length > 0 ? parts.join(" | ") : JSON.stringify(errJson);
     } catch {
       errorBody = await res.text();
     }

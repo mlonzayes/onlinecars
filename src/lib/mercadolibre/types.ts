@@ -60,7 +60,9 @@ export interface MLCreateItemPayload {
 export interface MLItemResponse {
   id: string;
   title: string;
-  status: "active" | "paused" | "closed" | "under_review";
+  // `payment_required` lo devuelve ML para clasificados que necesitan pago
+  // antes de activarse (típicamente vehículos en MLA1744).
+  status: "active" | "paused" | "closed" | "under_review" | "payment_required";
   permalink: string;
   category_id: string;
   price: number;

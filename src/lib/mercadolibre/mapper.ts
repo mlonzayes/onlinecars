@@ -89,9 +89,9 @@ function buildAttributes(vehicle: Vehicle): MLAttribute[] {
     { id: "TRIM", value_name: deriveTrim(vehicle) },
   ];
 
-  // Kilometraje — solo para usados, pero ML lo pide siempre como obligatorio en MLA1744.
+  // Kilometraje — ML pide número + unidad (ej: "75000 km"). Sin unidad lo rechaza.
   if (vehicle.kilometers != null) {
-    attrs.push({ id: "KILOMETERS", value_name: String(vehicle.kilometers) });
+    attrs.push({ id: "KILOMETERS", value_name: `${vehicle.kilometers} km` });
   }
 
   if (vehicle.fuelType && FUEL_MAP[vehicle.fuelType]) {

@@ -146,7 +146,7 @@ export function HeroSearch({
     config.align === "left" ? "max-w-3xl" : "mx-auto max-w-3xl text-center";
 
   return (
-    <section ref={scopeRef} className="relative isolate overflow-hidden ">
+    <section ref={scopeRef} className="relative isolate overflow-hidden min-h-[60vh] sm:min-h-[70vh] lg:min-h-[80vh] flex flex-col justify-center bg-slate-900">
       {/* Background media */}
       {heroSource.kind === "image" && heroSource.url && (
         <div
@@ -183,7 +183,7 @@ export function HeroSearch({
       />
 
       {/* Content */}
-      <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-32">
+      <div className="relative mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
         <div className={headlineWrapperClass}>
           <h1
             ref={titleRef}

@@ -77,6 +77,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
       <main className="flex-1">{children}</main>
       <TenantFooter
         name={dealership.name}
+        logo={dealership.logo}
         description={dealership.description}
         phone={dealership.phone}
         email={dealership.email}

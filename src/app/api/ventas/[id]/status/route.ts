@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { getCurrentDealership } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -115,6 +116,10 @@ export const PATCH = withLogger<SaleParams>(async (request, { requestId, params 
 
     return updatedSale;
   });
+
+  // Una transición de status cambia los counters de los stats (un draft pasa
+  // a reserved → baja "draft" sube "reserved", etc). Invalidamos el cache.
+  revalidateTag("sales-stats");
 
   logger.info(requestId, "sales.status.ok", {
     dealershipId: dealership.id,

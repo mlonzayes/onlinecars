@@ -28,18 +28,20 @@ model Dealership {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  vehicles        Vehicle[]
-  leads           Lead[]
-  users           DealershipUser[]
-  invites         DealershipInvite[]
-  customers       Customer[]
-  sales           Sale[]
-  reviews         Review[]
-  financingPlans  FinancingPlan[]
-  mlAccount       MercadoLibreAccount?
-  mlListings      MercadoLibreListing[]
-  sections        DealershipSection[]
-  media           DealershipMedia[]
+  vehicles          Vehicle[]
+  leads             Lead[]
+  users             DealershipUser[]
+  invites           DealershipInvite[]
+  customers         Customer[]
+  sales             Sale[]
+  reviews           Review[]
+  financingPlans    FinancingPlan[]
+  mlAccount         MercadoLibreAccount?
+  mlListings        MercadoLibreListing[]
+  sections          DealershipSection[]
+  media             DealershipMedia[]
+  quotations        Quotation[]
+  quotationCounters QuotationCounter[]
 
   @@map("dealerships")
 }
@@ -153,6 +155,7 @@ model Vehicle {
   // en SQL (ver migración add_partial_unique_active_sale).
   sales        Sale[]
   mlListing    MercadoLibreListing?
+  quotations   Quotation[]
 
   @@index([dealershipId, status])
   @@index([brand, model, year])
@@ -182,13 +185,15 @@ model Lead {
   email        String?
   phone        String?
   message      String?
-  source       String   @default("web") // web | whatsapp | mercadolibre
+  source       String   @default("web") // web | whatsapp | mercadolibre | tasacion
   status       String   @default("new") // new | contacted | qualified | closed
+  quoteData    Json?    // Datos del vehículo a tasar cuando source=tasacion
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  dealership   Dealership @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
-  vehicle      Vehicle?   @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  dealership   Dealership  @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
+  vehicle      Vehicle?    @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  quotations   Quotation[]
 
   @@index([dealershipId, status])
   @@map("leads")
@@ -374,4 +379,91 @@ model MercadoLibreListing {
 
   @@index([dealershipId])
   @@map("ml_listings")
+}
+
+// ─── Cotizaciones ────────────────────────────────────────────────────────────
+
+// Cotizaciones — comerciales (venta) y de compra (tasación). Modelo único
+// con discriminator `type`. Campos type-specific en columnas nullables.
+model Quotation {
+  id                   String   @id @default(cuid())
+  dealershipId         String
+  type                 String   // "sale" | "purchase"
+  number               Int      // counter atómico por (dealershipId, type)
+  code                 String   // derivado: "COT-V-00001" / "COT-C-00001"
+  status               String   @default("pending") // pending | accepted | rejected | expired
+  currency             String   @default("ARS")     // ARS | USD
+  validUntil           DateTime
+  emittedAt            DateTime @default(now())
+  notes                String?  @db.Text
+  createdByClerkUserId String
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  // SALE-specific (nullable cuando type=purchase)
+  vehicleId             String?
+  saleClientName        String?
+  saleClientDocument    String?
+  saleClientEmail       String?
+  saleClientPhone       String?
+  saleTotalPrice        Decimal? @db.Decimal(12, 2)
+  saleDownPayment       Decimal? @db.Decimal(12, 2)
+  saleInstallments      Int?
+  saleInstallmentAmount Decimal? @db.Decimal(12, 2)
+  salePaymentMethod     String? // cash | financed | mixed
+  saleSellerName        String? // vendedor del concesionario (texto libre)
+  // Permuta — el comprador entrega un usado como parte de pago. Todos los
+  // campos son opcionales (cotización sin permuta los deja null). La moneda
+  // del usado puede ser distinta a la del total — el dealer cierra la cuenta
+  // aparte según cotización USD/ARS del día; el PDF solo deja constancia.
+  saleTradeInBrand      String?
+  saleTradeInModel      String?
+  saleTradeInYear       Int?
+  saleTradeInValue      Decimal? @db.Decimal(12, 2)
+  saleTradeInCurrency   String? // ARS | USD
+
+  // PURCHASE-specific (nullable cuando type=sale)
+  leadId                 String?
+  purchaseSellerName     String?
+  purchaseSellerDocument String?
+  purchaseSellerEmail    String?
+  purchaseSellerPhone    String?
+  purchaseBrand          String?
+  purchaseModel          String?
+  purchaseYear           Int?
+  purchaseVersion        String?
+  purchaseKilometers     Int?
+  purchaseColor          String?
+  purchaseFuelType       String?
+  purchaseTransmission   String?
+  purchaseCondition      String?
+  purchaseOfferAmount    Decimal? @db.Decimal(12, 2)
+  purchasePaymentMethod  String? // cash | financed | mixed
+
+  dealership Dealership @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
+  vehicle    Vehicle?   @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  lead       Lead?      @relation(fields: [leadId], references: [id], onDelete: SetNull)
+
+  @@unique([dealershipId, type, number])
+  @@unique([dealershipId, code])
+  @@index([dealershipId, type, status])
+  @@index([dealershipId, createdAt])
+  @@index([leadId])
+  @@index([vehicleId])
+  @@map("quotations")
+}
+
+// Counter atómico para numeración correlativa por dealer y tipo de cotización.
+// Se incrementa dentro de una transacción al crear cada Quotation.
+model QuotationCounter {
+  id           String   @id @default(cuid())
+  dealershipId String
+  type         String   // "sale" | "purchase"
+  next         Int      @default(1)
+  updatedAt    DateTime @updatedAt
+
+  dealership   Dealership @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
+
+  @@unique([dealershipId, type])
+  @@map("quotation_counters")
 }

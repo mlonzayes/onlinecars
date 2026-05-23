@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { getCurrentDealership } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -179,6 +180,9 @@ export const POST = withLogger(async (request, { requestId }) => {
 
     return created;
   });
+
+  // Invalidamos el cache de stats — el dashboard de ventas lo consume.
+  revalidateTag("sales-stats");
 
   logger.info(requestId, "sales.create.ok", {
     dealershipId: dealership.id,

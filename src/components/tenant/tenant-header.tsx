@@ -72,16 +72,18 @@ export function TenantHeader({ name, logo, basePath }: TenantHeaderProps) {
             <img
               src={logo}
               alt={name}
-              className="h-8 w-8 rounded-lg object-cover"
+              className="h-12 w-auto object-contain"
             />
           ) : (
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--tenant-primary)] text-white shadow-sm">
-              <Car className="h-5 w-5" />
-            </div>
+            <>
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--tenant-primary)] text-white shadow-sm">
+                <Car className="h-5 w-5" />
+              </div>
+              <span className="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">
+                {name}
+              </span>
+            </>
           )}
-          <span className="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">
-            {name}
-          </span>
         </Link>
 
         {/* Desktop Navigation */}

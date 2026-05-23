@@ -69,19 +69,25 @@ export default async function ClientesPage({ searchParams }: ClientesPageProps) 
       : {}),
   };
 
-  // Stats absolutos del dealership en caché
-  const [total, customers, stats] = await Promise.all([
-    prisma.customer.count({ where }),
+  const hasSearch = tokens.length > 0;
+
+  // Sin búsqueda, `total` es exactamente lo mismo que `stats.totalAll` (que
+  // está cacheado en Redis vía unstable_cache). Evitamos el COUNT(*) extra y
+  // lo derivamos del cache. Con búsqueda activa, sí lo corremos porque el
+  // resultado depende de los tokens y no se puede cachear.
+  const [stats, customers, searchCount] = await Promise.all([
+    getCachedStats(dealership.id),
     prisma.customer.findMany({
       where,
       skip,
       take: PAGE_SIZE,
       orderBy: { createdAt: "desc" },
     }),
-    getCachedStats(dealership.id),
+    hasSearch ? prisma.customer.count({ where }) : Promise.resolve(0),
   ]);
 
   const { totalAll, totalIndividuals, totalCompanies } = stats;
+  const total = hasSearch ? searchCount : totalAll;
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 

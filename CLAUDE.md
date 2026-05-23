@@ -339,6 +339,216 @@ Validaciones de formato/tamaño viven en cada endpoint de upload con magic-numbe
 - **Branches:** `feature/{nombre}`, `fix/{nombre}`, `chore/{nombre}`
 - **PR titles** siguen la misma convención.
 
+## Patrones para nuevas pantallas del dashboard
+
+Cuando armes una pantalla nueva de listado en `/dashboard/...` (ej: vehículos, leads, ventas, cotizaciones, clientes), seguí estos patterns que ya están consolidados en las pantallas existentes. **Mirá `sales-table.tsx` o `quotations-table.tsx` como referencia** — están al día.
+
+### 1. Stats cacheados con `unstable_cache` + `revalidateTag`
+
+Los contadores de los stat cards (Total, En curso, Completadas, etc) no se calculan en cada request. Usá `unstable_cache` con un tag, e invalidá ese tag en CADA endpoint que mute el recurso.
+
+```ts
+// page.tsx (server)
+const getCachedStats = unstable_cache(
+  async (dealershipId: string) => {
+    const [total, active] = await Promise.all([
+      prisma.sale.count({ where: { dealershipId } }),
+      prisma.sale.count({ where: { dealershipId, status: { in: [...] } } }),
+    ]);
+    return { total, active };
+  },
+  ["sales-stats"],                          // ← cache key
+  { tags: ["sales-stats"], revalidate: 3600 } // ← tag para invalidar
+);
+
+// /api/ventas/route.ts (POST, PATCH, DELETE, status, etc)
+import { revalidateTag } from "next/cache";
+// ...después de la mutación
+revalidateTag("sales-stats");
+```
+
+**Optimización**: cuando el paginador necesita un `count(where)` pero NO hay filtros activos, derivá `total` del cache en lugar de correr el count:
+
+```ts
+const [stats, sales, filteredCount] = await Promise.all([
+  getCachedStats(dealership.id),
+  prisma.sale.findMany({ where, skip, take }),
+  hasFilters ? prisma.sale.count({ where }) : Promise.resolve(0),
+]);
+const total = hasFilters ? filteredCount : stats.total;
+```
+
+### 2. Filtros y search en searchParams (no en useState)
+
+Los filtros y la búsqueda viven en la URL para que sean bookmarkables, soporten back/forward del browser y permitan SSR. **No usar `useState` en el client para filtros**.
+
+- **Server page**: lee `searchParams.q`, `searchParams.status`, etc, y los pasa al `where` de Prisma.
+- **Client component**: filtros y search **modifican la URL** (`router.push` o `<Link>`), no estado local.
+- **Reset de `page`**: al cambiar un filtro, siempre borrá `?page` (volver a página 1).
+
+Ej de un Select de URL — ver [src/components/dashboard/sales-status-select.tsx](src/components/dashboard/sales-status-select.tsx):
+
+```ts
+function handleChange(next: string | null) {
+  const params = new URLSearchParams(searchParams?.toString());
+  if (next === "all") params.delete("status");
+  else params.set("status", next);
+  params.delete("page");
+  router.push(qs ? `/dashboard/x?${qs}` : "/dashboard/x");
+}
+```
+
+### 3. Search con tokens + AND/OR
+
+`TableSearch` ya existe y postea `?q=...` a la URL. En el server tokenizá la query y exigí AND de matches en algún campo, con OR de campos relevantes (incluí relaciones cuando aplique — Prisma las soporta).
+
+```ts
+const tokens = search.split(/\s+/).filter(Boolean);
+const where = {
+  dealershipId,
+  ...(tokens.length > 0 ? {
+    AND: tokens.map(token => ({
+      OR: [
+        { name: { contains: token, mode: "insensitive" as const } },
+        { customer: { firstName: { contains: token, mode: "insensitive" as const } } },
+        { vehicle: { licensePlate: { contains: token, mode: "insensitive" as const } } },
+      ],
+    })),
+  } : {}),
+};
+```
+
+Sin tokens, no se sumas filtros — el `count` se puede derivar del cache.
+
+### 4. Bulk selection con plan gating
+
+Si la pantalla soporta seleccionar varios items y hacer una acción masiva:
+
+- Estado local: `selectedIds: Set<string>`, `bulkLoading: boolean`.
+- Checkbox master con `indeterminate` cuando hay selección parcial.
+- Toolbar visible solo cuando `selectedCount > 0`.
+- **Plan gating**: chequear `limits.allowBulkActions` en los toggles ANTES de mutar el set. Si no tiene plan, mostrar toast de upgrade:
+
+```ts
+function toggleSelect(id: string) {
+  if (!limits.allowBulkActions) {
+    toast("Mejorá tu plan", { description: "Disponible a partir del plan Media." });
+    return;
+  }
+  // ...mutar el set
+}
+```
+
+La page server debe pasar `limits={getPlanLimits(dealership)}` (de [src/lib/plans.ts](src/lib/plans.ts)) al client.
+
+- **Bulk operations**: usar `Promise.allSettled` (no `Promise.all`) para que un fallo no aborte los demás. Reportar éxitos y fallos por separado en el toast.
+
+```ts
+const results = await Promise.allSettled(ids.map(id => fetch(...)));
+const failed = results.filter(r => r.status === "rejected" || !r.value.ok).length;
+const ok = ids.length - failed;
+if (ok > 0) toast.success(...);
+if (failed > 0) toast.error(`${failed} fallaron (transición no permitida)`);
+```
+
+**Defense in depth**: el plan gating es client-side. Si hace falta defender server-side (raro, porque los recursos son del propio tenant), agregá el chequeo en el handler también.
+
+### 5. ConfirmDialog en lugar de `window.confirm()`
+
+Para confirmar acciones destructivas (delete individual, delete masivo, cancelar masivo), usar [src/components/ui/confirm-dialog.tsx](src/components/ui/confirm-dialog.tsx), nunca el `confirm()` nativo del browser:
+
+```tsx
+const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+<ConfirmDialog
+  open={confirmDeleteId !== null}
+  onOpenChange={(open) => !open && setConfirmDeleteId(null)}
+  title="Eliminar venta"
+  description="Solo se pueden eliminar borradores o canceladas."
+  confirmLabel="Eliminar"
+  destructive
+  onConfirm={confirmDelete}
+/>
+```
+
+El componente maneja su propio loading durante `onConfirm` — no hace falta deshabilitar el botón manualmente.
+
+### 6. Base UI Select: labels vía render fn
+
+El wrapper de `Select` usa `@base-ui/react`, que **no replica el children del `SelectItem` en el `SelectValue` automáticamente** (a diferencia de Radix). Si seteás `value="all"`, el trigger muestra `"all"` literal. Solución: pasar render fn al `SelectValue`:
+
+```tsx
+<SelectValue placeholder="Todos los estados">
+  {(v) => STATUS_LABEL_BY_VALUE[v as string] ?? "Todos los estados"}
+</SelectValue>
+```
+
+Mantené un `LABEL_BY_VALUE: Record<string, string>` como fuente única (derivado de las options con `Object.fromEntries`).
+
+### 7. SelectTrigger dentro de un form: `w-full` explícito
+
+El `SelectTrigger` default tiene `w-fit` (queda al ancho del contenido — bueno para filtros inline). Dentro de un form, donde cada Select ocupa una columna del grid, **agregar `className="w-full"`** para que coincida con los Inputs del mismo grid:
+
+```tsx
+<SelectTrigger id="province" className="w-full">
+```
+
+### 8. Tabla densa: patente en font-mono, no columna nueva
+
+Para mostrar la patente del vehículo en una tabla (leads, ventas, cotizaciones), **NO agregar columna nueva** — meterla en el subtítulo del vehículo con `font-mono uppercase tracking-wider` para que se lea como identificador (mismo patrón que vehicle-table):
+
+```tsx
+<p className="text-xs text-muted-foreground">
+  {vehicle.brand} {vehicle.model} · {vehicle.year}
+  {vehicle.licensePlate && (
+    <>
+      {" · "}
+      <span className="font-mono uppercase tracking-wider text-foreground/80">
+        {vehicle.licensePlate}
+      </span>
+    </>
+  )}
+</p>
+```
+
+### 9. Counts en chips/tabs: Badge en vez de paréntesis
+
+```tsx
+// ❌ "Todos (3)"
+<TabsTrigger>Todos ({count})</TabsTrigger>
+
+// ✅ "Todos [3]" como Badge inline
+<TabsTrigger>
+  Todos
+  <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-[10px]">
+    {count}
+  </Badge>
+</TabsTrigger>
+```
+
+Usar `variant="destructive"` solo si el count es una alerta (ej: "No leídos"); para el resto, `secondary`.
+
+### 10. Forms centrados con `mx-auto max-w-3xl`
+
+Las pages que renderizan un form deben envolver al componente en un wrapper centrado:
+
+```tsx
+<div className="mx-auto max-w-3xl space-y-6">
+  <h1>Editar cliente</h1>
+  <CustomerForm customer={customer} />
+</div>
+```
+
+Sin `mx-auto`, el form queda pegado a la izquierda. `max-w-3xl` (~768px) da un ancho cómodo de lectura.
+
+### 11. Atajos de contacto (WhatsApp / mailto / tel)
+
+En vistas de detalle/sheet con datos de contacto, agregar atajos clickeables (no solo texto). El teléfono en formato `tel:` para llamar + botón verde de WhatsApp con `wa.me/{numero}` (normalizando código país AR si falta). Ver [src/components/dashboard/lead-detail-sheet.tsx](src/components/dashboard/lead-detail-sheet.tsx) como referencia.
+
+### 12. PDF (pdfmake): un solo doc, sin React
+
+Los PDFs server-side usan `pdfmake` (no react-pdf — fue probado y rompió por incompatibilidad de React canary de Next 15 con react-pdf v4). Ver [src/lib/pdf/](src/lib/pdf/) — el componente es un `TDocumentDefinitions` plano (objetos JS), no JSX. Imágenes como data URI base64 (PNG/JPEG; WebP no soportado por pdfkit). Externalizado en `next.config.ts` (`serverExternalPackages: ["pdfmake", "pdfkit"]`) para que mantenga acceso a sus archivos `.afm` en runtime.
+
 ## Modelos de Datos (Prisma)
 
 Ver schema completo en [prisma/schema.prisma](prisma/schema.prisma). Resumen:

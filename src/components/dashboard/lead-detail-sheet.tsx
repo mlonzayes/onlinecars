@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Globe, MessageCircle, ShoppingCart } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa6";
 import {
   Sheet,
   SheetContent,
@@ -26,6 +27,21 @@ const STATUS_OPTIONS = [
   { value: "qualified", label: "Calificado" },
   { value: "closed", label: "Cerrado" },
 ] as const;
+
+const STATUS_LABEL_BY_VALUE: Record<string, string> = Object.fromEntries(
+  STATUS_OPTIONS.map((o) => [o.value, o.label])
+);
+
+/**
+ * Arma la URL de wa.me. Limpia caracteres no numéricos y, si el número no
+ * tiene código país, asume Argentina (54). wa.me redirige a la app instalada
+ * en mobile y abre WhatsApp Web en desktop.
+ */
+function buildWhatsAppUrl(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  const intl = digits.startsWith("54") ? digits : `54${digits}`;
+  return `https://wa.me/${intl}`;
+}
 
 const SOURCE_LABELS: Record<string, string> = {
   web: "Web",
@@ -68,7 +84,7 @@ export function LeadDetailSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+      <SheetContent className="w-full sm:max-w-md overflow-y-auto px-6 py-6">
         <SheetHeader className="mb-6">
           <SheetTitle className="text-lg">{lead.name}</SheetTitle>
         </SheetHeader>
@@ -92,14 +108,26 @@ export function LeadDetailSheet({
                 </div>
               )}
               {lead.phone && (
-                <div className="flex justify-between px-3 py-2">
+                <div className="flex items-center justify-between px-3 py-2">
                   <span className="text-muted-foreground">Teléfono</span>
-                  <a
-                    href={`tel:${lead.phone}`}
-                    className="font-medium text-blue-600 hover:underline"
-                  >
-                    {lead.phone}
-                  </a>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={`tel:${lead.phone}`}
+                      className="font-medium text-blue-600 hover:underline"
+                    >
+                      {lead.phone}
+                    </a>
+                    <a
+                      href={buildWhatsAppUrl(lead.phone)}
+                      target="_blank"
+                      rel="noreferrer"
+                      title="Abrir en WhatsApp"
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-green-500 text-white transition-colors hover:bg-green-600"
+                    >
+                      <FaWhatsapp className="h-4 w-4" />
+                      <span className="sr-only">Abrir en WhatsApp</span>
+                    </a>
+                  </div>
                 </div>
               )}
               {!lead.email && !lead.phone && (
@@ -187,7 +215,11 @@ export function LeadDetailSheet({
               disabled={updating}
             >
               <SelectTrigger className="w-full">
-                <SelectValue />
+                <SelectValue>
+                  {(value) =>
+                    STATUS_LABEL_BY_VALUE[value as string] ?? "Seleccionar estado"
+                  }
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {STATUS_OPTIONS.map((opt) => (

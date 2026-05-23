@@ -67,6 +67,14 @@ if (process.env.NODE_ENV === "production") {
 }
 
 const nextConfig: NextConfig = {
+  // pdfmake/pdfkit cargan archivos auxiliares (font metrics .afm, datos de
+  // PNG/JPEG decoders, etc) con paths relativos a sus __dirname. Si webpack
+  // los bundlea, esos paths apuntan a .next/server/vendor-chunks/ donde no
+  // existen los archivos → ENOENT al renderizar. Marcándolos como external,
+  // Node los resuelve con su `require` regular y mantienen los paths.
+  // No hay conflicto de React aquí (pdfmake no usa React), así que externalizar
+  // es seguro.
+  serverExternalPackages: ["pdfmake", "pdfkit"],
   images: {
     remotePatterns: buildRemotePatterns(),
   },

@@ -22,6 +22,7 @@ export function WebsiteSettings({ dealership, theme }: WebsiteSettingsProps) {
   const [customDomain, setCustomDomain] = useState(theme?.customDomain ?? "");
   const [logo, setLogo] = useState(dealership.logo ?? "");
   const [savingLogo, setSavingLogo] = useState(false);
+  const [deletingLogo, setDeletingLogo] = useState(false);
   const [savingDomain, setSavingDomain] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -45,20 +46,47 @@ export function WebsiteSettings({ dealership, theme }: WebsiteSettingsProps) {
     }, 500);
   }, []);
 
-  async function handleSaveLogo() {
+  async function handleUploadLogo(file: File) {
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("El archivo no puede superar los 5MB");
+      return;
+    }
+    
     setSavingLogo(true);
     try {
-      const res = await fetch("/api/concesionario", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ logo: logo || null }),
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/concesionario/logo", {
+        method: "POST",
+        body: formData,
       });
-      if (!res.ok) throw new Error();
+      
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Error al subir");
+      
+      setLogo(json.data.url);
       toast.success("Logo actualizado", { duration: 2000 });
-    } catch {
-      toast.error("No se pudo guardar el logo");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo guardar el logo");
     } finally {
       setSavingLogo(false);
+    }
+  }
+
+  async function handleDeleteLogo() {
+    setDeletingLogo(true);
+    try {
+      const res = await fetch("/api/concesionario/logo", {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Error al eliminar");
+      setLogo("");
+      toast.success("Logo eliminado", { duration: 2000 });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo eliminar el logo");
+    } finally {
+      setDeletingLogo(false);
     }
   }
 
@@ -107,24 +135,44 @@ export function WebsiteSettings({ dealership, theme }: WebsiteSettingsProps) {
             <ImageIcon className="h-5 w-5 text-purple-500" />
             Logo
           </CardTitle>
-          <CardDescription>Se mostrará en el header de tu sitio.</CardDescription>
+          <CardDescription>Subí el logo que se mostrará en el header de tu sitio (JPG, PNG, WebP, máx 5MB).</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
-            {logo && (
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-white">
+            {logo ? (
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-white">
                 <img src={logo} alt="Logo preview" className="h-full w-full object-contain" />
               </div>
+            ) : (
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border border-dashed bg-muted">
+                <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
+              </div>
             )}
-            <Input
-              value={logo}
-              onChange={(e) => setLogo(e.target.value)}
-              placeholder="https://ejemplo.com/logo.png"
-            />
+            <div className="flex-1 space-y-2">
+              <div className="flex gap-2">
+                <Input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleUploadLogo(file);
+                  }}
+                  disabled={savingLogo || deletingLogo}
+                  className="cursor-pointer"
+                />
+                {logo && (
+                  <Button
+                    variant="destructive"
+                    onClick={handleDeleteLogo}
+                    disabled={savingLogo || deletingLogo}
+                  >
+                    Eliminar logo
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">Medida ideal recomendada: 250x60 píxeles (formato horizontal). Máximo 5MB.</p>
+            </div>
           </div>
-          <Button onClick={handleSaveLogo} disabled={savingLogo} className="w-full">
-            {savingLogo ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Guardando...</> : "Guardar logo"}
-          </Button>
         </CardContent>
       </Card>
 

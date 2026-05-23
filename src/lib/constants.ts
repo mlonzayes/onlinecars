@@ -60,7 +60,7 @@ export const VEHICLE_STATUS_LABELS: Record<VehicleStatus, string> = {
 export const LEAD_STATUSES = ["new", "contacted", "qualified", "closed"] as const;
 export type LeadStatus = (typeof LEAD_STATUSES)[number];
 
-export const LEAD_SOURCES = ["web", "whatsapp", "mercadolibre"] as const;
+export const LEAD_SOURCES = ["web", "whatsapp", "mercadolibre", "tasacion"] as const;
 export type LeadSource = (typeof LEAD_SOURCES)[number];
 
 export const CURRENCIES = ["ARS", "USD"] as const;
@@ -225,3 +225,18 @@ export const SECTION_TEXT_LIMITS = {
   subtitleMax: 200,
   contentMax: 2000,
 } as const;
+
+// --- Quotations ---
+export const QUOTATION_TYPES = ["sale", "purchase"] as const;
+export type QuotationType = (typeof QUOTATION_TYPES)[number];
+
+export const QUOTATION_STATUSES = ["pending", "accepted", "rejected", "expired"] as const;
+export type QuotationStatus = (typeof QUOTATION_STATUSES)[number];
+
+export const QUOTATION_PAYMENT_METHODS = ["cash", "financed", "mixed"] as const;
+export type QuotationPaymentMethod = (typeof QUOTATION_PAYMENT_METHODS)[number];
+
+export const DEALERSHIP_PLANS = ["base", "media", "premium", "enterprise"] as const;
+export type DealershipPlan = (typeof DEALERSHIP_PLANS)[number];
+
+export const DEFAULT_QUOTATION_VALIDITY_DAYS = 15;

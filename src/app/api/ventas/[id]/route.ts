@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { getCurrentDealership } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -119,6 +120,10 @@ export const PATCH = withLogger<SaleParams>(async (request, { requestId, params 
       include: SALE_INCLUDE,
     });
 
+    // El update no toca el status (eso va por /status) pero igual invalidamos
+    // por si cambia datos que afectan el dashboard.
+    revalidateTag("sales-stats");
+
     logger.info(requestId, "sales.update.ok", {
       dealershipId: dealership.id,
       saleId: id,
@@ -137,8 +142,10 @@ export const PATCH = withLogger<SaleParams>(async (request, { requestId, params 
 });
 
 // DELETE /api/ventas/[id]
-// Solo se puede eliminar si status === "draft".
-// Restaura el vehículo a "available".
+// Permitido si status === "draft" o "cancelled".
+// - draft: el vehículo estaba "reserved" por la creación → vuelve a "available"
+// - cancelled: el vehículo ya está "available" (lo libera el endpoint /status)
+// El update del vehicle a "available" es idempotente en ambos casos.
 export const DELETE = withLogger<SaleParams>(async (_request, { requestId, params }) => {
   const { userId } = await auth();
   if (!userId) {
@@ -163,14 +170,17 @@ export const DELETE = withLogger<SaleParams>(async (_request, { requestId, param
     return NextResponse.json({ error: "Venta no encontrada" }, { status: 404 });
   }
 
-  if (sale.status !== "draft") {
-    logger.warn(requestId, "sales.delete.not_draft", {
+  if (sale.status !== "draft" && sale.status !== "cancelled") {
+    logger.warn(requestId, "sales.delete.invalid_status", {
       dealershipId: dealership.id,
       saleId: id,
       status: sale.status,
     });
     return NextResponse.json(
-      { error: "Solo se pueden eliminar ventas en estado borrador" },
+      {
+        error:
+          "Solo se pueden eliminar ventas en estado borrador o canceladas",
+      },
       { status: 409 }
     );
   }
@@ -182,6 +192,8 @@ export const DELETE = withLogger<SaleParams>(async (_request, { requestId, param
       data: { status: "available" },
     });
   });
+
+  revalidateTag("sales-stats");
 
   logger.info(requestId, "sales.delete.ok", {
     dealershipId: dealership.id,

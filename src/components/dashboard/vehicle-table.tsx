@@ -44,6 +44,7 @@ export interface SerializedVehicleRow {
   color: string | null;
   doors: number | null;
   engine: string | null;
+  licensePlate: string | null;
   description: string | null;
   condition: string;
   status: string;
@@ -183,6 +184,7 @@ export function VehicleTable({ vehicles, limits }: VehicleTableProps) {
             </TableHead>
             <TableHead className="w-[56px]" />
             <TableHead>Vehículo</TableHead>
+            <TableHead>Condición</TableHead>
             <TableHead>Precio</TableHead>
             <TableHead>Estado</TableHead>
             <TableHead>Publicación</TableHead>
@@ -235,7 +237,29 @@ export function VehicleTable({ vehicles, limits }: VehicleTableProps) {
                   <p className="font-medium leading-tight">{vehicle.title}</p>
                   <p className="text-xs text-muted-foreground">
                     {vehicle.brand} {vehicle.model} · {vehicle.year}
+                    {vehicle.licensePlate && (
+                      <>
+                        {" · "}
+                        <span className="font-mono uppercase tracking-wider text-foreground/80">
+                          {vehicle.licensePlate}
+                        </span>
+                      </>
+                    )}
                   </p>
+                </TableCell>
+
+                {/* Condición */}
+                <TableCell>
+                  <Badge
+                    className={cn(
+                      "text-xs",
+                      vehicle.condition === "new"
+                        ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-50"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-100",
+                    )}
+                  >
+                    {vehicle.condition === "new" ? "0km" : "Usado"}
+                  </Badge>
                 </TableCell>
 
                 {/* Precio */}

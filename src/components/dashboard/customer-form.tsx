@@ -155,7 +155,7 @@ export function CustomerForm({ customer }: CustomerFormProps) {
                     value={field.value}
                     onValueChange={(v) => v !== null && field.onChange(v)}
                   >
-                    <SelectTrigger id="type">
+                    <SelectTrigger id="type" className="w-full">
                       {/* SelectValue por default muestra el value crudo (ej: "individual").
                           Forzamos el label en español pasándolo como children. */}
                       <SelectValue>{CUSTOMER_TYPE_LABELS[field.value]}</SelectValue>
@@ -184,7 +184,7 @@ export function CustomerForm({ customer }: CustomerFormProps) {
                     onValueChange={(v) => v !== null && field.onChange(v)}
                     disabled={isCompany}
                   >
-                    <SelectTrigger id="documentType">
+                    <SelectTrigger id="documentType" className="w-full">
                       <SelectValue>{field.value}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
@@ -305,7 +305,7 @@ export function CustomerForm({ customer }: CustomerFormProps) {
                     value={field.value ?? ""}
                     onValueChange={(v) => v !== null && field.onChange(v || undefined)}
                   >
-                    <SelectTrigger id="province">
+                    <SelectTrigger id="province" className="w-full">
                       <SelectValue placeholder="Seleccionar">
                         {field.value || "Seleccionar"}
                       </SelectValue>

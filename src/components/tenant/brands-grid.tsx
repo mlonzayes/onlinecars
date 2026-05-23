@@ -27,7 +27,7 @@ export function BrandsGrid({ brands, basePath, limit = 6 }: BrandsGridProps) {
               <img
                 src={brand.logoUrl}
                 alt={`Logo ${brand.name}`}
-                className="max-h-full max-w-[80%] object-contain grayscale transition-all group-hover:grayscale-0"
+                className="max-h-full max-w-[80%] object-contain transition-all"
               />
             </div>
           ) : (

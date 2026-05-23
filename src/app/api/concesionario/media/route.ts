@@ -214,12 +214,12 @@ export const POST = withLogger(async (request, { requestId }) => {
     filename,
   });
 
-  // Insert + (optional) singleton DB cleanup atómicos.
-  const created = await prisma.$transaction(async (tx) => {
-    if (existingSingleton) {
-      await tx.dealershipMedia.delete({ where: { id: existingSingleton.id } });
-    }
-    return tx.dealershipMedia.create({
+  const ops = [];
+  if (existingSingleton) {
+    ops.push(prisma.dealershipMedia.delete({ where: { id: existingSingleton.id } }));
+  }
+  ops.push(
+    prisma.dealershipMedia.create({
       data: {
         dealershipId: dealership.id,
         sectionType,
@@ -230,8 +230,11 @@ export const POST = withLogger(async (request, { requestId }) => {
         sizeBytes: file.size,
         order: 0,
       },
-    });
-  });
+    })
+  );
+
+  const results = await prisma.$transaction(ops);
+  const created = results[results.length - 1];
 
   // Best-effort delete del asset viejo en storage. Si falla (ej: key legacy:),
   // loggeamos y seguimos — el DB ya está consistente.

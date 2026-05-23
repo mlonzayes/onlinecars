@@ -2,7 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Globe, MessageCircle, ShoppingCart, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  Globe,
+  Loader2,
+  MessageCircle,
+  ShoppingCart,
+  Trash2,
+} from "lucide-react";
+import { toast } from "sonner";
 import type { Lead } from "@prisma/client";
 import {
   Table,
@@ -14,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -22,8 +31,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
+import type { PlanLimits } from "@/lib/plans";
 import { LeadDetailSheet } from "./lead-detail-sheet";
+
+const UPGRADE_TOAST_TITLE = "Mejorá tu plan";
+const UPGRADE_TOAST_DESC =
+  "Las acciones masivas están disponibles a partir del plan Media.";
+
+const BULK_STATUS_OPTIONS = [
+  { value: "new", label: "Marcar como nuevo" },
+  { value: "contacted", label: "Marcar como contactado" },
+  { value: "qualified", label: "Marcar como calificado" },
+  { value: "closed", label: "Marcar como cerrado" },
+] as const;
+
+const TOAST_DURATION = 2500;
 
 // Lead serializado (fechas como string) con vehículo opcional
 export type SerializedLead = Omit<Lead, "createdAt" | "updatedAt"> & {
@@ -40,12 +70,23 @@ export type SerializedLead = Omit<Lead, "createdAt" | "updatedAt"> & {
 
 export interface LeadsTableProps {
   leads: SerializedLead[];
+  limits: PlanLimits;
 }
 
 const SOURCE_LABELS: Record<string, string> = {
   web: "Web",
   whatsapp: "WhatsApp",
   mercadolibre: "MercadoLibre",
+};
+
+// Labels para el filtro de fuente — incluyen "all" para el caso "sin filtro".
+// Base UI no replica el children del Item en el Value automáticamente como
+// Radix, hay que pasarle el label vía render fn (ver SelectValue abajo).
+const SOURCE_FILTER_LABELS: Record<string, string> = {
+  all: "Todas las fuentes",
+  web: "Sitio Web",
+  whatsapp: "WhatsApp",
+  mercadolibre: "Mercado Libre",
 };
 
 function SourceBadge({ source }: { source: string }) {
@@ -82,12 +123,23 @@ function timeAgo(date: Date): string {
 
 interface LeadsListProps {
   leads: SerializedLead[];
+  selectedIds: Set<string>;
+  onToggleSelect: (id: string) => void;
+  onToggleSelectAll: (visibleIds: string[]) => void;
   onSelect: (lead: SerializedLead) => void;
-  onDelete: (id: string) => Promise<void>;
+  onDelete: (id: string) => void;
   onToggleRead: (lead: SerializedLead) => Promise<void>;
 }
 
-function LeadsList({ leads, onSelect, onDelete, onToggleRead }: LeadsListProps) {
+function LeadsList({
+  leads,
+  selectedIds,
+  onToggleSelect,
+  onToggleSelectAll,
+  onSelect,
+  onDelete,
+  onToggleRead,
+}: LeadsListProps) {
   if (leads.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
@@ -97,11 +149,24 @@ function LeadsList({ leads, onSelect, onDelete, onToggleRead }: LeadsListProps) 
     );
   }
 
+  const visibleIds = leads.map((l) => l.id);
+  const visibleSelectedCount = visibleIds.filter((id) => selectedIds.has(id)).length;
+  const allVisibleSelected = visibleSelectedCount === leads.length;
+  const someVisibleSelected = visibleSelectedCount > 0 && !allVisibleSelected;
+
   return (
     <div className="rounded-lg border">
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-[40px] px-4">
+              <Checkbox
+                checked={allVisibleSelected}
+                indeterminate={someVisibleSelected}
+                onCheckedChange={() => onToggleSelectAll(visibleIds)}
+                aria-label="Seleccionar todos los visibles"
+              />
+            </TableHead>
             <TableHead className="w-[16px]" />
             <TableHead>Contacto</TableHead>
             <TableHead>Vehículo</TableHead>
@@ -114,13 +179,26 @@ function LeadsList({ leads, onSelect, onDelete, onToggleRead }: LeadsListProps) 
         <TableBody>
           {leads.map((lead) => {
             const isUnread = lead.status === "new";
+            const isSelected = selectedIds.has(lead.id);
 
             return (
               <TableRow
                 key={lead.id}
-                className="cursor-pointer hover:bg-muted/50"
+                className={cn(
+                  "cursor-pointer hover:bg-muted/50",
+                  isSelected && "bg-muted/40",
+                )}
                 onClick={() => onSelect(lead)}
               >
+                {/* Checkbox de selección masiva */}
+                <TableCell className="px-4" onClick={(e) => e.stopPropagation()}>
+                  <Checkbox
+                    checked={isSelected}
+                    onCheckedChange={() => onToggleSelect(lead.id)}
+                    aria-label={`Seleccionar lead ${lead.name}`}
+                  />
+                </TableCell>
+
                 {/* Indicador leído/no leído */}
                 <TableCell onClick={(e) => e.stopPropagation()}>
                   <span
@@ -208,12 +286,18 @@ function LeadsList({ leads, onSelect, onDelete, onToggleRead }: LeadsListProps) 
   );
 }
 
-export function LeadsTable({ leads: initialLeads }: LeadsTableProps) {
+export function LeadsTable({ leads: initialLeads, limits }: LeadsTableProps) {
   const router = useRouter();
   const [leads, setLeads] = useState<SerializedLead[]>(initialLeads);
   const [selectedLead, setSelectedLead] = useState<SerializedLead | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sourceFilter, setSourceFilter] = useState("all");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  // Selección masiva. Set por performance (lookups O(1)).
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const filteredLeads = leads.filter(
     (l) => sourceFilter === "all" || l.source === sourceFilter
@@ -265,12 +349,139 @@ export function LeadsTable({ leads: initialLeads }: LeadsTableProps) {
     router.refresh();
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("¿Seguro que querés eliminar este lead?")) return;
+  function handleDelete(id: string) {
+    setConfirmDeleteId(id);
+  }
+
+  async function confirmDelete() {
+    if (!confirmDeleteId) return;
+    const id = confirmDeleteId;
     await fetch(`/api/leads/${id}`, { method: "DELETE" });
     setLeads((prev) => prev.filter((l) => l.id !== id));
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
     if (selectedLead?.id === id) setSheetOpen(false);
     router.refresh();
+  }
+
+  // ─── Selección masiva ─────────────────────────────────────────────────────
+
+  function toggleSelect(id: string) {
+    if (!limits.allowBulkActions) {
+      toast(UPGRADE_TOAST_TITLE, { description: UPGRADE_TOAST_DESC });
+      return;
+    }
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  /**
+   * Si todos los visibles ya están seleccionados, los des-selecciona; si no,
+   * suma los faltantes al set. Trabaja sobre `visibleIds` (la lista filtrada
+   * por tab) para que el master checkbox refleje "todos los visibles".
+   */
+  function toggleSelectAll(visibleIds: string[]) {
+    if (!limits.allowBulkActions) {
+      toast(UPGRADE_TOAST_TITLE, { description: UPGRADE_TOAST_DESC });
+      return;
+    }
+    setSelectedIds((prev) => {
+      const allSelected = visibleIds.every((id) => prev.has(id));
+      const next = new Set(prev);
+      if (allSelected) {
+        visibleIds.forEach((id) => next.delete(id));
+      } else {
+        visibleIds.forEach((id) => next.add(id));
+      }
+      return next;
+    });
+  }
+
+  function clearSelection() {
+    setSelectedIds(new Set());
+  }
+
+  const selectedCount = selectedIds.size;
+
+  async function bulkDelete() {
+    if (selectedCount === 0) return;
+    setBulkLoading(true);
+    try {
+      const ids = Array.from(selectedIds);
+      const results = await Promise.allSettled(
+        ids.map((id) => fetch(`/api/leads/${id}`, { method: "DELETE" }))
+      );
+      const failed = results.filter(
+        (r) => r.status === "rejected" || (r.status === "fulfilled" && !r.value.ok)
+      ).length;
+      const ok = ids.length - failed;
+
+      if (ok > 0) {
+        setLeads((prev) => prev.filter((l) => !selectedIds.has(l.id)));
+        toast.success(
+          ok === 1 ? "Lead eliminado" : `${ok} leads eliminados`,
+          { duration: TOAST_DURATION }
+        );
+      }
+      if (failed > 0) {
+        toast.error(
+          `${failed} ${failed === 1 ? "lead falló" : "leads fallaron"} al eliminar`,
+          { duration: TOAST_DURATION }
+        );
+      }
+      clearSelection();
+      router.refresh();
+    } finally {
+      setBulkLoading(false);
+    }
+  }
+
+  async function bulkSetStatus(status: string) {
+    if (selectedCount === 0) return;
+    setBulkLoading(true);
+    try {
+      const ids = Array.from(selectedIds);
+      const results = await Promise.allSettled(
+        ids.map((id) =>
+          fetch(`/api/leads/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status }),
+          })
+        )
+      );
+      const failed = results.filter(
+        (r) => r.status === "rejected" || (r.status === "fulfilled" && !r.value.ok)
+      ).length;
+      const ok = ids.length - failed;
+
+      if (ok > 0) {
+        setLeads((prev) =>
+          prev.map((l) => (selectedIds.has(l.id) ? { ...l, status } : l))
+        );
+        toast.success(
+          ok === 1 ? "Lead actualizado" : `${ok} leads actualizados`,
+          { duration: TOAST_DURATION }
+        );
+      }
+      if (failed > 0) {
+        toast.error(
+          `${failed} ${failed === 1 ? "lead falló" : "leads fallaron"} al actualizar`,
+          { duration: TOAST_DURATION }
+        );
+      }
+      clearSelection();
+      router.refresh();
+    } finally {
+      setBulkLoading(false);
+    }
   }
 
   return (
@@ -278,7 +489,12 @@ export function LeadsTable({ leads: initialLeads }: LeadsTableProps) {
       <Tabs defaultValue="all">
         <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <TabsList>
-            <TabsTrigger value="all">Todos ({filteredLeads.length})</TabsTrigger>
+            <TabsTrigger value="all">
+              Todos
+              <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-[10px]">
+                {filteredLeads.length}
+              </Badge>
+            </TabsTrigger>
             <TabsTrigger value="unread">
               No leídos
               {unreadLeads.length > 0 && (
@@ -287,25 +503,91 @@ export function LeadsTable({ leads: initialLeads }: LeadsTableProps) {
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="contacted">Contactados ({contactedLeads.length})</TabsTrigger>
+            <TabsTrigger value="contacted">
+              Contactados
+              <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-[10px]">
+                {contactedLeads.length}
+              </Badge>
+            </TabsTrigger>
           </TabsList>
 
           <Select value={sourceFilter} onValueChange={(value) => setSourceFilter(value ?? "all")}>
             <SelectTrigger className="w-full sm:w-[200px]">
-              <SelectValue placeholder="Todas las fuentes" />
+              <SelectValue placeholder="Todas las fuentes">
+                {(value) =>
+                  SOURCE_FILTER_LABELS[value as string] ?? "Todas las fuentes"
+                }
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas las fuentes</SelectItem>
-              <SelectItem value="web">Sitio Web</SelectItem>
-              <SelectItem value="mercadolibre">Mercado Libre</SelectItem>
-              <SelectItem value="whatsapp">WhatsApp</SelectItem>
+              <SelectItem value="all">{SOURCE_FILTER_LABELS.all}</SelectItem>
+              <SelectItem value="web">{SOURCE_FILTER_LABELS.web}</SelectItem>
+              <SelectItem value="mercadolibre">{SOURCE_FILTER_LABELS.mercadolibre}</SelectItem>
+              <SelectItem value="whatsapp">{SOURCE_FILTER_LABELS.whatsapp}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
+        {/* Toolbar de bulk actions — aparece solo cuando hay seleccionados */}
+        {selectedCount > 0 && (
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-muted/40 px-3 py-2">
+            <div className="flex items-center gap-3 text-sm">
+              <span className="font-medium">
+                {selectedCount} {selectedCount === 1 ? "seleccionado" : "seleccionados"}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearSelection}
+                disabled={bulkLoading}
+                className="h-7 text-xs"
+              >
+                Limpiar selección
+              </Button>
+            </div>
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  disabled={bulkLoading}
+                  className="inline-flex h-8 items-center gap-1 rounded-md border bg-background px-3 text-sm hover:bg-muted disabled:opacity-50"
+                >
+                  Cambiar estado
+                  <ChevronDown className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {BULK_STATUS_OPTIONS.map((opt) => (
+                    <DropdownMenuItem
+                      key={opt.value}
+                      onClick={() => bulkSetStatus(opt.value)}
+                    >
+                      {opt.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setConfirmBulkDelete(true)}
+                disabled={bulkLoading}
+              >
+                {bulkLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="mr-2 h-4 w-4" />
+                )}
+                Eliminar
+              </Button>
+            </div>
+          </div>
+        )}
+
         <TabsContent value="all">
           <LeadsList
             leads={filteredLeads}
+            selectedIds={selectedIds}
+            onToggleSelect={toggleSelect}
+            onToggleSelectAll={toggleSelectAll}
             onSelect={handleSelect}
             onDelete={handleDelete}
             onToggleRead={handleToggleRead}
@@ -315,6 +597,9 @@ export function LeadsTable({ leads: initialLeads }: LeadsTableProps) {
         <TabsContent value="unread">
           <LeadsList
             leads={unreadLeads}
+            selectedIds={selectedIds}
+            onToggleSelect={toggleSelect}
+            onToggleSelectAll={toggleSelectAll}
             onSelect={handleSelect}
             onDelete={handleDelete}
             onToggleRead={handleToggleRead}
@@ -324,12 +609,39 @@ export function LeadsTable({ leads: initialLeads }: LeadsTableProps) {
         <TabsContent value="contacted">
           <LeadsList
             leads={contactedLeads}
+            selectedIds={selectedIds}
+            onToggleSelect={toggleSelect}
+            onToggleSelectAll={toggleSelectAll}
             onSelect={handleSelect}
             onDelete={handleDelete}
             onToggleRead={handleToggleRead}
           />
         </TabsContent>
       </Tabs>
+
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        onOpenChange={(open) => !open && setConfirmDeleteId(null)}
+        title="Eliminar lead"
+        description="Se va a eliminar la consulta de forma permanente. Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        destructive
+        onConfirm={confirmDelete}
+      />
+
+      <ConfirmDialog
+        open={confirmBulkDelete}
+        onOpenChange={setConfirmBulkDelete}
+        title={
+          selectedCount === 1
+            ? "Eliminar lead"
+            : `Eliminar ${selectedCount} leads`
+        }
+        description="Se van a eliminar las consultas seleccionadas de forma permanente. Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        destructive
+        onConfirm={bulkDelete}
+      />
 
       <LeadDetailSheet
         lead={selectedLead}

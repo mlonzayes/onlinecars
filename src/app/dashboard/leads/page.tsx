@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { LeadsTable } from "@/components/dashboard/leads-table";
 import { Badge } from "@/components/ui/badge";
+import { getPlanLimits } from "@/lib/plans";
 
 export default async function LeadsPage() {
   const dealership = await getCurrentDealership();
@@ -33,7 +34,7 @@ export default async function LeadsPage() {
           <Badge variant="destructive">{unreadCount} sin leer</Badge>
         )}
       </div>
-      <LeadsTable leads={serialized} />
+      <LeadsTable leads={serialized} limits={getPlanLimits(dealership)} />
     </div>
   );
 }

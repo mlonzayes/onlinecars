@@ -1,10 +1,12 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Car, MapPin, Phone, Mail, MessageCircle } from "lucide-react";
 
 interface TenantFooterProps {
   // Solo los campos que el footer realmente usa — evitamos arrastrar el objeto Prisma
   // completo (Date fields rompen el boundary server→client si en algún momento se vuelve client).
   name: string;
+  logo?: string | null;
   description: string | null;
   phone: string | null;
   email: string | null;
@@ -17,6 +19,7 @@ interface TenantFooterProps {
 
 export function TenantFooter({
   name,
+  logo,
   description,
   phone,
   email,
@@ -31,19 +34,30 @@ export function TenantFooter({
   const locationParts = [address, city, province].filter(Boolean);
 
   return (
-    <footer className="border-t border-slate-200 bg-slate-50">
+    <footer className="border-t border-slate-200 bg-zinc-100">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           {/* Col 1 — Brand */}
           <div className="space-y-4 lg:col-span-2">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--tenant-primary)] text-white shadow-sm">
-                <Car className="h-5 w-5" />
+            {logo ? (
+              <div className="relative h-12 w-full max-w-[200px]">
+                <Image
+                  src={logo}
+                  alt={`Logo de ${name}`}
+                  fill
+                  className="object-contain object-left"
+                />
               </div>
-              <span className="text-lg font-semibold tracking-tight text-slate-900">
-                {name}
-              </span>
-            </div>
+            ) : (
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--tenant-primary)] text-white shadow-sm">
+                  <Car className="h-5 w-5" />
+                </div>
+                <span className="text-lg font-semibold tracking-tight text-slate-900">
+                  {name}
+                </span>
+              </div>
+            )}
             {description && (
               <p className="max-w-md text-sm leading-relaxed text-slate-600">
                 {description}

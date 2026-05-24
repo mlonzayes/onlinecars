@@ -185,6 +185,7 @@ export const POST = withLogger<Params>(async (request, ctx) => {
 // ─── DELETE — Cerrar publicación ──────────────────────────────────────────────
 
 export const DELETE = withLogger<Params>(async (_request, ctx) => {
+  const { requestId } = ctx;
   const dealership = await getCurrentDealership();
   if (!dealership) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
@@ -200,13 +201,26 @@ export const DELETE = withLogger<Params>(async (_request, ctx) => {
     return NextResponse.json({ error: "Publicación no encontrada" }, { status: 404 });
   }
 
+  // Caso especial: si el listing está en payment_required, ML NO permite cerrarlo
+  // vía PUT /items (devuelve "status is not modifiable" porque nunca llegó a activo).
+  // El item sin pagar expira solo en ML después de un tiempo. Acá solo limpiamos
+  // nuestra DB y avisamos al usuario.
+  if (listing.status === "payment_required") {
+    logger.info(requestId, "ml.listing.discard_unpaid", {
+      vehicleId,
+      mlItemId: listing.mlItemId,
+    });
+    await prisma.mercadoLibreListing.delete({ where: { vehicleId } });
+    return NextResponse.json({ closed: true, discardedUnpaid: true });
+  }
+
   try {
     await updateItemStatus(dealership.id, listing.mlItemId, { status: "closed" });
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : "Error cerrando publicación en ML";
     await prisma.mercadoLibreListing.update({
       where: { vehicleId },
-      data: { status: "error", errorMessage },
+      data: { status: "error", errorMessage: errorMessage.slice(0, 500) },
     });
     return NextResponse.json({ error: errorMessage }, { status: 422 });
   }

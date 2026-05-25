@@ -1,22 +1,12 @@
-import { SignUp } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 
-export default function SignUpPage() {
-  const isLoginEnabled =
-    process.env.NEXT_PUBLIC_ENABLE_LOGIN === "true";
-
-  if (!isLoginEnabled) redirect("/");
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <SignUp 
-        appearance={{
-          elements: {
-            formButtonPrimary: "bg-blue-600 hover:bg-blue-700 shadow-sm transition-all",
-            card: "shadow-2xl border border-gray-200 rounded-2xl",
-          }
-        }}
-      />
-    </div>
-  );
+/**
+ * El sign-up público está deshabilitado a propósito.
+ * La ÚNICA forma de crear una cuenta es vía /registro?token=xxx, donde el
+ * token lo genera el admin desde /admin/waitlist al aprobar un lead.
+ *
+ * Si alguien navega manualmente a /sign-up, lo mandamos al landing.
+ */
+export default function SignUpDisabledPage() {
+  redirect("/");
 }

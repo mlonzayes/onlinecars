@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   ALLOWED_DOCUMENT_TYPES,
   MAX_DOCUMENT_SIZE_BYTES,
@@ -94,6 +95,7 @@ export function SaleDocuments({ saleId, initialDocuments }: SaleDocumentsProps) 
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const remaining = MAX_DOCUMENTS_PER_SALE - documents.length;
 
@@ -203,10 +205,9 @@ export function SaleDocuments({ saleId, initialDocuments }: SaleDocumentsProps) 
     }
   }
 
-  async function handleDelete(docId: string) {
-    if (!confirm("¿Eliminar este documento? Esta acción no se puede deshacer.")) {
-      return;
-    }
+  async function handleDeleteConfirmed() {
+    if (!confirmDeleteId) return;
+    const docId = confirmDeleteId;
 
     const res = await fetch(`/api/ventas/${saleId}/documentos/${docId}`, {
       method: "DELETE",
@@ -214,11 +215,13 @@ export function SaleDocuments({ saleId, initialDocuments }: SaleDocumentsProps) 
 
     if (!res.ok) {
       toast.error("No se pudo eliminar el documento.");
+      setConfirmDeleteId(null);
       return;
     }
 
     setDocuments((prev) => prev.filter((d) => d.id !== docId));
     toast.success("Documento eliminado.");
+    setConfirmDeleteId(null);
     router.refresh();
   }
 
@@ -408,7 +411,7 @@ export function SaleDocuments({ saleId, initialDocuments }: SaleDocumentsProps) 
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDelete(doc.id)}
+                          onClick={() => setConfirmDeleteId(doc.id)}
                           className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                           aria-label="Eliminar documento"
                           title="Eliminar"
@@ -424,6 +427,16 @@ export function SaleDocuments({ saleId, initialDocuments }: SaleDocumentsProps) 
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        onOpenChange={(open) => !open && setConfirmDeleteId(null)}
+        title="Eliminar documento"
+        description="Esta acción no se puede deshacer. El archivo se borra permanentemente del storage."
+        confirmLabel="Eliminar"
+        destructive
+        onConfirm={handleDeleteConfirmed}
+      />
     </div>
   );
 }

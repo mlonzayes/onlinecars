@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   ALLOWED_TENANT_IMAGE_MIME_TYPES,
   MAX_GALLERY_IMAGES,
@@ -31,6 +32,7 @@ export function GalleryGrid({
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(0);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const maxMb = MAX_TENANT_IMAGE_BYTES / 1024 / 1024;
   const remaining = MAX_GALLERY_IMAGES - items.length - uploading;
@@ -131,10 +133,9 @@ export function GalleryGrid({
     event.target.value = "";
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("¿Eliminar esta imagen? Esta acción no se puede deshacer.")) {
-      return;
-    }
+  async function handleDeleteConfirmed() {
+    if (!confirmDeleteId) return;
+    const id = confirmDeleteId;
     setDeletingId(id);
     try {
       const res = await fetch(`/api/concesionario/media/${id}`, {
@@ -150,6 +151,7 @@ export function GalleryGrid({
       toast.error("Error al eliminar");
     } finally {
       setDeletingId(null);
+      setConfirmDeleteId(null);
     }
   }
 
@@ -209,7 +211,7 @@ export function GalleryGrid({
                 />
                 <button
                   type="button"
-                  onClick={() => handleDelete(m.id)}
+                  onClick={() => setConfirmDeleteId(m.id)}
                   disabled={deletingId === m.id}
                   aria-label="Eliminar imagen"
                   className="absolute right-1.5 top-1.5 rounded bg-background/90 p-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
@@ -233,6 +235,16 @@ export function GalleryGrid({
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        onOpenChange={(open) => !open && setConfirmDeleteId(null)}
+        title="Eliminar imagen"
+        description="Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        destructive
+        onConfirm={handleDeleteConfirmed}
+      />
     </div>
   );
 }

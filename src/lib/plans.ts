@@ -64,9 +64,29 @@ export function canUseBulkActions(dealership: Pick<Dealership, "plan">): boolean
 }
 
 /**
- * Verifica si el concesionario puede agregar más vehículos.
+ * Verifica si el concesionario puede publicar más vehículos.
+ *
+ * IMPORTANTE: el límite del plan se cuenta por vehículos PUBLICADOS
+ * (`publishedAt IS NOT NULL`), NO por total de vehículos cargados.
+ * Razones:
+ *  - Los vendidos quedan en DB como histórico contable, no deberían
+ *    ocupar el slot del plan
+ *  - Los drafts (sin publicar) son trabajo del user, no consumen recursos
+ *    de la web pública
+ *
+ * `publishedCount` lo pasa el caller (el handler hace count antes de invocar).
+ */
+export function canPublishMoreVehicles(
+  dealership: Pick<Dealership, "plan">,
+  publishedCount: number
+): boolean {
+  const limit = getPlanLimits(dealership).maxVehicles;
+  return publishedCount < limit;
+}
+
+/**
+ * @deprecated Usar canPublishMoreVehicles. El plan se cuenta por publicados.
  */
 export function canAddMoreVehicles(dealership: Pick<Dealership, "plan">, currentCount: number): boolean {
-  const limit = getPlanLimits(dealership).maxVehicles;
-  return currentCount < limit;
+  return canPublishMoreVehicles(dealership, currentCount);
 }

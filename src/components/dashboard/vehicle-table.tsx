@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Car, Eye, EyeOff, Loader2, MoreHorizontal, Pencil, Star, Trash2, ShoppingBag, Lock } from "lucide-react";
+import { Car, Eye, EyeOff, Loader2, MoreHorizontal, Pencil, Star, Trash2, ShoppingBag, Lock, ChevronDown, CheckCircle2, CircleDot } from "lucide-react";
 import { toast } from "sonner";
 import {
   Table,
@@ -22,11 +22,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { cn, formatCurrency } from "@/lib/utils";
 import type { VehicleImage } from "@prisma/client";
 import type { PlanLimits } from "@/lib/plans";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 // Versión serializada: price como string, fechas como string
 export interface SerializedVehicleRow {
@@ -68,10 +68,26 @@ const STATUS_LABELS: Record<string, string> = {
 
 const TOAST_DURATION = 2000;
 
+// Acciones masivas que requieren confirmación (destructivas o semi-destructivas).
+// Las toggle (publish/featured) ejecutan directo sin ConfirmDialog.
+type ConfirmableBulkAction =
+  | { kind: "delete" }
+  | { kind: "status"; status: "available" | "reserved" | "sold" };
+
+const STATUS_BULK_LABEL: Record<string, string> = {
+  available: "Disponible",
+  reserved: "Reservado",
+  sold: "Vendido",
+};
+
 export function VehicleTable({ vehicles, limits }: VehicleTableProps) {
   const router = useRouter();
   const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  // Acción bulk pendiente de confirmar. null = sin confirmación abierta.
+  const [pendingBulk, setPendingBulk] = useState<ConfirmableBulkAction | null>(null);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const isAllSelected = selectedIds.size > 0 && selectedIds.size === vehicles.length;
   const isSomeSelected = selectedIds.size > 0 && selectedIds.size < vehicles.length;
@@ -120,8 +136,9 @@ export function VehicleTable({ vehicles, limits }: VehicleTableProps) {
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("¿Seguro que querés eliminar este vehículo?")) return;
+  async function handleDeleteConfirmed() {
+    if (!confirmDeleteId) return;
+    const id = confirmDeleteId;
     setLoading(id, true);
     try {
       const res = await fetch(`/api/vehiculos/${id}`, { method: "DELETE" });
@@ -132,7 +149,76 @@ export function VehicleTable({ vehicles, limits }: VehicleTableProps) {
       toast.error("Error al eliminar el vehículo", { duration: TOAST_DURATION });
     } finally {
       setLoading(id, false);
+      setConfirmDeleteId(null);
     }
+  }
+
+  // Llama a POST /api/vehiculos/bulk con la acción que corresponda.
+  // Centralizamos acá el manejo de loading + toast + refresh + cleanup
+  // así cada acción específica solo arma el body.
+  async function callBulk(body: Record<string, unknown>, successCopy: (ok: number) => string) {
+    if (selectedIds.size === 0) return;
+    setBulkLoading(true);
+    try {
+      const res = await fetch("/api/vehiculos/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...body, ids: Array.from(selectedIds) }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(data.error ?? "Error al ejecutar la acción", { duration: TOAST_DURATION });
+        return;
+      }
+      const ok: number = data.ok ?? 0;
+      const blocked: Array<{ title: string; reason: string }> = data.blocked ?? [];
+
+      if (ok > 0) toast.success(successCopy(ok), { duration: TOAST_DURATION });
+      if (blocked.length > 0) {
+        // Mostramos las primeras 3 razones para no inundar el toast.
+        const preview = blocked.slice(0, 3).map((b) => `${b.title} (${b.reason})`).join(", ");
+        const more = blocked.length > 3 ? ` y ${blocked.length - 3} más` : "";
+        toast.error(`${blocked.length} bloqueados: ${preview}${more}`, { duration: 6000 });
+      }
+      if (ok === 0 && blocked.length === 0) {
+        toast.message("Sin cambios", { duration: TOAST_DURATION });
+      }
+
+      setSelectedIds(new Set());
+      router.refresh();
+    } catch {
+      toast.error("Error de conexión", { duration: TOAST_DURATION });
+    } finally {
+      setBulkLoading(false);
+      setPendingBulk(null);
+    }
+  }
+
+  function handleBulkConfirmed() {
+    if (!pendingBulk) return;
+    if (pendingBulk.kind === "delete") {
+      void callBulk({ action: "delete" }, (n) => `${n} vehículos eliminados`);
+    } else if (pendingBulk.kind === "status") {
+      const label = STATUS_BULK_LABEL[pendingBulk.status];
+      void callBulk(
+        { action: "status", status: pendingBulk.status },
+        (n) => `${n} vehículos marcados como ${label}`
+      );
+    }
+  }
+
+  function handleBulkPublish(value: boolean) {
+    void callBulk(
+      { action: "publish", value },
+      (n) => (value ? `${n} vehículos publicados` : `${n} vehículos despublicados`)
+    );
+  }
+
+  function handleBulkFeatured(value: boolean) {
+    void callBulk(
+      { action: "featured", value },
+      (n) => (value ? `${n} vehículos destacados` : `${n} sin destaque`)
+    );
   }
 
   if (vehicles.length === 0) {
@@ -152,13 +238,66 @@ export function VehicleTable({ vehicles, limits }: VehicleTableProps) {
       {selectedIds.size > 0 && (
         <div className="flex items-center justify-between rounded-lg border bg-muted/50 px-4 py-2">
           <span className="text-sm font-medium">{selectedIds.size} seleccionados</span>
-          <Button variant="destructive" size="sm" onClick={() => {
-            if (!confirm("¿Eliminar vehículos seleccionados?")) return;
-            // Acá iría la llamada a la API bulk (implementación backend pendiente)
-            toast.error("Funcionalidad bulk en desarrollo.");
-          }}>
-            <Trash2 className="mr-2 h-4 w-4" /> Eliminar seleccionados
-          </Button>
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="inline-flex h-8 items-center gap-1.5 rounded-md border bg-background px-3 text-sm font-medium hover:bg-accent disabled:opacity-50"
+                disabled={bulkLoading}
+              >
+                {bulkLoading ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <ChevronDown className="h-3.5 w-3.5" />
+                )}
+                Acciones
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {/* Status group */}
+                <DropdownMenuItem onClick={() => setPendingBulk({ kind: "status", status: "available" })}>
+                  <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" />
+                  Marcar Disponible
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPendingBulk({ kind: "status", status: "reserved" })}>
+                  <CircleDot className="mr-2 h-4 w-4 text-amber-600" />
+                  Marcar Reservado
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPendingBulk({ kind: "status", status: "sold" })}>
+                  <CircleDot className="mr-2 h-4 w-4 text-red-600" />
+                  Marcar Vendido
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                {/* Toggle group — sin confirmación, son reversibles */}
+                <DropdownMenuItem onClick={() => handleBulkPublish(true)}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  Publicar en web
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleBulkPublish(false)}>
+                  <EyeOff className="mr-2 h-4 w-4" />
+                  Despublicar
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleBulkFeatured(true)}>
+                  <Star className="mr-2 h-4 w-4" />
+                  Destacar
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleBulkFeatured(false)}>
+                  <Star className="mr-2 h-4 w-4 text-muted-foreground" />
+                  Quitar destaque
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
+                  className="text-red-600 focus:text-red-600"
+                  onClick={() => setPendingBulk({ kind: "delete" })}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Eliminar seleccionados
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       )}
       
@@ -364,7 +503,7 @@ export function VehicleTable({ vehicles, limits }: VehicleTableProps) {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         className="text-red-600 focus:text-red-600"
-                        onClick={() => handleDelete(vehicle.id)}
+                        onClick={() => setConfirmDeleteId(vehicle.id)}
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
                         Eliminar
@@ -378,6 +517,38 @@ export function VehicleTable({ vehicles, limits }: VehicleTableProps) {
         </TableBody>
       </Table>
       </div>
+
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        onOpenChange={(open) => !open && setConfirmDeleteId(null)}
+        title="Eliminar vehículo"
+        description="Esta acción no se puede deshacer. Se eliminarán también todas sus imágenes."
+        confirmLabel="Eliminar"
+        destructive
+        onConfirm={handleDeleteConfirmed}
+      />
+
+      <ConfirmDialog
+        open={pendingBulk !== null}
+        onOpenChange={(open) => !open && setPendingBulk(null)}
+        title={
+          pendingBulk?.kind === "delete"
+            ? "Eliminar vehículos seleccionados"
+            : pendingBulk?.kind === "status"
+            ? `Marcar ${selectedIds.size} como ${STATUS_BULK_LABEL[pendingBulk.status]}`
+            : "Confirmar acción"
+        }
+        description={
+          pendingBulk?.kind === "delete"
+            ? `Se van a eliminar ${selectedIds.size} vehículos. Esta acción no se puede deshacer. Los que tengan ventas activas se reportarán pero no se borrarán.`
+            : pendingBulk?.kind === "status"
+            ? `Se va a cambiar el estado de ${selectedIds.size} vehículos a "${STATUS_BULK_LABEL[pendingBulk.status]}". Verificá la selección antes de confirmar.`
+            : ""
+        }
+        confirmLabel={pendingBulk?.kind === "delete" ? "Eliminar" : "Aplicar"}
+        destructive={pendingBulk?.kind === "delete" || (pendingBulk?.kind === "status" && pendingBulk.status === "sold")}
+        onConfirm={handleBulkConfirmed}
+      />
     </div>
   );
 }

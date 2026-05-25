@@ -8,6 +8,9 @@ export const vehicleCreateSchema = z.object({
   year: z.number().int().min(1900).max(new Date().getFullYear() + 1),
   price: z.number().positive("El precio debe ser mayor a 0"),
   currency: z.enum(CURRENCIES).default("ARS"),
+  // Precio de costo (compra). Solo admins pueden setearlo — el handler valida el role.
+  costPrice: z.number().positive("El costo debe ser mayor a 0").optional(),
+  costCurrency: z.enum(CURRENCIES).optional(),
   kilometers: z.number().int().min(0).optional(),
   fuelType: z.enum(FUEL_TYPES).optional(),
   transmission: z.enum(TRANSMISSION_TYPES).optional(),

@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { VehicleForm } from "@/components/dashboard/vehicle-form";
 import { findBlockingSale } from "@/lib/sale-guards";
 import { MLVehiclePanel } from "@/components/dashboard/ml-vehicle-panel";
+import { canSeeCosts, canEditCosts } from "@/lib/permissions";
 
 export default async function EditarVehiculoPage({
   params,
@@ -34,9 +35,13 @@ export default async function EditarVehiculoPage({
 
   // Serializar Decimal antes de pasar al Client Component (Next 15 no acepta
   // objetos no-plain). Las imágenes ya son plain (solo strings/numbers/booleans).
+  // costPrice se proyecta a null si el user no tiene permiso para verlo.
+  const visibleCosts = canSeeCosts(dealership.currentUser, dealership);
   const serializedVehicle = {
     ...vehicle,
     price: vehicle.price.toString(),
+    costPrice: visibleCosts && vehicle.costPrice ? vehicle.costPrice.toString() : null,
+    costCurrency: visibleCosts ? vehicle.costCurrency : null,
   };
 
   // Serializar listing de ML (las fechas no son plain)
@@ -52,7 +57,11 @@ export default async function EditarVehiculoPage({
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold">Editar vehículo</h1>
-      <VehicleForm vehicle={serializedVehicle} blockingSale={blockingSale} />
+      <VehicleForm
+        vehicle={serializedVehicle}
+        blockingSale={blockingSale}
+        canEditCosts={canEditCosts(dealership.currentUser)}
+      />
       <MLVehiclePanel
         vehicleId={id}
         initialListing={serializedListing as Parameters<typeof MLVehiclePanel>[0]["initialListing"]}

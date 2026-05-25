@@ -455,23 +455,58 @@ if (failed > 0) toast.error(`${failed} fallaron (transición no permitida)`);
 
 ### 5. ConfirmDialog en lugar de `window.confirm()`
 
-Para confirmar acciones destructivas (delete individual, delete masivo, cancelar masivo), usar [src/components/ui/confirm-dialog.tsx](src/components/ui/confirm-dialog.tsx), nunca el `confirm()` nativo del browser:
+**Nunca** usar `confirm()` o `alert()` nativos del browser para confirmaciones. **Siempre** usar [src/components/ui/confirm-dialog.tsx](src/components/ui/confirm-dialog.tsx). Convención del proyecto — verificar en code review. Si en algún momento se setea ESLint, agregar `no-restricted-globals` para `confirm` y `alert` para enforce automático.
+
+#### Patrón completo (state + trigger + handler + render)
 
 ```tsx
+// 1. State — `id` para acciones por-item, boolean para acciones singleton/bulk
 const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
 
+// 2. Trigger — el onClick del botón rojo SOLO abre el dialog, no ejecuta la acción
+<DropdownMenuItem onClick={() => setConfirmDeleteId(item.id)}>
+  Eliminar
+</DropdownMenuItem>
+
+// 3. Handler separado — lo que antes era `handleDelete(id)` con confirm() inline,
+//    ahora es una función sin parámetros que lee del state
+async function handleDeleteConfirmed() {
+  if (!confirmDeleteId) return;
+  const id = confirmDeleteId;
+  try {
+    const res = await fetch(`/api/recurso/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      toast.error("Error al eliminar");
+      return;
+    }
+    toast.success("Eliminado");
+    router.refresh();
+  } finally {
+    setConfirmDeleteId(null);
+  }
+}
+
+// 4. Dialog — al FINAL del JSX, fuera del DropdownMenu/Sheet/Drawer
 <ConfirmDialog
   open={confirmDeleteId !== null}
   onOpenChange={(open) => !open && setConfirmDeleteId(null)}
-  title="Eliminar venta"
-  description="Solo se pueden eliminar borradores o canceladas."
+  title="Eliminar vehículo"
+  description="Esta acción no se puede deshacer. Se eliminarán también todas sus imágenes."
   confirmLabel="Eliminar"
   destructive
-  onConfirm={confirmDelete}
+  onConfirm={handleDeleteConfirmed}
 />
 ```
 
-El componente maneja su propio loading durante `onConfirm` — no hace falta deshabilitar el botón manualmente.
+#### Reglas no obvias
+
+- **El dialog se renderiza al nivel raíz del componente**, no dentro del item de la tabla. Si lo metés dentro del `<TableRow>` o `<DropdownMenu>`, se desmonta cuando el menú se cierra y nunca llega a abrirse.
+- **`onConfirm` puede ser async** — el componente maneja su propio loading state, muestra spinner en el botón y deshabilita ambos botones hasta que resuelva. NO setees loading externo.
+- **Cleanup en `finally`** — siempre cerrar el dialog con `setConfirmDeleteId(null)` aunque falle el fetch, para no dejar el modal abierto con un error que no se ve.
+- **Para bulk**: usar un boolean `confirmBulkOpen`, el handler lee de `selectedIds` directamente.
+- **Para descripciones dinámicas** (ej: "Se van a eliminar 5 elementos"), interpolá en el `description` con el contador del state (`selectedIds.size`).
+- **Reemplazos canónicos hechos** en: vehicle-table, customers-table, sales-table, quotations-table, quotation-detail-client, users-tab (cancelar invite), reviews-settings, sale-documents, vehicle-image-uploader, gallery-grid, media-uploader, ml-integration-card. **Mirar cualquiera de esos** como referencia si tenés dudas.
 
 ### 6. Base UI Select: labels vía render fn
 

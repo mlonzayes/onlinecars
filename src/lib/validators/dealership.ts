@@ -19,6 +19,8 @@ export const dealershipCreateSchema = z.object({
 
 export const dealershipUpdateSchema = dealershipCreateSchema.partial().omit({ slug: true }).extend({
   logo: z.string().url("URL de logo inválida").nullable().optional().or(z.literal("")),
+  // Permiso para que roles no-admin vean costPrice de los vehículos.
+  showCostsToNonAdmins: z.boolean().optional(),
 });
 
 export type DealershipCreateInput = z.infer<typeof dealershipCreateSchema>;

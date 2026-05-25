@@ -55,10 +55,12 @@ export default async function ConfiguracionPage() {
         </TabsContent>
         
         <TabsContent value="usuarios" className="mt-0">
-          <UsersTab 
-            users={usersWithEmail} 
-            invites={invites.map(i => ({ id: i.id, role: i.role, token: i.token, createdAt: i.createdAt }))} 
-            limits={limits} 
+          <UsersTab
+            users={usersWithEmail}
+            invites={invites.map(i => ({ id: i.id, role: i.role, token: i.token, createdAt: i.createdAt }))}
+            limits={limits}
+            showCostsToNonAdmins={dealership.showCostsToNonAdmins}
+            isAdmin={dealership.currentUser.role === "admin"}
           />
         </TabsContent>
 

@@ -6,6 +6,17 @@ import { NextResponse } from "next/server";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { invalidateTenantHomeBundle } from "@/lib/tenant";
+import { canSeeCosts, canEditCosts } from "@/lib/permissions";
+
+// Sacamos costPrice/costCurrency de una lista de vehículos si el user no tiene permiso.
+// Devolvemos `null` en vez de `undefined` para no romper el shape de la response.
+function projectCosts<T extends { costPrice: unknown; costCurrency: unknown }>(
+  vehicles: T[],
+  allowed: boolean
+): T[] {
+  if (allowed) return vehicles;
+  return vehicles.map((v) => ({ ...v, costPrice: null, costCurrency: null }));
+}
 
 // GET /api/vehiculos
 // Lista paginada de vehículos del concesionario autenticado.
@@ -54,6 +65,9 @@ export const GET = withLogger(async (request, { requestId }) => {
     }),
   ]);
 
+  const allowedCosts = canSeeCosts(dealership.currentUser, dealership);
+  const projected = projectCosts(vehicles, allowedCosts);
+
   logger.info(requestId, "vehicles.list.ok", {
     dealershipId: dealership.id,
     total,
@@ -62,7 +76,7 @@ export const GET = withLogger(async (request, { requestId }) => {
   });
 
   return NextResponse.json({
-    data: vehicles,
+    data: projected,
     meta: {
       total,
       page,
@@ -102,11 +116,18 @@ export const POST = withLogger(async (request, { requestId }) => {
     );
   }
 
+  // Solo admins pueden setear costPrice/costCurrency. Si un editor/viewer
+  // intenta mandarlos en el body, los descartamos en silencio (no error).
+  const { costPrice, costCurrency, ...rest } = parsed.data;
+  const allowedToEditCosts = canEditCosts(dealership.currentUser);
+
   const vehicle = await prisma.vehicle.create({
     data: {
-      ...parsed.data,
-      // Prisma espera Decimal para price — lo convertimos explícitamente
+      ...rest,
       price: parsed.data.price,
+      ...(allowedToEditCosts
+        ? { costPrice: costPrice ?? null, costCurrency: costCurrency ?? null }
+        : {}),
       dealershipId: dealership.id,
     },
   });

@@ -45,14 +45,19 @@ import type { Vehicle, VehicleImage } from "@prisma/client";
 import type { BlockingSale } from "@/lib/sale-guards";
 import { VehicleImageUploader } from "./vehicle-image-uploader";
 
-// `price` viene serializado como string desde el server porque Prisma usa Decimal
-// y Next 15 no permite pasar objetos no-plain de Server a Client Components.
-type SerializedVehicle = Omit<Vehicle, "price"> & { price: string };
+// `price` y `costPrice` vienen serializados como string desde el server porque
+// Prisma usa Decimal y Next 15 no permite pasar objetos no-plain a Client Components.
+type SerializedVehicle = Omit<Vehicle, "price" | "costPrice"> & {
+  price: string;
+  costPrice: string | null;
+};
 
 interface VehicleFormProps {
   vehicle?: SerializedVehicle & { images: VehicleImage[] };
   // Si hay una venta activa sobre el vehículo, el form se renderiza en modo lectura.
   blockingSale?: BlockingSale | null;
+  // Si el user logueado puede ver/editar el precio de costo. Default false.
+  canEditCosts?: boolean;
 }
 
 const BLOCKING_SALE_LABELS: Record<BlockingSale["status"], string> = {
@@ -88,6 +93,13 @@ const vehicleFormSchema = z.object({
     z.number({ message: "Precio requerido" }).positive("El precio debe ser mayor a 0")
   ),
   currency: z.enum(CURRENCIES),
+  // Precio de costo (admin only). Si el field viene vacío, lo dejamos undefined
+  // así no se manda al server. Si hay un número, exigimos > 0.
+  costPrice: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? undefined : Number(v)),
+    z.number().positive("El costo debe ser mayor a 0").optional()
+  ),
+  costCurrency: z.union([z.enum(CURRENCIES), z.literal("")]).optional(),
   kilometers: optionalIntFromString.pipe(
     z.number().int().min(0, "No puede ser negativo").optional()
   ),
@@ -130,6 +142,8 @@ function buildDefaults(vehicle?: SerializedVehicle): VehicleFormValues {
     status: (vehicle?.status as VehicleFormValues["status"]) ?? "available",
     price: vehicle?.price ? Number(vehicle.price) : (undefined as unknown as VehicleFormValues["price"]),
     currency: (vehicle?.currency as VehicleFormValues["currency"]) ?? "ARS",
+    costPrice: vehicle?.costPrice ? Number(vehicle.costPrice) : undefined,
+    costCurrency: (vehicle?.costCurrency as VehicleFormValues["costCurrency"]) ?? "",
     kilometers: vehicle?.kilometers ?? undefined,
     fuelType: (vehicle?.fuelType as VehicleFormValues["fuelType"]) ?? "",
     transmission: (vehicle?.transmission as VehicleFormValues["transmission"]) ?? "",
@@ -161,6 +175,9 @@ interface TabSectionProps {
   control: Control<VehicleFormValues>;
   errors: FieldErrors<VehicleFormValues>;
   disabled?: boolean;
+  // Solo el tab de precio lo usa, pero lo declaramos acá para mantener una
+  // interfaz única — los tabs que no lo necesitan simplemente lo ignoran.
+  canEditCosts?: boolean;
 }
 
 function BasicInfoTab({ register, control, errors, disabled }: TabSectionProps) {
@@ -284,11 +301,17 @@ function BasicInfoTab({ register, control, errors, disabled }: TabSectionProps) 
 }
 
 // --- Sub-componente: Tab de precio y detalles ---
-function PriceDetailsTab({ register, control, errors, disabled }: TabSectionProps) {
+function PriceDetailsTab({
+  register,
+  control,
+  errors,
+  disabled,
+  canEditCosts,
+}: TabSectionProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-12">
       <div className="space-y-1.5 sm:col-span-8">
-        <Label htmlFor="price">Precio *</Label>
+        <Label htmlFor="price">Precio de venta *</Label>
         <Input
           id="price"
           type="number"
@@ -301,7 +324,7 @@ function PriceDetailsTab({ register, control, errors, disabled }: TabSectionProp
         <FieldError message={errorMessage(errors, "price")} />
       </div>
       <div className="space-y-1.5 sm:col-span-4">
-        <Label htmlFor="currency">Moneda</Label>
+        <Label htmlFor="currency">Moneda venta</Label>
         <Controller
           control={control}
           name="currency"
@@ -325,6 +348,56 @@ function PriceDetailsTab({ register, control, errors, disabled }: TabSectionProp
           )}
         />
       </div>
+
+      {/* Precio de costo — solo visible para admins. Se gatea desde el server:
+          si canEditCosts=false el field NO se renderiza y el handler de la API
+          tampoco acepta el campo aunque el cliente lo mande. */}
+      {canEditCosts && (
+        <>
+          <div className="space-y-1.5 sm:col-span-8">
+            <Label htmlFor="costPrice">Precio de costo</Label>
+            <Input
+              id="costPrice"
+              type="number"
+              placeholder="8000"
+              min={0}
+              disabled={disabled}
+              aria-invalid={!!errors.costPrice}
+              {...register("costPrice")}
+            />
+            <FieldError message={errorMessage(errors, "costPrice")} />
+            <p className="text-xs text-muted-foreground">
+              Lo que pagaste para comprarlo. Lo usamos para calcular margen en la contabilidad.
+            </p>
+          </div>
+          <div className="space-y-1.5 sm:col-span-4">
+            <Label htmlFor="costCurrency">Moneda costo</Label>
+            <Controller
+              control={control}
+              name="costCurrency"
+              render={({ field }) => (
+                <Select
+                  value={field.value ?? ""}
+                  onValueChange={(v) => v !== null && field.onChange(v || "")}
+                  disabled={disabled}
+                >
+                  <SelectTrigger id="costCurrency" className="w-full">
+                    <SelectValue>{field.value || "—"}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Sin definir</SelectItem>
+                    {CURRENCIES.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
+        </>
+      )}
       <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="kilometers">Kilómetros</Label>
         <Input
@@ -469,7 +542,11 @@ function isVehicleFormTab(value: string | null): value is VehicleFormTab {
   return value !== null && (VEHICLE_FORM_TABS as readonly string[]).includes(value);
 }
 
-export function VehicleForm({ vehicle, blockingSale }: VehicleFormProps) {
+export function VehicleForm({
+  vehicle,
+  blockingSale,
+  canEditCosts = false,
+}: VehicleFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [submitting, setSubmitting] = useState(false);
@@ -504,7 +581,7 @@ export function VehicleForm({ vehicle, blockingSale }: VehicleFormProps) {
 
     // Limpiamos enums vacíos a undefined para que el server no intente
     // guardar "" en columnas con enum string.
-    const payload = {
+    const payload: Record<string, unknown> = {
       title: data.title,
       brand: data.brand,
       model: data.model,
@@ -526,6 +603,14 @@ export function VehicleForm({ vehicle, blockingSale }: VehicleFormProps) {
         : undefined,
       description: data.description || undefined,
     };
+
+    // Costos: solo mandamos si el user puede editarlos. El handler igual valida
+    // el role del lado del server (defense in depth), pero acá evitamos mandar
+    // basura para roles que no pueden cargar costos.
+    if (canEditCosts) {
+      payload.costPrice = data.costPrice;
+      payload.costCurrency = data.costCurrency || undefined;
+    }
 
     try {
       const url = isEditing ? `/api/vehiculos/${vehicle!.id}` : "/api/vehiculos";
@@ -622,6 +707,7 @@ export function VehicleForm({ vehicle, blockingSale }: VehicleFormProps) {
                 control={control}
                 errors={errors}
                 disabled={isLocked}
+                canEditCosts={canEditCosts}
               />
             </TabsContent>
 

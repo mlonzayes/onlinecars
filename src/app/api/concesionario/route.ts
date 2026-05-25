@@ -58,9 +58,16 @@ export const PUT = withLogger(async (request, { requestId }) => {
     );
   }
 
+  // Solo admins pueden cambiar el toggle de visibilidad de costos.
+  // Si lo mandó un user no-admin, descartamos el campo en silencio.
+  const updateData = { ...parsed.data };
+  if (dealership.currentUser.role !== "admin") {
+    delete updateData.showCostsToNonAdmins;
+  }
+
   const updated = await prisma.dealership.update({
     where: { id: dealership.id },
-    data: parsed.data,
+    data: updateData,
   });
 
   // Invalidamos con el slug NUEVO y el viejo — por las dudas que se haya

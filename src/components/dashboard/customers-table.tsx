@@ -32,6 +32,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import type { Customer } from "@prisma/client";
 import type { PlanLimits } from "@/lib/plans";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface CustomersTableProps {
   customers: Customer[];
@@ -44,6 +45,8 @@ export function CustomersTable({ customers, limits }: CustomersTableProps) {
   const router = useRouter();
   const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
 
   const isAllSelected = selectedIds.size > 0 && selectedIds.size === customers.length;
   const isSomeSelected = selectedIds.size > 0 && selectedIds.size < customers.length;
@@ -56,8 +59,9 @@ export function CustomersTable({ customers, limits }: CustomersTableProps) {
     });
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("¿Seguro que querés eliminar este cliente?")) return;
+  async function handleDeleteConfirmed() {
+    if (!confirmDeleteId) return;
+    const id = confirmDeleteId;
     setLoading(id, true);
     try {
       const res = await fetch(`/api/clientes/${id}`, { method: "DELETE" });
@@ -72,7 +76,13 @@ export function CustomersTable({ customers, limits }: CustomersTableProps) {
       router.refresh();
     } finally {
       setLoading(id, false);
+      setConfirmDeleteId(null);
     }
+  }
+
+  function handleBulkDeleteConfirmed() {
+    toast.error("Funcionalidad bulk en desarrollo.");
+    setConfirmBulkOpen(false);
   }
 
   if (customers.length === 0) {
@@ -92,10 +102,7 @@ export function CustomersTable({ customers, limits }: CustomersTableProps) {
       {selectedIds.size > 0 && (
         <div className="flex items-center justify-between rounded-lg border bg-muted/50 px-4 py-2">
           <span className="text-sm font-medium">{selectedIds.size} seleccionados</span>
-          <Button variant="destructive" size="sm" onClick={() => {
-            if (!confirm("¿Eliminar clientes seleccionados?")) return;
-            toast.error("Funcionalidad bulk en desarrollo.");
-          }}>
+          <Button variant="destructive" size="sm" onClick={() => setConfirmBulkOpen(true)}>
             <Trash2 className="mr-2 h-4 w-4" /> Eliminar seleccionados
           </Button>
         </div>
@@ -216,7 +223,7 @@ export function CustomersTable({ customers, limits }: CustomersTableProps) {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         className="text-red-600 focus:text-red-600"
-                        onClick={() => handleDelete(customer.id)}
+                        onClick={() => setConfirmDeleteId(customer.id)}
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
                         Eliminar
@@ -230,6 +237,26 @@ export function CustomersTable({ customers, limits }: CustomersTableProps) {
         </TableBody>
       </Table>
       </div>
+
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        onOpenChange={(open) => !open && setConfirmDeleteId(null)}
+        title="Eliminar cliente"
+        description="Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        destructive
+        onConfirm={handleDeleteConfirmed}
+      />
+
+      <ConfirmDialog
+        open={confirmBulkOpen}
+        onOpenChange={setConfirmBulkOpen}
+        title="Eliminar clientes seleccionados"
+        description={`Se van a eliminar ${selectedIds.size} clientes. Esta acción no se puede deshacer.`}
+        confirmLabel="Eliminar todos"
+        destructive
+        onConfirm={handleBulkDeleteConfirmed}
+      />
     </div>
   );
 }

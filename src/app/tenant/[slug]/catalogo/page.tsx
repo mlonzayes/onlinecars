@@ -29,12 +29,13 @@ export default async function TenantCatalogPage({ params, searchParams }: Tenant
   if (!dealership) notFound();
 
   // searchParams llegan como `string | undefined` libre. Para los enums (sort,
-  // condition) confiamos en que getPublishedVehicles ignora valores inválidos.
+  // condition, bodyType) confiamos en que getPublishedVehicles ignora valores inválidos.
   const filters = {
     brand: sp.brand,
     minPrice: sp.minPrice ? Number(sp.minPrice) : undefined,
     maxPrice: sp.maxPrice ? Number(sp.maxPrice) : undefined,
     condition: sp.condition,
+    bodyType: sp.bodyType,
     sort: sp.sort,
   } as Parameters<typeof getPublishedVehicles>[1];
 

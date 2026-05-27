@@ -16,6 +16,9 @@ const themeUpdateSchema = z.object({
   heroType: z.enum(["none", "image", "video"]).optional(),
   heroUrl: z.string().url("URL inválida").nullable().optional(),
   customDomain: z.string().max(253).nullable().optional(),
+  // Marcas oficiales seleccionadas (IDs del JSON src/data/brands.json).
+  // Se editan desde el panel BrandsSettings dentro del editor de la sección "brands".
+  selectedBrandIds: z.array(z.string()).optional(),
 });
 
 // PATCH /api/concesionario/theme

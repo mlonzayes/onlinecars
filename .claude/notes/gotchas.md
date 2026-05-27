@@ -12,7 +12,7 @@ if (!isLocalhost) {
 }
 ```
 
-**En producción** funciona normal: `{slug}.motorflow.com.ar` → `/tenant/{slug}/`.
+**En producción** funciona normal: `{slug}.motorflowapp.com` → `/tenant/{slug}/`.
 
 ---
 

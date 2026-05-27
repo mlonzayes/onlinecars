@@ -146,6 +146,15 @@ export function SectionConfigControls<T extends SectionType>({
             update("showSearch" as keyof SectionConfigByType[T], next as SectionConfigByType[T][keyof SectionConfigByType[T]])
           }
         />
+        <SwitchRow
+          id="hero-show-quick-actions"
+          label="Mostrar tarjetas de acción rápida"
+          helperText="3 tarjetas al pie (Catálogo, Vender mi auto, Contacto). Sugerencia: usá una u otra opción, no ambas, para no saturar el hero."
+          checked={c.showQuickActions}
+          onChange={(next) =>
+            update("showQuickActions" as keyof SectionConfigByType[T], next as SectionConfigByType[T][keyof SectionConfigByType[T]])
+          }
+        />
       </div>
     );
   }

@@ -8,7 +8,19 @@ export const heroConfigSchema = z.object({
   overlay: z.number().int().min(0).max(100),
   align: z.enum(["left", "center"]),
   showSearch: z.boolean(),
+  // Default false: hero configs creados antes de esta feature siguen funcionando
+  // sin migración. Solo aparece el toggle si el dealer lo activa explícitamente.
+  showQuickActions: z.boolean().default(false),
 }).strict();
+
+// Categorías: schema vacío. Si en el futuro hay config (ej: bodyTypes ocultos),
+// se agrega acá y todo el resto del sistema lo agarra solo.
+export const categoriesConfigSchema = z.object({}).strict();
+
+// Marcas: schema vacío. Las marcas seleccionadas viven en theme.selectedBrandIds
+// (no en el config de la sección) — esta sección solo controla orden, enabled
+// y copy. La selección se edita desde un panel dedicado en el editor.
+export const brandsConfigSchema = z.object({}).strict();
 
 export const aboutConfigSchema = z.object({
   layout: z.enum(["text-only", "image-left", "image-right"]),
@@ -41,8 +53,10 @@ export const contactConfigSchema = z.object({
 
 const schemaMap = {
   hero: heroConfigSchema,
+  categories: categoriesConfigSchema,
   about: aboutConfigSchema,
   catalog: catalogConfigSchema,
+  brands: brandsConfigSchema,
   gallery: galleryConfigSchema,
   financing: financingConfigSchema,
   reviews: reviewsConfigSchema,

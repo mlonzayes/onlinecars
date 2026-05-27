@@ -4,11 +4,16 @@ import { MessageCircle } from "lucide-react";
 
 interface WhatsAppFabProps {
   whatsapp: string;
+  // Mensaje pre-cargado al abrir el chat. Null/undefined = usar default.
+  message?: string | null;
 }
 
-export function WhatsAppFab({ whatsapp }: WhatsAppFabProps) {
+const DEFAULT_MESSAGE = "Hola! Vi su sitio web y me gustaría consultar.";
+
+export function WhatsAppFab({ whatsapp, message }: WhatsAppFabProps) {
   const cleaned = whatsapp.replace(/\D/g, "");
-  const url = `https://wa.me/${cleaned}?text=${encodeURIComponent("Hola! Vi su sitio web y me gustaría consultar.")}`;
+  const text = message?.trim() || DEFAULT_MESSAGE;
+  const url = `https://wa.me/${cleaned}?text=${encodeURIComponent(text)}`;
 
   return (
     <a

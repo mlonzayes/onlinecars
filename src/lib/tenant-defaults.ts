@@ -12,18 +12,25 @@ export interface SectionDefaultCopy {
 
 export const DEFAULT_SECTION_ORDER: Record<SectionType, number> = {
   hero: 1,
-  catalog: 2,
-  gallery: 3,
-  about: 4,
-  financing: 5,
-  reviews: 6,
-  contact: 7,
+  categories: 2,
+  catalog: 3,
+  brands: 4,
+  gallery: 5,
+  about: 6,
+  financing: 7,
+  reviews: 8,
+  contact: 9,
 };
 
 export const DEFAULT_SECTION_COPY: Record<SectionType, SectionDefaultCopy> = {
   hero: {
     title: "Encontrá tu próximo auto",
     subtitle: "Buscá en nuestro stock por marca, condición o presupuesto.",
+    content: null,
+  },
+  categories: {
+    title: "Categorías",
+    subtitle: "Filtrá rápido por el tipo de vehículo que buscás.",
     content: null,
   },
   about: {
@@ -34,6 +41,11 @@ export const DEFAULT_SECTION_COPY: Record<SectionType, SectionDefaultCopy> = {
   catalog: {
     title: "Nuestros vehículos",
     subtitle: "Una selección curada de la mejor parte de nuestro inventario.",
+    content: null,
+  },
+  brands: {
+    title: "Marcas premium",
+    subtitle: "Acceso directo a las marcas más buscadas del mercado.",
     content: null,
   },
   gallery: {
@@ -59,9 +71,11 @@ export const DEFAULT_SECTION_COPY: Record<SectionType, SectionDefaultCopy> = {
 };
 
 export const DEFAULT_SECTION_CONFIG: SectionConfigByType = {
-  hero: { overlay: 70, align: "center", showSearch: true },
+  hero: { overlay: 70, align: "center", showSearch: true, showQuickActions: false },
+  categories: {},
   about: { layout: "image-right" },
   catalog: { showFilters: true, pageSize: 12, emphasis: "featured" },
+  brands: {},
   gallery: { layout: "grid", columns: 3 },
   financing: { showCalculatorCta: true },
   reviews: { showCta: true, maxItems: 6 },

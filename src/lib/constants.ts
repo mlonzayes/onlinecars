@@ -165,8 +165,10 @@ export const SALE_LEGAL_THRESHOLDS = {
 // --- Tenant site builder ---
 export const SECTION_TYPES = [
   "hero",
+  "categories",
   "about",
   "catalog",
+  "brands",
   "gallery",
   "financing",
   "reviews",
@@ -176,8 +178,10 @@ export type SectionType = (typeof SECTION_TYPES)[number];
 
 export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   hero: "Portada",
+  categories: "Categorías",
   about: "Sobre nosotros",
   catalog: "Catálogo",
+  brands: "Marcas",
   gallery: "Galería",
   financing: "Financiación",
   reviews: "Opiniones",

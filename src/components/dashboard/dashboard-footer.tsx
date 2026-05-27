@@ -9,11 +9,11 @@ export function DashboardFooter() {
           <p>© {new Date().getFullYear()} motorflow. Todos los derechos reservados.</p>
           <div className="flex items-center gap-4">
             <a
-              href="mailto:soporte@motorflow.com.ar"
+              href="mailto:soporte@motorflowapp.com"
               className="flex items-center gap-1.5 transition hover:text-foreground"
             >
               <Mail className="size-3.5" />
-              soporte@motorflow.com.ar
+              soporte@motorflowapp.com
             </a>
             <a
               href="tel:+5491100000000"
@@ -27,7 +27,7 @@ export function DashboardFooter() {
       </footer>
 
       <Link
-        href="mailto:soporte@motorflow.com.ar"
+        href="mailto:soporte@motorflowapp.com"
         title="Contactar soporte"
         aria-label="Contactar soporte"
         className="fixed bottom-6 right-6 z-50 flex size-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition hover:scale-105 hover:bg-blue-700"

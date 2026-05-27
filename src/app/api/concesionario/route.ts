@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { invalidateTenantHomeBundle } from "@/lib/tenant";
+import { getPlanLimits } from "@/lib/plans";
 
 // GET /api/concesionario
 // Retorna los datos del concesionario del usuario autenticado.
@@ -63,6 +64,15 @@ export const PUT = withLogger(async (request, { requestId }) => {
   const updateData = { ...parsed.data };
   if (dealership.currentUser.role !== "admin") {
     delete updateData.showCostsToNonAdmins;
+  }
+
+  // FAB de WhatsApp: si el plan no lo permite, FORZAMOS enabled=false aunque
+  // el cliente lo haya mandado en true. El admin del cliente intentando "activar"
+  // sin el plan correcto NO lo logra desde acá. El mensaje custom se permite
+  // siempre (es solo texto, no representa ventaja sin el FAB visible).
+  const limits = getPlanLimits(dealership);
+  if (!limits.allowWhatsappFab && updateData.whatsappFabEnabled === true) {
+    updateData.whatsappFabEnabled = false;
   }
 
   const updated = await prisma.dealership.update({

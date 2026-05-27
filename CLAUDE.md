@@ -57,12 +57,12 @@ Hay un `prisma.config.ts` en la raíz del repo. Las migraciones existentes viven
 
 ### Multi-tenancy
 
-El modelo de multi-tenancy se resuelve por **subdomain routing** (default domain `motorflow.com.ar`, configurable vía `NEXT_PUBLIC_APP_DOMAIN`):
+El modelo de multi-tenancy se resuelve por **subdomain routing** (default domain `motorflowapp.com`, configurable vía `NEXT_PUBLIC_APP_DOMAIN`):
 
 ```
-{slug}.motorflow.com.ar  → Sitio público del concesionario (rewrite a /tenant/{slug})
-app.motorflow.com.ar     → Panel de administración (dashboard)
-motorflow.com.ar         → Landing pública (waitlist) + onboarding + sign-in
+{slug}.motorflowapp.com  → Sitio público del concesionario (rewrite a /tenant/{slug})
+app.motorflowapp.com     → Panel de administración (dashboard)
+motorflowapp.com         → Landing pública (waitlist) + onboarding + sign-in
 ```
 
 El subdomain rewrite vive en [src/middleware.ts](src/middleware.ts) y **solo se activa fuera de `localhost`**. En dev se trabaja todo desde `localhost:3000` accediendo a `/dashboard`, `/tenant/{slug}`, etc. directamente.
@@ -661,7 +661,7 @@ RESEND_API_KEY=
 
 # App
 NEXT_PUBLIC_APP_URL=
-NEXT_PUBLIC_APP_DOMAIN=motorflow.com.ar
+NEXT_PUBLIC_APP_DOMAIN=motorflowapp.com
 
 # Feature flags
 NEXT_PUBLIC_ENABLE_LOGIN=false      # "true" habilita dashboard + protección de rutas

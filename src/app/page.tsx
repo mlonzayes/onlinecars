@@ -424,11 +424,11 @@ function Footer() {
             <ul className="mt-4 flex flex-col gap-3 text-sm text-gray-400">
               <li>
                 <a
-                  href="mailto:ventas@motorflow.com.ar"
+                  href="mailto:ventas@motorflowapp.com"
                   className="inline-flex items-center gap-2 transition hover:text-white"
                 >
                   <PiEnvelope className="h-4 w-4 shrink-0" />
-                  ventas@motorflow.com.ar
+                  ventas@motorflowapp.com
                 </a>
               </li>
               <li>

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ContactForm } from "@/components/dashboard/settings/contact-form";
 import { UsersTab } from "@/components/dashboard/settings/users-tab";
 import { SubscriptionTab } from "@/components/dashboard/settings/subscription-tab";
+import { WhatsappFabCard } from "@/components/dashboard/settings/whatsapp-fab-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { prisma } from "@/lib/prisma";
 import { getPlanLimits } from "@/lib/plans";
@@ -52,6 +53,13 @@ export default async function ConfiguracionPage() {
         
         <TabsContent value="general" className="mt-0 space-y-6">
           <ContactForm dealership={dealership} />
+          <WhatsappFabCard
+            enabled={dealership.whatsappFabEnabled}
+            message={dealership.whatsappMessage}
+            hasWhatsappNumber={Boolean(dealership.whatsapp)}
+            allowWhatsappFab={limits.allowWhatsappFab}
+            currentPlan={dealership.plan}
+          />
         </TabsContent>
         
         <TabsContent value="usuarios" className="mt-0">

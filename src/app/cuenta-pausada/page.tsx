@@ -74,7 +74,7 @@ export default async function CuentaPausadaPage({
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          motorflow · soporte@motorflow.com.ar
+          motorflow · soporte@motorflowapp.com
         </p>
       </div>
     </div>

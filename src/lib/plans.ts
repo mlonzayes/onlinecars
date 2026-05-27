@@ -8,6 +8,10 @@ export interface PlanLimits {
   maxUsers: number;
   allowBulkActions: boolean;
   allowMLIntegration: boolean;
+  // Botón flotante de WhatsApp en el sitio público del tenant.
+  // Feature de retención clave: el dealer ve consultas convertirse en chats
+  // directos sin formularios → motiva el upgrade desde el plan base.
+  allowWhatsappFab: boolean;
 }
 
 export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
@@ -17,6 +21,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     maxUsers: 1, // Solo el dueño
     allowBulkActions: false,
     allowMLIntegration: false,
+    allowWhatsappFab: false, // Gancho para upgrade
   },
   media: {
     maxVehicles: 100,
@@ -24,6 +29,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     maxUsers: 3, // Dueño + 2 vendedores
     allowBulkActions: true,
     allowMLIntegration: true, // ML habilitado a partir de este plan (~90k)
+    allowWhatsappFab: true,
   },
   premium: {
     maxVehicles: Infinity,
@@ -31,6 +37,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     maxUsers: Infinity,
     allowBulkActions: true,
     allowMLIntegration: true,
+    allowWhatsappFab: true,
   },
   enterprise: {
     maxVehicles: Infinity,
@@ -38,6 +45,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     maxUsers: Infinity,
     allowBulkActions: true,
     allowMLIntegration: true,
+    allowWhatsappFab: true,
   },
 };
 

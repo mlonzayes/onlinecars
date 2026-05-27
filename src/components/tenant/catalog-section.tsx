@@ -1,7 +1,5 @@
 import { Section } from "./section";
-import { CategoriesGrid } from "./categories-grid";
 import { FeaturedTabs } from "./featured-tabs";
-import { BrandsGrid } from "./brands-grid";
 import { DualCTA } from "./dual-cta";
 import { WhyChooseUs } from "./why-choose-us";
 import { AnimateOnScroll } from "./animate-on-scroll";
@@ -20,23 +18,13 @@ interface CatalogSectionProps {
 // en page.tsx (categorías → vehículos destacados → marcas → CTAs → por qué elegirnos).
 // El título/subtítulo del bloque de destacados sale del DealershipSection.
 export function CatalogSection({ section, bundle, basePath }: CatalogSectionProps) {
-  const { vehicles, displayBrands } = bundle;
+  const { vehicles } = bundle;
 
   return (
     <>
-      {/* Categorías por tipo de carrocería */}
-      <Section
-        background="white"
-        eyebrow="Explorá por tipo"
-        title="Categorías"
-        description="Filtrá rápido por el tipo de vehículo que buscás."
-      >
-        <AnimateOnScroll preset="stagger" staggerDelay={0.06}>
-          <CategoriesGrid basePath={basePath} />
-        </AnimateOnScroll>
-      </Section>
-
-      {/* Vehículos destacados con tabs — usa copy de la sección */}
+      {/* Categorías y Marcas son secciones independientes — ver `categories`
+          y `brands` en section-renderer. El dealer las mueve / activa desde
+          el sections-builder. Acá solo queda destacados + CTA + Why Choose. */}
       {vehicles.length > 0 && (
         <Section
           background="muted"
@@ -45,20 +33,6 @@ export function CatalogSection({ section, bundle, basePath }: CatalogSectionProp
           description={section.subtitle ?? undefined}
         >
           <FeaturedTabs vehicles={vehicles} basePath={basePath} />
-        </Section>
-      )}
-
-      {/* Marcas que trabajamos */}
-      {displayBrands.length > 0 && (
-        <Section
-          background="white"
-          eyebrow="Trabajamos con las mejores"
-          title="Marcas premium"
-          description="Acceso directo a las marcas más buscadas del mercado."
-        >
-          <AnimateOnScroll preset="stagger" staggerDelay={0.05}>
-            <BrandsGrid brands={displayBrands} basePath={basePath} />
-          </AnimateOnScroll>
         </Section>
       )}
 

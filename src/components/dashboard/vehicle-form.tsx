@@ -44,6 +44,10 @@ import {
 import type { Vehicle, VehicleImage } from "@prisma/client";
 import type { BlockingSale } from "@/lib/sale-guards";
 import { VehicleImageUploader } from "./vehicle-image-uploader";
+import {
+  VehicleCatalogSearch,
+  type VehicleCatalogResult,
+} from "./vehicle-catalog-search";
 
 // `price` y `costPrice` vienen serializados como string desde el server porque
 // Prisma usa Decimal y Next 15 no permite pasar objetos no-plain a Client Components.
@@ -178,11 +182,21 @@ interface TabSectionProps {
   // Solo el tab de precio lo usa, pero lo declaramos acá para mantener una
   // interfaz única — los tabs que no lo necesitan simplemente lo ignoran.
   canEditCosts?: boolean;
+  // Solo BasicInfoTab lo usa — para el auto-completado desde el catálogo.
+  onCatalogSelect?: (result: VehicleCatalogResult) => void;
 }
 
-function BasicInfoTab({ register, control, errors, disabled }: TabSectionProps) {
+function BasicInfoTab({ register, control, errors, disabled, onCatalogSelect }: TabSectionProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-12">
+      {/* Búsqueda del catálogo para auto-completar título, marca, modelo,
+          combustible y motor. Si el dealer prefiere cargarlo a mano, simplemente
+          ignora el buscador y tipea en los campos abajo — siguen siendo editables. */}
+      {onCatalogSelect && (
+        <div className="sm:col-span-12">
+          <VehicleCatalogSearch onSelect={onCatalogSelect} disabled={disabled} />
+        </div>
+      )}
       <div className="space-y-1.5 sm:col-span-12">
         <Label htmlFor="title">Título *</Label>
         <Input
@@ -366,9 +380,6 @@ function PriceDetailsTab({
               {...register("costPrice")}
             />
             <FieldError message={errorMessage(errors, "costPrice")} />
-            <p className="text-xs text-muted-foreground">
-              Lo que pagaste para comprarlo. Lo usamos para calcular margen en la contabilidad.
-            </p>
           </div>
           <div className="space-y-1.5 sm:col-span-4">
             <Label htmlFor="costCurrency">Moneda costo</Label>
@@ -559,12 +570,30 @@ export function VehicleForm({
     handleSubmit,
     control,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<VehicleFormValues>({
     resolver: zodResolver(vehicleFormSchema) as Resolver<VehicleFormValues>,
     defaultValues: buildDefaults(vehicle),
     mode: "onBlur",
   });
+
+  // Auto-completado desde el catálogo. shouldDirty/shouldValidate=true para
+  // que los validators de Zod corran (típico: dispara la validación visual).
+  // Solo escribe los campos que vinieron en el resultado — si fuel/engine
+  // son null en el CSV (eléctricos sin cilindrada, etc), no pisa lo que
+  // el user ya hubiera tipeado.
+  function handleCatalogSelect(result: VehicleCatalogResult) {
+    setValue("title", result.fullName, { shouldDirty: true, shouldValidate: true });
+    setValue("brand", result.brand, { shouldDirty: true, shouldValidate: true });
+    setValue("model", result.model, { shouldDirty: true, shouldValidate: true });
+    if (result.fuel) {
+      setValue("fuelType", result.fuel, { shouldDirty: true, shouldValidate: true });
+    }
+    if (result.engine) {
+      setValue("engine", result.engine, { shouldDirty: true, shouldValidate: true });
+    }
+  }
 
   // Para mostrar el contador de chars de la descripción.
   const description = watch("description") ?? "";
@@ -698,6 +727,7 @@ export function VehicleForm({
                 control={control}
                 errors={errors}
                 disabled={isLocked}
+                onCatalogSelect={handleCatalogSelect}
               />
             </TabsContent>
 

@@ -18,6 +18,13 @@ model Dealership {
   phone       String?
   email       String?
   whatsapp    String?
+  // Mensaje pre-cargado para el botón flotante de WhatsApp del sitio público.
+  // Null = usa el copy default ("Hola! Me gustaría consultar..."). Editable
+  // desde el admin solo si el plan habilita allowWhatsappFab.
+  whatsappMessage      String?
+  // Si true, muestra el FAB de WhatsApp en el sitio público. Requiere también
+  // que el plan habilite allowWhatsappFab — defense in depth.
+  whatsappFabEnabled   Boolean  @default(false)
   address     String?
   city        String?
   province    String?

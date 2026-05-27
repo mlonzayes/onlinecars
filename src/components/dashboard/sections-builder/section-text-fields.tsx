@@ -18,8 +18,10 @@ interface SectionTextFieldsProps {
 // Qué campos textuales muestra cada tipo.
 const HAS_CONTENT: Record<SectionType, boolean> = {
   hero: false,
+  categories: false,
   about: true,
   catalog: false,
+  brands: false,
   gallery: false,
   financing: true,
   reviews: false,

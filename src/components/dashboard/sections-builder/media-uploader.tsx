@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Loader2, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   ALLOWED_TENANT_IMAGE_MIME_TYPES,
   ALLOWED_VIDEO_MIME_TYPES,
@@ -37,6 +38,7 @@ export function MediaUploader({
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   const isVideo = purpose === "hero_video";
   const acceptMimes = isVideo
@@ -109,11 +111,8 @@ export function MediaUploader({
     }
   }
 
-  async function handleDelete() {
+  async function handleDeleteConfirmed() {
     if (!current) return;
-    if (!confirm("¿Eliminar este archivo? Esta acción no se puede deshacer.")) {
-      return;
-    }
 
     setDeleting(true);
     try {
@@ -130,6 +129,7 @@ export function MediaUploader({
       toast.error("Error al eliminar");
     } finally {
       setDeleting(false);
+      setConfirmDeleteOpen(false);
     }
   }
 
@@ -199,7 +199,7 @@ export function MediaUploader({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={handleDelete}
+            onClick={() => setConfirmDeleteOpen(true)}
             disabled={disabled || deleting}
           >
             {deleting ? (
@@ -214,6 +214,16 @@ export function MediaUploader({
       <p className="text-xs text-muted-foreground">
         Formatos: {formatsLabel} · máx {maxMb}MB
       </p>
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title="Eliminar archivo"
+        description="Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        destructive
+        onConfirm={handleDeleteConfirmed}
+      />
     </div>
   );
 }

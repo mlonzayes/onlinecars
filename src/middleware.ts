@@ -17,7 +17,7 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   // Saco el puerto del host (ej: "foo.com.ar:3000" → "foo.com.ar") para que
   // matchee bien contra appDomain.
   const hostname = (req.headers.get("host") ?? "").split(":")[0];
-  const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "motorflow.com.ar";
+  const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "motorflowapp.com";
   const isLoginEnabled = process.env.NEXT_PUBLIC_ENABLE_LOGIN === "true";
 
   // Solo aplicamos subdomain routing si el hostname pertenece a NUESTRO dominio.

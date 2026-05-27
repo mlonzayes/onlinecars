@@ -5,6 +5,7 @@ import { getDealershipBySlug } from "@/lib/tenant";
 import { TenantHeader } from "@/components/tenant/tenant-header";
 import { TenantFooter } from "@/components/tenant/tenant-footer";
 import { WhatsAppFab } from "@/components/tenant/whatsapp-fab";
+import { getPlanLimits } from "@/lib/plans";
 import type { DealershipTheme } from "@/types";
 
 // Poppins: fuente del tenant (decisión de diseño del rediseño).
@@ -36,13 +37,22 @@ export async function generateMetadata({
     dealership.description ??
     `Explorá los vehículos de ${dealership.name}. Encontrá tu próximo auto.`;
 
+  // Favicon dinámico por tenant: usamos el logo del concesionario si está cargado.
+  // Si no hay logo, no devolvemos `icons` y el favicon del root (motorflow) toma
+  // por default — preferible a un favicon roto.
+  const icons = dealership.logo
+    ? { icon: dealership.logo, shortcut: dealership.logo, apple: dealership.logo }
+    : undefined;
+
   return {
     title,
     description,
+    icons,
     openGraph: {
       title,
       description,
       type: "website",
+      ...(dealership.logo ? { images: [dealership.logo] } : {}),
     },
   };
 }
@@ -74,7 +84,10 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
         logo={dealership.logo}
         basePath={basePath}
       />
-      <main className="flex-1">{children}</main>
+      {/* pt-24 reserva espacio para el navbar flotante en TODAS las páginas.
+          El hero de la home se desfasa con -mt-24 para correr DETRÁS del nav
+          y dar el efecto inmersivo (ver hero-search.tsx). */}
+      <main className="flex-1 pt-24">{children}</main>
       <TenantFooter
         name={dealership.name}
         logo={dealership.logo}
@@ -87,7 +100,19 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
         province={dealership.province}
         basePath={basePath}
       />
-      {dealership.whatsapp && <WhatsAppFab whatsapp={dealership.whatsapp} />}
+      {/* FAB de WhatsApp: requiere TRES condiciones simultáneas:
+            1) El dealer cargó un número (dealership.whatsapp)
+            2) El dealer activó el toggle en el admin (whatsappFabEnabled)
+            3) El plan permite la feature (allowWhatsappFab)
+          Si una falla, el FAB no renderiza. */}
+      {dealership.whatsapp &&
+        dealership.whatsappFabEnabled &&
+        getPlanLimits(dealership).allowWhatsappFab && (
+          <WhatsAppFab
+            whatsapp={dealership.whatsapp}
+            message={dealership.whatsappMessage}
+          />
+        )}
     </div>
   );
 }

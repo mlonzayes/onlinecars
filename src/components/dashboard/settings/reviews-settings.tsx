@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 // Tipo serializado: las dates vienen como string ISO desde el server.
 // La serialización se hace inline en el server page (no acá, porque este
 // archivo es "use client" y Next 15 no permite llamar funciones de client desde server).
@@ -30,6 +31,7 @@ interface ReviewsSettingsProps {
 
 export function ReviewsSettings({ initialReviews }: ReviewsSettingsProps) {
   const [reviews, setReviews] = useState<ReviewData[]>(initialReviews);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const router = useRouter();
 
   async function handleStatusChange(id: string, newStatus: string) {
@@ -52,9 +54,9 @@ export function ReviewsSettings({ initialReviews }: ReviewsSettingsProps) {
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("¿Eliminar esta opinión permanentemente?")) return;
-
+  async function handleDeleteConfirmed() {
+    if (!confirmDeleteId) return;
+    const id = confirmDeleteId;
     const previous = reviews;
     setReviews((prev) => prev.filter((r) => r.id !== id));
 
@@ -67,10 +69,13 @@ export function ReviewsSettings({ initialReviews }: ReviewsSettingsProps) {
     } catch {
       setReviews(previous);
       toast.error("No se pudo eliminar la opinión.");
+    } finally {
+      setConfirmDeleteId(null);
     }
   }
 
   return (
+    <>
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
@@ -174,7 +179,7 @@ export function ReviewsSettings({ initialReviews }: ReviewsSettingsProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleDelete(review.id)}
+                    onClick={() => setConfirmDeleteId(review.id)}
                     className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -186,6 +191,17 @@ export function ReviewsSettings({ initialReviews }: ReviewsSettingsProps) {
         )}
       </CardContent>
     </Card>
+
+    <ConfirmDialog
+      open={confirmDeleteId !== null}
+      onOpenChange={(open) => !open && setConfirmDeleteId(null)}
+      title="Eliminar opinión"
+      description="Esta acción no se puede deshacer. La reseña desaparece permanentemente."
+      confirmLabel="Eliminar"
+      destructive
+      onConfirm={handleDeleteConfirmed}
+    />
+    </>
   );
 }
 

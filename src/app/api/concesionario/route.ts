@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { invalidateTenantHomeBundle } from "@/lib/tenant";
+import { getPlanLimits } from "@/lib/plans";
 
 // GET /api/concesionario
 // Retorna los datos del concesionario del usuario autenticado.
@@ -58,9 +59,25 @@ export const PUT = withLogger(async (request, { requestId }) => {
     );
   }
 
+  // Solo admins pueden cambiar el toggle de visibilidad de costos.
+  // Si lo mandó un user no-admin, descartamos el campo en silencio.
+  const updateData = { ...parsed.data };
+  if (dealership.currentUser.role !== "admin") {
+    delete updateData.showCostsToNonAdmins;
+  }
+
+  // FAB de WhatsApp: si el plan no lo permite, FORZAMOS enabled=false aunque
+  // el cliente lo haya mandado en true. El admin del cliente intentando "activar"
+  // sin el plan correcto NO lo logra desde acá. El mensaje custom se permite
+  // siempre (es solo texto, no representa ventaja sin el FAB visible).
+  const limits = getPlanLimits(dealership);
+  if (!limits.allowWhatsappFab && updateData.whatsappFabEnabled === true) {
+    updateData.whatsappFabEnabled = false;
+  }
+
   const updated = await prisma.dealership.update({
     where: { id: dealership.id },
-    data: parsed.data,
+    data: updateData,
   });
 
   // Invalidamos con el slug NUEVO y el viejo — por las dudas que se haya

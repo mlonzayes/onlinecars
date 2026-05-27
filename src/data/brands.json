@@ -1,13 +1,48 @@
 [
   {
+    "id": "agrale",
+    "name": "Agrale",
+    "logoUrl": null
+  },
+  {
+    "id": "alfa-romeo",
+    "name": "Alfa Romeo",
+    "logoUrl": "/brands/alfa-romeo.png"
+  },
+  {
+    "id": "arcfox",
+    "name": "ARCFOX",
+    "logoUrl": "/brands/arcfox.png"
+  },
+  {
     "id": "audi",
     "name": "Audi",
     "logoUrl": "/brands/audi.png"
   },
   {
+    "id": "baic",
+    "name": "BAIC",
+    "logoUrl": null
+  },
+  {
     "id": "bmw",
     "name": "BMW",
     "logoUrl": "/brands/bmw.png"
+  },
+  {
+    "id": "byd",
+    "name": "BYD",
+    "logoUrl": "/brands/byd.png"
+  },
+  {
+    "id": "changan",
+    "name": "Changan",
+    "logoUrl": "/brands/changan.png"
+  },
+  {
+    "id": "chery",
+    "name": "Chery",
+    "logoUrl": "/brands/chery.png"
   },
   {
     "id": "chevrolet",
@@ -20,8 +55,23 @@
     "logoUrl": "/brands/citroen.png"
   },
   {
+    "id": "dfsk",
+    "name": "DFSK",
+    "logoUrl": null
+  },
+  {
+    "id": "ds",
+    "name": "DS",
+    "logoUrl": "/brands/ds.png"
+  },
+  {
+    "id": "faw",
+    "name": "FAW",
+    "logoUrl": "/brands/faw.png"
+  },
+  {
     "id": "fiat",
-    "name": "Fiat",
+    "name": "FIAT",
     "logoUrl": "/brands/fiat.png"
   },
   {
@@ -30,9 +80,59 @@
     "logoUrl": "/brands/ford.png"
   },
   {
+    "id": "foton",
+    "name": "Foton",
+    "logoUrl": "/brands/foton.png"
+  },
+  {
+    "id": "gac",
+    "name": "GAC",
+    "logoUrl": null
+  },
+  {
+    "id": "geely",
+    "name": "Geely",
+    "logoUrl": "/brands/geely.png"
+  },
+  {
+    "id": "gwm",
+    "name": "GWM",
+    "logoUrl": null
+  },
+  {
+    "id": "haval",
+    "name": "Haval",
+    "logoUrl": "/brands/haval.png"
+  },
+  {
     "id": "honda",
     "name": "Honda",
     "logoUrl": "/brands/honda.png"
+  },
+  {
+    "id": "hyundai",
+    "name": "Hyundai",
+    "logoUrl": "/brands/hyundai.png"
+  },
+  {
+    "id": "isuzu",
+    "name": "Isuzu",
+    "logoUrl": "/brands/isuzu.png"
+  },
+  {
+    "id": "iveco",
+    "name": "Iveco",
+    "logoUrl": "/brands/iveco.png"
+  },
+  {
+    "id": "jac",
+    "name": "JAC",
+    "logoUrl": "/brands/jac.png"
+  },
+  {
+    "id": "jaguar",
+    "name": "Jaguar",
+    "logoUrl": "/brands/jaguar.png"
   },
   {
     "id": "jeep",
@@ -40,14 +140,74 @@
     "logoUrl": "/brands/jeep.png"
   },
   {
+    "id": "jetour",
+    "name": "Jetour",
+    "logoUrl": "/brands/jetour.png"
+  },
+  {
+    "id": "jmc",
+    "name": "JMC",
+    "logoUrl": "/brands/jmc.png"
+  },
+  {
+    "id": "jmev",
+    "name": "JMEV",
+    "logoUrl": null
+  },
+  {
+    "id": "kaiyi",
+    "name": "Kaiyi",
+    "logoUrl": null
+  },
+  {
     "id": "kia",
-    "name": "Kia",
+    "name": "KIA",
     "logoUrl": "/brands/kia.png"
+  },
+  {
+    "id": "kyc",
+    "name": "KYC",
+    "logoUrl": null
+  },
+  {
+    "id": "land-rover",
+    "name": "Land Rover",
+    "logoUrl": "/brands/land-rover.png"
+  },
+  {
+    "id": "lexus",
+    "name": "Lexus",
+    "logoUrl": "/brands/lexus.png"
+  },
+  {
+    "id": "maserati",
+    "name": "Maserati",
+    "logoUrl": "/brands/maserati.png"
+  },
+  {
+    "id": "maxus",
+    "name": "Maxus",
+    "logoUrl": "/brands/maxus.png"
   },
   {
     "id": "mercedes-benz",
     "name": "Mercedes-Benz",
     "logoUrl": "/brands/mercedes-benz.png"
+  },
+  {
+    "id": "mg",
+    "name": "MG",
+    "logoUrl": "/brands/mg.png"
+  },
+  {
+    "id": "mini",
+    "name": "MINI",
+    "logoUrl": "/brands/mini.png"
+  },
+  {
+    "id": "mitsubishi",
+    "name": "Mitsubishi",
+    "logoUrl": "/brands/mitsubishi.png"
   },
   {
     "id": "nissan",
@@ -60,9 +220,54 @@
     "logoUrl": "/brands/peugeot.png"
   },
   {
+    "id": "porsche",
+    "name": "Porsche",
+    "logoUrl": "/brands/porsche.png"
+  },
+  {
+    "id": "ram",
+    "name": "RAM",
+    "logoUrl": "/brands/ram.png"
+  },
+  {
     "id": "renault",
     "name": "Renault",
     "logoUrl": "/brands/renault.png"
+  },
+  {
+    "id": "sero-electric",
+    "name": "Sero Electric",
+    "logoUrl": null
+  },
+  {
+    "id": "shineray",
+    "name": "Shineray",
+    "logoUrl": null
+  },
+  {
+    "id": "ssangyong",
+    "name": "SsangYong",
+    "logoUrl": "/brands/ssangyong.png"
+  },
+  {
+    "id": "subaru",
+    "name": "Subaru",
+    "logoUrl": "/brands/subaru.png"
+  },
+  {
+    "id": "suzuki",
+    "name": "Suzuki",
+    "logoUrl": "/brands/suzuki.png"
+  },
+  {
+    "id": "swm",
+    "name": "SWM",
+    "logoUrl": null
+  },
+  {
+    "id": "tank",
+    "name": "TANK",
+    "logoUrl": null
   },
   {
     "id": "toyota",
@@ -75,33 +280,8 @@
     "logoUrl": "/brands/volkswagen.png"
   },
   {
-    "id": "byd",
-    "name": "BYD",
-    "logoUrl": "/brands/byd.png"
-  },
-  {
-    "id": "baic",
-    "name": "BAIC",
-    "logoUrl": "/brands/baic.png"
-  },
-  {
-    "id": "mg",
-    "name": "MG",
-    "logoUrl": "/brands/mg.png"
-  },
-  {
-    "id": "chery",
-    "name": "Chery",
-    "logoUrl": "/brands/chery.png"
-  },
-  {
-    "id": "haval",
-    "name": "Haval",
-    "logoUrl": "/brands/haval.png"
-  },
-  {
-    "id": "geely",
-    "name": "Geely",
-    "logoUrl": "/brands/geely.png"
+    "id": "volvo",
+    "name": "Volvo",
+    "logoUrl": "/brands/volvo.png"
   }
 ]

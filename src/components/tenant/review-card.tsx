@@ -22,7 +22,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
         ))}
       </div>
       <p className="flex-1 text-sm leading-relaxed text-gray-600 italic">
-        "{review.content}"
+        &ldquo;{review.content}&rdquo;
       </p>
       <div className="mt-2 flex items-center gap-3 border-t border-gray-50 pt-4">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-500">

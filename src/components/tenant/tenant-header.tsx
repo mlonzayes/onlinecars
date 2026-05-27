@@ -60,8 +60,12 @@ export function TenantHeader({ name, logo, basePath }: TenantHeaderProps) {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/85 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
+    // Floating pill nav: fixed con margen del top y de los costados. El video
+    // del hero corre POR DETRÁS (el hero usa -mt-24 para empezar bajo el nav).
+    // pointer-events-none en el wrapper deja pasar clicks al video; el inner
+    // pill recupera pointer-events-auto.
+    <header className="fixed left-0 right-0 top-0 z-50 pointer-events-none">
+      <div className="mx-auto mt-3 flex h-16 max-w-7xl items-center justify-between gap-6 rounded-full border border-white/30 bg-white/80 px-4 shadow-lg backdrop-blur-xl pointer-events-auto sm:mx-4 sm:mt-4 sm:px-6 lg:mx-auto lg:px-8">
         {/* Logo */}
         <Link
           href={basePath}
@@ -124,10 +128,10 @@ export function TenantHeader({ name, logo, basePath }: TenantHeaderProps) {
         </button>
       </div>
 
-      {/* Mobile Menu Panel */}
+      {/* Mobile Menu Panel — card flotante debajo del pill */}
       {mobileOpen && (
-        <div className="border-t border-gray-200 bg-white md:hidden">
-          <nav className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-4 sm:px-6">
+        <div className="mx-3 mt-2 rounded-2xl border border-white/30 bg-white shadow-xl pointer-events-auto sm:mx-4 md:hidden">
+          <nav className="flex flex-col gap-1 px-3 py-3">
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -143,7 +147,7 @@ export function TenantHeader({ name, logo, basePath }: TenantHeaderProps) {
             <div className="mt-2 border-t border-gray-100 pt-3">
               <Link
                 href={contactHref}
-                className="flex w-full items-center justify-center rounded-lg bg-[var(--tenant-primary)] px-4 py-3 text-base font-semibold text-white shadow-sm"
+                className="flex w-full items-center justify-center rounded-full bg-[var(--tenant-primary)] px-4 py-3 text-base font-semibold text-white shadow-sm"
               >
                 Contacto
               </Link>

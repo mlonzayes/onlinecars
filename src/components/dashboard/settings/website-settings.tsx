@@ -26,7 +26,7 @@ export function WebsiteSettings({ dealership, theme }: WebsiteSettingsProps) {
   const [savingDomain, setSavingDomain] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const appDomain = "motorflow.com.ar";
+  const appDomain = "motorflowapp.com";
 
   const handleColorChange = useCallback((value: string) => {
     setColorPrimary(value);

@@ -27,6 +27,9 @@ import { SectionTextFields } from "./section-text-fields";
 import { SectionConfigControls } from "./section-config-controls";
 import { MediaUploader } from "./media-uploader";
 import { GalleryGrid } from "./gallery-grid";
+import { BrandsSettings } from "@/components/dashboard/settings/brands-settings";
+import { ReviewsSettings, type ReviewData } from "@/components/dashboard/settings/reviews-settings";
+import type { DealershipTheme } from "@/types";
 
 type SectionMedia = TenantHomeBundleMedia & { sectionType: SectionType };
 
@@ -39,6 +42,15 @@ interface SectionEditorSheetProps {
   onMediaUploaded: (media: SectionMedia) => void;
   onMediaDeleted: (id: string) => void;
   onMediaReordered: (media: SectionMedia[]) => void;
+  // Data extra para paneles in-sheet específicos por tipo de sección:
+  //  - theme: el panel de marcas oficiales (section.type === "brands")
+  //  - reviews: el panel de moderación de opiniones (section.type === "reviews")
+  // Si la sección que se edita NO es de esos tipos, estos props se ignoran.
+  theme?: DealershipTheme | null;
+  // Callback para que el padre actualice su state de theme tras un save.
+  // Sin esto, reabrir el sheet leería el theme STALE del primer render del server.
+  onThemeChange?: (theme: DealershipTheme | null) => void;
+  reviews?: ReviewData[];
 }
 
 interface PatchBody {
@@ -57,12 +69,18 @@ export function SectionEditorSheet({
   onMediaUploaded,
   onMediaDeleted,
   onMediaReordered,
+  theme,
+  onThemeChange,
+  reviews,
 }: SectionEditorSheetProps) {
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [content, setContent] = useState("");
   const [config, setConfig] = useState<SectionConfigByType[SectionType] | null>(null);
   const [saving, setSaving] = useState(false);
+  // Estado de marcas seleccionadas — solo aplica cuando section.type === "brands".
+  // Se inicializa desde theme.selectedBrandIds al abrir el sheet.
+  const [selectedBrandIds, setSelectedBrandIds] = useState<string[]>([]);
 
   // Reset form when the section being edited changes.
   useEffect(() => {
@@ -71,7 +89,10 @@ export function SectionEditorSheet({
     setSubtitle(section.subtitle ?? "");
     setContent(section.content ?? "");
     setConfig(section.config);
-  }, [section]);
+    // Refrescamos las marcas seleccionadas también — relevante solo para la sección
+    // brands, pero leemos del theme siempre por simplicidad (es solo memoria).
+    setSelectedBrandIds(theme?.selectedBrandIds ?? []);
+  }, [section, theme]);
 
   if (!section) {
     return (
@@ -106,6 +127,7 @@ export function SectionEditorSheet({
 
     setSaving(true);
     try {
+      // 1. Guardar la metadata de la sección (título, subtítulo, config)
       const res = await fetch(`/api/concesionario/sections/${section.type}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -116,8 +138,28 @@ export function SectionEditorSheet({
         throw new Error(errBody?.error ?? "No se pudo guardar la sección");
       }
       const json = (await res.json()) as { data: TenantHomeBundleSection };
+
+      // 2. Si la sección es "brands", también persistimos las marcas oficiales
+      //    en theme.selectedBrandIds. Es una segunda request a un endpoint
+      //    distinto porque las marcas viven en theme, no en la sección.
+      if (section.type === "brands") {
+        const themeRes = await fetch("/api/concesionario/theme", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ selectedBrandIds }),
+        });
+        if (!themeRes.ok) {
+          throw new Error("Sección guardada pero no se pudieron guardar las marcas");
+        }
+        // Notificar al padre con el theme actualizado (la response del endpoint
+        // contiene el theme completo post-merge). Sin este paso, el theme prop
+        // queda stale y los checkboxes vuelven a aparecer destildados al reabrir.
+        const themeJson = (await themeRes.json()) as { data: { theme: DealershipTheme | null } };
+        onThemeChange?.(themeJson.data.theme);
+      }
+
       onSaved(json.data);
-      toast.success("Sección actualizada");
+      toast.success(section.type === "brands" ? "Sección y marcas actualizadas" : "Sección actualizada");
       onOpenChange(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al guardar");
@@ -222,6 +264,23 @@ export function SectionEditorSheet({
                   }
                 />
               </div>
+            </>
+          )}
+
+          {section.type === "brands" && (
+            <>
+              <Separator />
+              <BrandsSettings
+                selectedBrandIds={selectedBrandIds}
+                onChange={setSelectedBrandIds}
+              />
+            </>
+          )}
+
+          {section.type === "reviews" && (
+            <>
+              <Separator />
+              <ReviewsSettings initialReviews={reviews ?? []} />
             </>
           )}
         </div>

@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { QuotationStatusBadge } from "./quotation-status-badge";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { formatCurrency } from "@/lib/utils";
 import {
   FUEL_TYPE_LABELS,
@@ -135,6 +136,7 @@ export function QuotationDetailClient({
     "accept" | "reject" | "delete" | "extend" | null
   >(null);
   const [extendOpen, setExtendOpen] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [newValidUntil, setNewValidUntil] = useState(
     new Date(quotation.validUntil).toISOString().slice(0, 10)
   );
@@ -172,12 +174,6 @@ export function QuotationDetailClient({
   }
 
   async function handleDelete() {
-    if (
-      !confirm(
-        "¿Eliminar esta cotización? Solo se pueden eliminar las pendientes."
-      )
-    )
-      return;
     setPendingAction("delete");
     try {
       const res = await fetch(`/api/cotizaciones/${quotation.id}`, {
@@ -397,7 +393,7 @@ export function QuotationDetailClient({
                 <Button
                   variant="outline"
                   className="w-full justify-start text-red-600 hover:text-red-600"
-                  onClick={handleDelete}
+                  onClick={() => setConfirmDeleteOpen(true)}
                   disabled={pendingAction !== null}
                 >
                   {pendingAction === "delete" ? (
@@ -439,6 +435,16 @@ export function QuotationDetailClient({
           </Card>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title="Eliminar cotización"
+        description="Solo se pueden eliminar las cotizaciones pendientes. Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        destructive
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

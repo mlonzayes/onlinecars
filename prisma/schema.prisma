@@ -18,6 +18,13 @@ model Dealership {
   phone       String?
   email       String?
   whatsapp    String?
+  // Mensaje pre-cargado para el botón flotante de WhatsApp del sitio público.
+  // Null = usa el copy default ("Hola! Me gustaría consultar..."). Editable
+  // desde el admin solo si el plan habilita allowWhatsappFab.
+  whatsappMessage      String?
+  // Si true, muestra el FAB de WhatsApp en el sitio público. Requiere también
+  // que el plan habilite allowWhatsappFab — defense in depth.
+  whatsappFabEnabled   Boolean  @default(false)
   address     String?
   city        String?
   province    String?
@@ -25,6 +32,20 @@ model Dealership {
   theme       Json?    // Configuración de colores/branding
   active      Boolean  @default(true)
   plan        String   @default("base") // base | media | premium | enterprise
+  // Estado de la suscripción / acceso del dealership.
+  //   trial     → en período de prueba (trialEndsAt define cuándo termina)
+  //   active    → pagó y está vigente
+  //   expired   → trial venció sin convertir a paid
+  //   suspended → bloqueado manualmente por el admin (impago, fraude, etc)
+  // El dashboard layout bloquea el acceso si !== trial && !== active.
+  subscriptionStatus String   @default("trial") // trial | active | expired | suspended
+  // Cuándo termina el período de prueba. Null = sin trial (típico cuenta paid).
+  // El cron diario marca como "expired" los dealerships con trialEndsAt < now()
+  // y subscriptionStatus == "trial".
+  trialEndsAt        DateTime?
+  // Si true, users con role distinto de admin pueden ver el costo de compra
+  // de los vehículos. Default false — sólo admins ven costos.
+  showCostsToNonAdmins Boolean @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -129,6 +150,10 @@ model Vehicle {
   year         Int
   price        Decimal   @db.Decimal(12, 2)
   currency     String    @default("ARS") // ARS | USD
+  // Precio de costo (compra) — info sensible, gateada por role.
+  // Puede estar en moneda distinta a `price` (típico: compra USD, venta ARS).
+  costPrice    Decimal?  @db.Decimal(12, 2)
+  costCurrency String?   // ARS | USD
   kilometers   Int?
   fuelType     String?   // nafta | diesel | gnc | electrico | hibrido
   transmission String?   // manual | automatica
@@ -206,8 +231,29 @@ model WaitlistEntry {
   name       String?
   dealership String?  // Nombre del concesionario interesado
   phone      String?
+  // Estado del lead en el funnel de invitación.
+  //   pending  → solo se anotó al waitlist, todavía no aprobado
+  //   invited  → admin generó token, le mando link de registro
+  //   accepted → completó el sign-up + onboarding
+  //   rejected → admin lo descartó (no relevant / spam)
+  status     String   @default("pending") // pending | invited | accepted | rejected
+  // Token único para el link de registro. Único y opaco (UUID-ish).
+  // Se genera cuando el admin aprueba el lead.
+  inviteToken          String?  @unique
+  // Cuándo se generó el token. Para auditoría y para calcular expiración.
+  invitedAt            DateTime?
+  // Vencimiento del token (default: 7 días después de generarlo).
+  // Si pasó, el link de /registro?token=xxx rechaza.
+  inviteExpiresAt      DateTime?
+  // Cuándo se completó el onboarding con este invite (acceptedAt = consumed).
+  // El check de /registro lo usa para no permitir reusar el link.
+  acceptedAt           DateTime?
+  // Clerk userId del usuario que finalmente aceptó el invite.
+  // Para vincular waitlist ↔ usuario real.
+  clerkUserId          String?
   createdAt  DateTime @default(now())
 
+  @@index([status])
   @@map("waitlist_entries")
 }
 
@@ -441,7 +487,9 @@ model Quotation {
   purchasePaymentMethod  String? // cash | financed | mixed
 
   dealership Dealership @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
-  vehicle    Vehicle?   @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  // SetNull (igual que Lead.vehicle): borrar el vehículo NO destruye la cotización
+  // — queda como histórico con vehicleId=null. La UI ya maneja el caso "sin vehículo".
+  vehicle    Vehicle?   @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
   lead       Lead?      @relation(fields: [leadId], references: [id], onDelete: SetNull)
 
   @@unique([dealershipId, type, number])

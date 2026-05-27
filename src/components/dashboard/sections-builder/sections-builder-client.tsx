@@ -8,21 +8,34 @@ import type {
 } from "@/lib/tenant";
 import { SectionsList } from "./sections-list";
 import { SectionEditorSheet } from "./section-editor-sheet";
+import type { ReviewData } from "@/components/dashboard/settings/reviews-settings";
+import type { DealershipTheme } from "@/types";
 
 type SectionMedia = TenantHomeBundleMedia & { sectionType: SectionType };
 
 interface SectionsBuilderClientProps {
   initialSections: TenantHomeBundleSection[];
   initialMedia: SectionMedia[];
+  // Data extra pasada a los paneles in-sheet de las secciones brands/reviews.
+  // Se serializa desde el server en /dashboard/sitio-web/page.tsx.
+  theme: DealershipTheme | null;
+  reviews: ReviewData[];
 }
 
 export function SectionsBuilderClient({
   initialSections,
   initialMedia,
+  theme,
+  reviews,
 }: SectionsBuilderClientProps) {
   const [sections, setSections] = useState(initialSections);
   const [media, setMedia] = useState(initialMedia);
   const [editingType, setEditingType] = useState<SectionType | null>(null);
+  // Mantenemos el theme como STATE local (no solo prop). Cuando el sheet guarda
+  // cambios al theme (ej: selectedBrandIds desde el panel de marcas), llama a
+  // onThemeChange y acá lo actualizamos. Sin esto, reabrir el sheet leía el
+  // theme STALE del prop server-side y mostraba las marcas destildadas.
+  const [currentTheme, setCurrentTheme] = useState(theme);
 
   const editingSection = useMemo(
     () => sections.find((s) => s.type === editingType) ?? null,
@@ -85,6 +98,9 @@ export function SectionsBuilderClient({
         onMediaUploaded={handleMediaUploaded}
         onMediaDeleted={handleMediaDeleted}
         onMediaReordered={handleMediaReordered}
+        theme={currentTheme}
+        onThemeChange={setCurrentTheme}
+        reviews={reviews}
       />
     </>
   );

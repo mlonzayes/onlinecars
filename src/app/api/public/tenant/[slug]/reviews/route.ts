@@ -10,7 +10,7 @@ import { isHoneypotTriggered } from "@/lib/honeypot";
 type TenantParams = { slug: string };
 
 // POST /api/public/tenant/[slug]/reviews
-// Lo usa el sitio del concesionario ({slug}.motorflow.com.ar) cuando un visitante
+// Lo usa el sitio del concesionario ({slug}.motorflowapp.com) cuando un visitante
 // envía una opinión. Las reviews entran como `pending` y necesitan moderación
 // desde el dashboard antes de mostrarse.
 export const POST = withLogger<TenantParams>(async (request, { requestId, params }) => {

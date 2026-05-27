@@ -1,0 +1,481 @@
+brand,brand_slug,model,model_slug,version,version_slug,fuel,engine,full_name
+ARCFOX,arcfox,Alpha T5,alpha-t5,Comfort,comfort,Eléctrico,Eléctrico,ARCFOX Alpha T5 Comfort
+ARCFOX,arcfox,Alpha T5,alpha-t5,Premium,premium,Eléctrico,Eléctrico,ARCFOX Alpha T5 Premium
+Agrale,agrale,A10000,a10000,,,,,Agrale A10000
+Agrale,agrale,A8700,a8700,,,,,Agrale A8700
+Alfa Romeo,alfa-romeo,Tonale,tonale,1.5T Hybrid Sprint AT,1-5t-hybrid-sprint-at,Nafta Eléctrico,1.5 L,Alfa Romeo Tonale 1.5T Hybrid Sprint AT
+Alfa Romeo,alfa-romeo,Tonale,tonale,1.5T Hybrid Ti AT,1-5t-hybrid-ti-at,Nafta Eléctrico,1.5 L,Alfa Romeo Tonale 1.5T Hybrid Ti AT
+Alfa Romeo,alfa-romeo,Tonale,tonale,1.5T Hybrid Veloce AT,1-5t-hybrid-veloce-at,Nafta Eléctrico,1.5 L,Alfa Romeo Tonale 1.5T Hybrid Veloce AT
+Audi,audi,A1,a1,Sportback 35 TFSI S-Tronic,sportback-35-tfsi-s-tronic,Nafta,1.5 L,Audi A1 Sportback 35 TFSI S-Tronic
+Audi,audi,A1,a1,Sportback 35 TFSI S Line S-Tronic,sportback-35-tfsi-s-line-s-tronic,Nafta,1.5 L,Audi A1 Sportback 35 TFSI S Line S-Tronic
+Audi,audi,A3,a3,Sedán 35 TFSI S-Tronic,sedan-35-tfsi-s-tronic,Nafta,1.5 L,Audi A3 Sedán 35 TFSI S-Tronic
+Audi,audi,A3,a3,Sedán 35 TFSI S Line S-Tronic,sedan-35-tfsi-s-line-s-tronic,Nafta,1.5 L,Audi A3 Sedán 35 TFSI S Line S-Tronic
+Audi,audi,A5,a5,Coupé 45 TFSI quattro S-Tronic,coupe-45-tfsi-quattro-s-tronic,Nafta,2.0 L,Audi A5 Coupé 45 TFSI quattro S-Tronic
+Audi,audi,A5,a5,Sportback 45 TFSI quattro S-Tronic,sportback-45-tfsi-quattro-s-tronic,Nafta,2.0 L,Audi A5 Sportback 45 TFSI quattro S-Tronic
+Audi,audi,A6 Allroad,a6-allroad,55 TFSI quattro S-Tronic,55-tfsi-quattro-s-tronic,Nafta,3.0 L,Audi A6 Allroad 55 TFSI quattro S-Tronic
+Audi,audi,Q3,q3,35 TFSI S-Tronic,35-tfsi-s-tronic,Nafta,1.5 L,Audi Q3 35 TFSI S-Tronic
+Audi,audi,Q3,q3,Sportback 35 TFSI S-Tronic,sportback-35-tfsi-s-tronic,Nafta,1.5 L,Audi Q3 Sportback 35 TFSI S-Tronic
+Audi,audi,Q3,q3,40 TFSI quattro S-Tronic,40-tfsi-quattro-s-tronic,Nafta,2.0 L,Audi Q3 40 TFSI quattro S-Tronic
+Audi,audi,Q3,q3,Sportback 40 TFSI quattro S-Tronic,sportback-40-tfsi-quattro-s-tronic,Nafta,2.0 L,Audi Q3 Sportback 40 TFSI quattro S-Tronic
+Audi,audi,Q5,q5,45 TFSI quattro S-Tronic,45-tfsi-quattro-s-tronic,Nafta,2.0 L,Audi Q5 45 TFSI quattro S-Tronic
+Audi,audi,Q5,q5,Sportback 45 TFSI quattro S-Tronic,sportback-45-tfsi-quattro-s-tronic,Nafta,2.0 L,Audi Q5 Sportback 45 TFSI quattro S-Tronic
+Audi,audi,Q5,q5,SQ5 Sportback TFSI,sq5-sportback-tfsi,Nafta,3.0 L,Audi Q5 SQ5 Sportback TFSI
+Audi,audi,Q7,q7,55 TFSI quattro Tiptronic,55-tfsi-quattro-tiptronic,Nafta,3.0 L,Audi Q7 55 TFSI quattro Tiptronic
+Audi,audi,Q8,q8,55 TFSI quattro Tiptronic,55-tfsi-quattro-tiptronic,Nafta,3.0 L,Audi Q8 55 TFSI quattro Tiptronic
+Audi,audi,Q8,q8,RS Q8 TFSI quattro Tiptronic,rs-q8-tfsi-quattro-tiptronic,Nafta,4.0 L,Audi Q8 RS Q8 TFSI quattro Tiptronic
+Audi,audi,e-tron GT,e-tron-gt,RS e-tron GT quattro,rs-e-tron-gt-quattro,Eléctrico,Eléctrico,Audi e-tron GT RS e-tron GT quattro
+BAIC,baic,BJ40,bj40,2.0T Plus AT 4x4,2-0t-plus-at-4x4,Nafta,2.0 L,BAIC BJ40 2.0T Plus AT 4x4
+BAIC,baic,X55,x55,1.5T Comfort CVT,1-5t-comfort-cvt,Nafta,1.5 L,BAIC X55 1.5T Comfort CVT
+BAIC,baic,X55,x55,1.5T Elite CVT,1-5t-elite-cvt,Nafta,1.5 L,BAIC X55 1.5T Elite CVT
+BMW,bmw,Serie 1,serie-1,118i Sportline Steptronic,118i-sportline-steptronic,Nafta,1.5 L,BMW Serie 1 118i Sportline Steptronic
+BMW,bmw,Serie 1,serie-1,120i M Sport Steptronic,120i-m-sport-steptronic,Nafta,2.0 L,BMW Serie 1 120i M Sport Steptronic
+BMW,bmw,Serie 2 Active Tourer,serie-2-active-tourer,218i Active Tourer Steptronic,218i-active-tourer-steptronic,Nafta,1.5 L,BMW Serie 2 Active Tourer 218i Active Tourer Steptronic
+BMW,bmw,Serie 2 Gran Coupé,serie-2-gran-coupe,218i Gran Coupé Steptronic,218i-gran-coupe-steptronic,Nafta,1.5 L,BMW Serie 2 Gran Coupé 218i Gran Coupé Steptronic
+BMW,bmw,Serie 2 Gran Coupé,serie-2-gran-coupe,220i M Sport Gran Coupé Steptronic,220i-m-sport-gran-coupe-steptronic,Nafta,2.0 L,BMW Serie 2 Gran Coupé 220i M Sport Gran Coupé Steptronic
+BMW,bmw,Serie 3,serie-3,320i Steptronic,320i-steptronic,Nafta,2.0 L,BMW Serie 3 320i Steptronic
+BMW,bmw,Serie 3,serie-3,320i M Sport Steptronic,320i-m-sport-steptronic,Nafta,2.0 L,BMW Serie 3 320i M Sport Steptronic
+BMW,bmw,Serie 3,serie-3,330i M Sport Steptronic,330i-m-sport-steptronic,Nafta,2.0 L,BMW Serie 3 330i M Sport Steptronic
+BMW,bmw,Serie 4 Gran Coupé,serie-4-gran-coupe,420i Gran Coupé Steptronic,420i-gran-coupe-steptronic,Nafta,2.0 L,BMW Serie 4 Gran Coupé 420i Gran Coupé Steptronic
+BMW,bmw,Serie 5,serie-5,530i M Sport Steptronic,530i-m-sport-steptronic,Nafta,2.0 L,BMW Serie 5 530i M Sport Steptronic
+BMW,bmw,X1,x1,sDrive18i Steptronic,sdrive18i-steptronic,Nafta,1.5 L,BMW X1 sDrive18i Steptronic
+BMW,bmw,X1,x1,sDrive20i M Sport Steptronic,sdrive20i-m-sport-steptronic,Nafta,2.0 L,BMW X1 sDrive20i M Sport Steptronic
+BMW,bmw,X1,x1,xDrive20i M Sport Steptronic,xdrive20i-m-sport-steptronic,Nafta,2.0 L,BMW X1 xDrive20i M Sport Steptronic
+BMW,bmw,X2,x2,sDrive20i M Sport X Steptronic,sdrive20i-m-sport-x-steptronic,Nafta,2.0 L,BMW X2 sDrive20i M Sport X Steptronic
+BMW,bmw,X3,x3,xDrive20i Steptronic,xdrive20i-steptronic,Nafta,2.0 L,BMW X3 xDrive20i Steptronic
+BMW,bmw,X3,x3,xDrive30i M Sport Steptronic,xdrive30i-m-sport-steptronic,Nafta,2.0 L,BMW X3 xDrive30i M Sport Steptronic
+BMW,bmw,X3,x3,M40i xDrive Steptronic,m40i-xdrive-steptronic,Nafta,3.0 L,BMW X3 M40i xDrive Steptronic
+BMW,bmw,X5,x5,xDrive40i M Sport Steptronic,xdrive40i-m-sport-steptronic,Nafta,3.0 L,BMW X5 xDrive40i M Sport Steptronic
+BMW,bmw,X6,x6,xDrive40i M Sport Steptronic,xdrive40i-m-sport-steptronic,Nafta,3.0 L,BMW X6 xDrive40i M Sport Steptronic
+BMW,bmw,Z4,z4,sDrive20i M Sport Steptronic,sdrive20i-m-sport-steptronic,Nafta,2.0 L,BMW Z4 sDrive20i M Sport Steptronic
+BMW,bmw,iX1,ix1,xDrive30 M Sport,xdrive30-m-sport,Eléctrico,Eléctrico,BMW iX1 xDrive30 M Sport
+BYD,byd,Dolphin,dolphin,Comfort,comfort,Eléctrico,Eléctrico,BYD Dolphin Comfort
+BYD,byd,Dolphin,dolphin,Premium,premium,Eléctrico,Eléctrico,BYD Dolphin Premium
+BYD,byd,Dolphin Mini,dolphin-mini,Standard,standard,Eléctrico,Eléctrico,BYD Dolphin Mini Standard
+BYD,byd,King,king,GL DM-i,gl-dm-i,Nafta Eléctrico,1.5 L,BYD King GL DM-i
+BYD,byd,King,king,GS DM-i,gs-dm-i,Nafta Eléctrico,1.5 L,BYD King GS DM-i
+BYD,byd,Seal,seal,Design RWD,design-rwd,Eléctrico,Eléctrico,BYD Seal Design RWD
+BYD,byd,Seal,seal,Excellence AWD,excellence-awd,Eléctrico,Eléctrico,BYD Seal Excellence AWD
+BYD,byd,Seal U,seal-u,Comfort,comfort,Eléctrico,Eléctrico,BYD Seal U Comfort
+BYD,byd,Seal U,seal-u,Premium,premium,Eléctrico,Eléctrico,BYD Seal U Premium
+BYD,byd,Song Plus,song-plus,Champion GL,champion-gl,Eléctrico,Eléctrico,BYD Song Plus Champion GL
+BYD,byd,Song Plus,song-plus,Champion GS,champion-gs,Eléctrico,Eléctrico,BYD Song Plus Champion GS
+BYD,byd,Yuan Plus,yuan-plus,Comfort,comfort,Eléctrico,Eléctrico,BYD Yuan Plus Comfort
+BYD,byd,Yuan Plus,yuan-plus,Premium,premium,Eléctrico,Eléctrico,BYD Yuan Plus Premium
+Changan,changan,CS35 Plus,cs35-plus,1.4T Comfort DCT,1-4t-comfort-dct,Nafta,1.4 L,Changan CS35 Plus 1.4T Comfort DCT
+Changan,changan,CS35 Plus,cs35-plus,1.4T Luxury DCT,1-4t-luxury-dct,Nafta,1.4 L,Changan CS35 Plus 1.4T Luxury DCT
+Changan,changan,CS55 Plus,cs55-plus,1.5T Comfort DCT,1-5t-comfort-dct,Nafta,1.5 L,Changan CS55 Plus 1.5T Comfort DCT
+Changan,changan,CS55 Plus,cs55-plus,1.5T Luxury DCT,1-5t-luxury-dct,Nafta,1.5 L,Changan CS55 Plus 1.5T Luxury DCT
+Changan,changan,CS75 Plus,cs75-plus,1.5T Comfort DCT,1-5t-comfort-dct,Nafta,1.5 L,Changan CS75 Plus 1.5T Comfort DCT
+Changan,changan,CS75 Plus,cs75-plus,1.5T Luxury DCT,1-5t-luxury-dct,Nafta,1.5 L,Changan CS75 Plus 1.5T Luxury DCT
+Changan,changan,Hunter,hunter,1.9TD 4x2 Luxury AT,1-9td-4x2-luxury-at,Diesel,1.9 L,Changan Hunter 1.9TD 4x2 Luxury AT
+Changan,changan,Hunter,hunter,1.9TD 4x4 Luxury AT,1-9td-4x4-luxury-at,Diesel,1.9 L,Changan Hunter 1.9TD 4x4 Luxury AT
+Chery,chery,Tiggo 2 Pro,tiggo-2-pro,1.5 Comfort,1-5-comfort,Nafta,1.5 L,Chery Tiggo 2 Pro 1.5 Comfort
+Chery,chery,Tiggo 2 Pro,tiggo-2-pro,1.5 Luxury CVT,1-5-luxury-cvt,Nafta,1.5 L,Chery Tiggo 2 Pro 1.5 Luxury CVT
+Chery,chery,Tiggo 4 Pro,tiggo-4-pro,1.5T Comfort CVT,1-5t-comfort-cvt,Nafta,1.5 L,Chery Tiggo 4 Pro 1.5T Comfort CVT
+Chery,chery,Tiggo 4 Pro,tiggo-4-pro,1.5T Luxury CVT,1-5t-luxury-cvt,Nafta,1.5 L,Chery Tiggo 4 Pro 1.5T Luxury CVT
+Chery,chery,Tiggo 7 Pro,tiggo-7-pro,1.5T Comfort CVT,1-5t-comfort-cvt,Nafta,1.5 L,Chery Tiggo 7 Pro 1.5T Comfort CVT
+Chery,chery,Tiggo 7 Pro,tiggo-7-pro,1.5T Luxury CVT,1-5t-luxury-cvt,Nafta,1.5 L,Chery Tiggo 7 Pro 1.5T Luxury CVT
+Chery,chery,Tiggo 8 Pro,tiggo-8-pro,1.6T Comfort DCT,1-6t-comfort-dct,Nafta,1.6 L,Chery Tiggo 8 Pro 1.6T Comfort DCT
+Chery,chery,Tiggo 8 Pro,tiggo-8-pro,1.6T Luxury DCT,1-6t-luxury-dct,Nafta,1.6 L,Chery Tiggo 8 Pro 1.6T Luxury DCT
+Chery,chery,Tiggo 8 Pro,tiggo-8-pro,1.6T Luxury DCT 7 asientos,1-6t-luxury-dct-7-asientos,Nafta,1.6 L,Chery Tiggo 8 Pro 1.6T Luxury DCT 7 asientos
+Chevrolet,chevrolet,Bolt EUV,bolt-euv,Premier,premier,Eléctrico,Eléctrico,Chevrolet Bolt EUV Premier
+Chevrolet,chevrolet,Cruze,cruze,5P 1.4T LT AT,5p-1-4t-lt-at,Nafta,1.4 L,Chevrolet Cruze 5P 1.4T LT AT
+Chevrolet,chevrolet,Cruze,cruze,5P 1.4T LTZ AT,5p-1-4t-ltz-at,Nafta,1.4 L,Chevrolet Cruze 5P 1.4T LTZ AT
+Chevrolet,chevrolet,Cruze,cruze,5P 1.4T Premier AT,5p-1-4t-premier-at,Nafta,1.4 L,Chevrolet Cruze 5P 1.4T Premier AT
+Chevrolet,chevrolet,Cruze,cruze,4P 1.4T LT AT,4p-1-4t-lt-at,Nafta,1.4 L,Chevrolet Cruze 4P 1.4T LT AT
+Chevrolet,chevrolet,Cruze,cruze,4P 1.4T LTZ AT,4p-1-4t-ltz-at,Nafta,1.4 L,Chevrolet Cruze 4P 1.4T LTZ AT
+Chevrolet,chevrolet,Cruze,cruze,4P 1.4T Premier AT,4p-1-4t-premier-at,Nafta,1.4 L,Chevrolet Cruze 4P 1.4T Premier AT
+Chevrolet,chevrolet,Equinox,equinox,1.5T Premier AT AWD,1-5t-premier-at-awd,Nafta,1.5 L,Chevrolet Equinox 1.5T Premier AT AWD
+Chevrolet,chevrolet,Montana,montana,1.2T MT,1-2t-mt,Nafta,1.2 L,Chevrolet Montana 1.2T MT
+Chevrolet,chevrolet,Montana,montana,1.2T LTZ AT,1-2t-ltz-at,Nafta,1.2 L,Chevrolet Montana 1.2T LTZ AT
+Chevrolet,chevrolet,Montana,montana,1.2T Premier AT,1-2t-premier-at,Nafta,1.2 L,Chevrolet Montana 1.2T Premier AT
+Chevrolet,chevrolet,Onix,onix,1.2L MT,1-2l-mt,Nafta,1.2 L,Chevrolet Onix 1.2L MT
+Chevrolet,chevrolet,Onix,onix,1.2L LT MT,1-2l-lt-mt,Nafta,1.2 L,Chevrolet Onix 1.2L LT MT
+Chevrolet,chevrolet,Onix,onix,1.0T LT AT,1-0t-lt-at,Nafta,1.0 L,Chevrolet Onix 1.0T LT AT
+Chevrolet,chevrolet,Onix,onix,1.0T LTZ AT,1-0t-ltz-at,Nafta,1.0 L,Chevrolet Onix 1.0T LTZ AT
+Chevrolet,chevrolet,Onix,onix,1.0T Premier AT,1-0t-premier-at,Nafta,1.0 L,Chevrolet Onix 1.0T Premier AT
+Chevrolet,chevrolet,Onix Plus,onix-plus,1.2L MT,1-2l-mt,Nafta,1.2 L,Chevrolet Onix Plus 1.2L MT
+Chevrolet,chevrolet,Onix Plus,onix-plus,1.2L LT MT,1-2l-lt-mt,Nafta,1.2 L,Chevrolet Onix Plus 1.2L LT MT
+Chevrolet,chevrolet,Onix Plus,onix-plus,1.0T LTZ AT,1-0t-ltz-at,Nafta,1.0 L,Chevrolet Onix Plus 1.0T LTZ AT
+Chevrolet,chevrolet,Onix Plus,onix-plus,1.0T Premier AT,1-0t-premier-at,Nafta,1.0 L,Chevrolet Onix Plus 1.0T Premier AT
+Chevrolet,chevrolet,S10,s10,2.8TD 4x2 LS MT,2-8td-4x2-ls-mt,Diesel,2.8 L,Chevrolet S10 2.8TD 4x2 LS MT
+Chevrolet,chevrolet,S10,s10,2.8TD 4x2 LT AT,2-8td-4x2-lt-at,Diesel,2.8 L,Chevrolet S10 2.8TD 4x2 LT AT
+Chevrolet,chevrolet,S10,s10,2.8TD 4x4 LTZ AT,2-8td-4x4-ltz-at,Diesel,2.8 L,Chevrolet S10 2.8TD 4x4 LTZ AT
+Chevrolet,chevrolet,S10,s10,2.8TD 4x4 High Country AT,2-8td-4x4-high-country-at,Diesel,2.8 L,Chevrolet S10 2.8TD 4x4 High Country AT
+Chevrolet,chevrolet,Spin,spin,1.8L LT MT 5 asientos,1-8l-lt-mt-5-asientos,Nafta,1.8 L,Chevrolet Spin 1.8L LT MT 5 asientos
+Chevrolet,chevrolet,Spin,spin,1.8L LTZ AT 7 asientos,1-8l-ltz-at-7-asientos,Nafta,1.8 L,Chevrolet Spin 1.8L LTZ AT 7 asientos
+Chevrolet,chevrolet,Tracker,tracker,1.2T MT,1-2t-mt,Nafta,1.2 L,Chevrolet Tracker 1.2T MT
+Chevrolet,chevrolet,Tracker,tracker,1.2T LTZ AT,1-2t-ltz-at,Nafta,1.2 L,Chevrolet Tracker 1.2T LTZ AT
+Chevrolet,chevrolet,Tracker,tracker,1.2T Premier AT,1-2t-premier-at,Nafta,1.2 L,Chevrolet Tracker 1.2T Premier AT
+Chevrolet,chevrolet,Tracker,tracker,1.0T RS AT,1-0t-rs-at,Nafta,1.0 L,Chevrolet Tracker 1.0T RS AT
+Chevrolet,chevrolet,Trailblazer,trailblazer,2.8TD 4x4 LTZ AT,2-8td-4x4-ltz-at,Diesel,2.8 L,Chevrolet Trailblazer 2.8TD 4x4 LTZ AT
+Chevrolet,chevrolet,Trailblazer,trailblazer,2.8TD 4x4 Premier AT,2-8td-4x4-premier-at,Diesel,2.8 L,Chevrolet Trailblazer 2.8TD 4x4 Premier AT
+Citroën,citroen,Berlingo,berlingo,1.6 HDi Business,1-6-hdi-business,Diesel,1.6 L,Citroën Berlingo 1.6 HDi Business
+Citroën,citroen,C3,c3,1.0T Feel AT,1-0t-feel-at,Nafta,1.0 L,Citroën C3 1.0T Feel AT
+Citroën,citroen,C3,c3,1.0T Shine AT,1-0t-shine-at,Nafta,1.0 L,Citroën C3 1.0T Shine AT
+Citroën,citroen,C3 Aircross,c3-aircross,1.0T Feel AT,1-0t-feel-at,Nafta,1.0 L,Citroën C3 Aircross 1.0T Feel AT
+Citroën,citroen,C3 Aircross,c3-aircross,1.0T Shine AT,1-0t-shine-at,Nafta,1.0 L,Citroën C3 Aircross 1.0T Shine AT
+Citroën,citroen,C4 Cactus,c4-cactus,VTi 115 Feel MT,vti-115-feel-mt,Nafta,1.6 L,Citroën C4 Cactus VTi 115 Feel MT
+Citroën,citroen,C4 Cactus,c4-cactus,VTi 115 Feel AT,vti-115-feel-at,Nafta,1.6 L,Citroën C4 Cactus VTi 115 Feel AT
+Citroën,citroen,C4 Cactus,c4-cactus,THP 165 Shine AT,thp-165-shine-at,Nafta,1.6 L,Citroën C4 Cactus THP 165 Shine AT
+Citroën,citroen,C5 Aircross,c5-aircross,1.6T Shine AT,1-6t-shine-at,Nafta,1.6 L,Citroën C5 Aircross 1.6T Shine AT
+Citroën,citroen,C5 Aircross,c5-aircross,1.6T Shine AT Pack,1-6t-shine-at-pack,Nafta,1.6 L,Citroën C5 Aircross 1.6T Shine AT Pack
+DFSK,dfsk,C31,c31,1.5L Truck,1-5l-truck,Nafta,1.5 L,DFSK C31 1.5L Truck
+DFSK,dfsk,Glory 580,glory-580,1.5T Comfort CVT,1-5t-comfort-cvt,Nafta,1.5 L,DFSK Glory 580 1.5T Comfort CVT
+DFSK,dfsk,Glory 580,glory-580,1.5T Luxury CVT,1-5t-luxury-cvt,Nafta,1.5 L,DFSK Glory 580 1.5T Luxury CVT
+DFSK,dfsk,K01S,k01s,1.3L Truck,1-3l-truck,Nafta,1.3 L,DFSK K01S 1.3L Truck
+DS,ds,DS 3,ds-3,1.2T So Chic AT,1-2t-so-chic-at,Nafta,1.2 L,DS DS 3 1.2T So Chic AT
+DS,ds,DS 3,ds-3,1.2T Performance Line AT,1-2t-performance-line-at,Nafta,1.2 L,DS DS 3 1.2T Performance Line AT
+DS,ds,DS 3,ds-3,Hybrid E-Tense AT,hybrid-e-tense-at,Nafta Eléctrico,1.6 L,DS DS 3 Hybrid E-Tense AT
+DS,ds,DS 7,ds-7,1.6T So Chic AT,1-6t-so-chic-at,Nafta,1.6 L,DS DS 7 1.6T So Chic AT
+DS,ds,DS 7,ds-7,1.6T Performance Line AT,1-6t-performance-line-at,Nafta,1.6 L,DS DS 7 1.6T Performance Line AT
+FAW,faw,Bestune T77 Pro,bestune-t77-pro,1.5T Comfort AT,1-5t-comfort-at,Nafta,1.5 L,FAW Bestune T77 Pro 1.5T Comfort AT
+FAW,faw,Bestune T77 Pro,bestune-t77-pro,1.5T Premium AT,1-5t-premium-at,Nafta,1.5 L,FAW Bestune T77 Pro 1.5T Premium AT
+FIAT,fiat,Cronos,cronos,1.3L Drive GSE MT,1-3l-drive-gse-mt,Nafta,1.3 L,FIAT Cronos 1.3L Drive GSE MT
+FIAT,fiat,Cronos,cronos,1.3L Drive GSE CVT,1-3l-drive-gse-cvt,Nafta,1.3 L,FIAT Cronos 1.3L Drive GSE CVT
+FIAT,fiat,Cronos,cronos,1.0T Impetus CVT,1-0t-impetus-cvt,Nafta,1.0 L,FIAT Cronos 1.0T Impetus CVT
+FIAT,fiat,Ducato,ducato,2.2 TD Cargo,2-2-td-cargo,Diesel,2.2 L,FIAT Ducato 2.2 TD Cargo
+FIAT,fiat,Ducato,ducato,2.2 TD Combinato,2-2-td-combinato,Diesel,2.2 L,FIAT Ducato 2.2 TD Combinato
+FIAT,fiat,Fiorino,fiorino,1.4L EVO Furgón,1-4l-evo-furgon,Nafta,1.4 L,FIAT Fiorino 1.4L EVO Furgón
+FIAT,fiat,Fiorino,fiorino,1.4L EVO Furgón Pack Top,1-4l-evo-furgon-pack-top,Nafta,1.4 L,FIAT Fiorino 1.4L EVO Furgón Pack Top
+FIAT,fiat,Mobi,mobi,1.0L Like,1-0l-like,Nafta,1.0 L,FIAT Mobi 1.0L Like
+FIAT,fiat,Mobi,mobi,1.0L Trekking,1-0l-trekking,Nafta,1.0 L,FIAT Mobi 1.0L Trekking
+FIAT,fiat,Pulse,pulse,1.0T Drive CVT,1-0t-drive-cvt,Nafta,1.0 L,FIAT Pulse 1.0T Drive CVT
+FIAT,fiat,Pulse,pulse,1.0T Impetus CVT,1-0t-impetus-cvt,Nafta,1.0 L,FIAT Pulse 1.0T Impetus CVT
+FIAT,fiat,Pulse,pulse,1.0T Abarth CVT,1-0t-abarth-cvt,Nafta,1.0 L,FIAT Pulse 1.0T Abarth CVT
+FIAT,fiat,Tera,tera,1.3L Trend Base MT,1-3l-trend-base-mt,Nafta,1.3 L,FIAT Tera 1.3L Trend Base MT
+FIAT,fiat,Tera,tera,1.0T Trend CVT,1-0t-trend-cvt,Nafta,1.0 L,FIAT Tera 1.0T Trend CVT
+FIAT,fiat,Tera,tera,1.0T Impetus CVT,1-0t-impetus-cvt,Nafta,1.0 L,FIAT Tera 1.0T Impetus CVT
+FIAT,fiat,Titano,titano,2.2TD 4x2 Ranch AT,2-2td-4x2-ranch-at,Diesel,2.2 L,FIAT Titano 2.2TD 4x2 Ranch AT
+FIAT,fiat,Titano,titano,2.2TD 4x4 Ranch AT,2-2td-4x4-ranch-at,Diesel,2.2 L,FIAT Titano 2.2TD 4x4 Ranch AT
+FIAT,fiat,Titano,titano,2.2TD 4x4 Volcano AT,2-2td-4x4-volcano-at,Diesel,2.2 L,FIAT Titano 2.2TD 4x4 Volcano AT
+FIAT,fiat,Toro,toro,1.3T Freedom AT,1-3t-freedom-at,Nafta,1.3 L,FIAT Toro 1.3T Freedom AT
+FIAT,fiat,Toro,toro,2.0TD Volcano 4x4 AT,2-0td-volcano-4x4-at,Diesel,2.0 L,FIAT Toro 2.0TD Volcano 4x4 AT
+FIAT,fiat,Toro,toro,2.0TD Ranch 4x4 AT,2-0td-ranch-4x4-at,Diesel,2.0 L,FIAT Toro 2.0TD Ranch 4x4 AT
+Ford,ford,Bronco Sport,bronco-sport,1.5T Big Bend AT,1-5t-big-bend-at,Nafta,1.5 L,Ford Bronco Sport 1.5T Big Bend AT
+Ford,ford,Bronco Sport,bronco-sport,2.0T Wildtrak AT 4x4,2-0t-wildtrak-at-4x4,Nafta,2.0 L,Ford Bronco Sport 2.0T Wildtrak AT 4x4
+Ford,ford,EcoSport,ecosport,1.5L SE MT,1-5l-se-mt,Nafta,1.5 L,Ford EcoSport 1.5L SE MT
+Ford,ford,EcoSport,ecosport,1.5L Titanium AT,1-5l-titanium-at,Nafta,1.5 L,Ford EcoSport 1.5L Titanium AT
+Ford,ford,F-150,f-150,3.5T V6 Platinum AT 4x4,3-5t-v6-platinum-at-4x4,Nafta,3.5 L,Ford F-150 3.5T V6 Platinum AT 4x4
+Ford,ford,F-150,f-150,3.5T V6 Raptor AT 4x4,3-5t-v6-raptor-at-4x4,Nafta,3.5 L,Ford F-150 3.5T V6 Raptor AT 4x4
+Ford,ford,Ka,ka,1.5L SE MT,1-5l-se-mt,Nafta,1.5 L,Ford Ka 1.5L SE MT
+Ford,ford,Ka,ka,1.5L SEL AT,1-5l-sel-at,Nafta,1.5 L,Ford Ka 1.5L SEL AT
+Ford,ford,Maverick,maverick,2.0T Lariat AT AWD,2-0t-lariat-at-awd,Nafta,2.0 L,Ford Maverick 2.0T Lariat AT AWD
+Ford,ford,Mustang,mustang,5.0L V8 GT AT,5-0l-v8-gt-at,Nafta,5.0 L,Ford Mustang 5.0L V8 GT AT
+Ford,ford,Ranger,ranger,2.0TD 4x2 XL MT,2-0td-4x2-xl-mt,Diesel,2.0 L,Ford Ranger 2.0TD 4x2 XL MT
+Ford,ford,Ranger,ranger,2.0TD 4x2 XLS MT,2-0td-4x2-xls-mt,Diesel,2.0 L,Ford Ranger 2.0TD 4x2 XLS MT
+Ford,ford,Ranger,ranger,2.0TD 4x2 XLT AT,2-0td-4x2-xlt-at,Diesel,2.0 L,Ford Ranger 2.0TD 4x2 XLT AT
+Ford,ford,Ranger,ranger,2.0TD 4x4 XLT AT,2-0td-4x4-xlt-at,Diesel,2.0 L,Ford Ranger 2.0TD 4x4 XLT AT
+Ford,ford,Ranger,ranger,2.0TD 4x4 Limited AT,2-0td-4x4-limited-at,Diesel,2.0 L,Ford Ranger 2.0TD 4x4 Limited AT
+Ford,ford,Ranger,ranger,3.0TD V6 4x4 Wildtrak AT,3-0td-v6-4x4-wildtrak-at,Diesel,3.0 L,Ford Ranger 3.0TD V6 4x4 Wildtrak AT
+Ford,ford,Ranger,ranger,3.0TD V6 4x4 Raptor AT,3-0td-v6-4x4-raptor-at,Diesel,3.0 L,Ford Ranger 3.0TD V6 4x4 Raptor AT
+Ford,ford,Territory,territory,1.5T Trend AT,1-5t-trend-at,Nafta,1.5 L,Ford Territory 1.5T Trend AT
+Ford,ford,Territory,territory,1.5T Titanium AT,1-5t-titanium-at,Nafta,1.5 L,Ford Territory 1.5T Titanium AT
+Ford,ford,Transit,transit,2.2TD Furgón Medio MT,2-2td-furgon-medio-mt,Diesel,2.2 L,Ford Transit 2.2TD Furgón Medio MT
+Ford,ford,Transit,transit,2.2TD Furgón Largo MT,2-2td-furgon-largo-mt,Diesel,2.2 L,Ford Transit 2.2TD Furgón Largo MT
+Ford,ford,Transit,transit,2.2TD Minibus MT,2-2td-minibus-mt,Diesel,2.2 L,Ford Transit 2.2TD Minibus MT
+Foton,foton,Aumark TM1,aumark-tm1,2.8TD Chasis Simple,2-8td-chasis-simple,Diesel,2.8 L,Foton Aumark TM1 2.8TD Chasis Simple
+Foton,foton,Tunland V,tunland-v,2.0TD 4x2 Comfort MT,2-0td-4x2-comfort-mt,Diesel,2.0 L,Foton Tunland V 2.0TD 4x2 Comfort MT
+Foton,foton,Tunland V,tunland-v,2.0TD 4x4 Luxury AT,2-0td-4x4-luxury-at,Diesel,2.0 L,Foton Tunland V 2.0TD 4x4 Luxury AT
+GAC,gac,GS3,gs3,1.5T Comfort AT,1-5t-comfort-at,Nafta,1.5 L,GAC GS3 1.5T Comfort AT
+GAC,gac,GS3,gs3,1.5T Luxury AT,1-5t-luxury-at,Nafta,1.5 L,GAC GS3 1.5T Luxury AT
+GAC,gac,GS4,gs4,1.5T Comfort AT,1-5t-comfort-at,Nafta,1.5 L,GAC GS4 1.5T Comfort AT
+GAC,gac,GS4,gs4,1.5T Luxury AT,1-5t-luxury-at,Nafta,1.5 L,GAC GS4 1.5T Luxury AT
+GWM,gwm,Ora 03,ora-03,Skin,skin,Eléctrico,Eléctrico,GWM Ora 03 Skin
+GWM,gwm,Ora 03,ora-03,Pro,pro,Eléctrico,Eléctrico,GWM Ora 03 Pro
+Geely,geely,Coolray,coolray,1.5T Sport DCT,1-5t-sport-dct,Nafta,1.5 L,Geely Coolray 1.5T Sport DCT
+Geely,geely,Monjaro,monjaro,2.0T Flagship AT 4x4,2-0t-flagship-at-4x4,Nafta,2.0 L,Geely Monjaro 2.0T Flagship AT 4x4
+Geely,geely,Tugella,tugella,2.0T Luxury AT 4x4,2-0t-luxury-at-4x4,Nafta,2.0 L,Geely Tugella 2.0T Luxury AT 4x4
+Haval,haval,H6,h6,2.0T Comfort AT,2-0t-comfort-at,Nafta,2.0 L,Haval H6 2.0T Comfort AT
+Haval,haval,H6,h6,2.0T Premium AT,2-0t-premium-at,Nafta,2.0 L,Haval H6 2.0T Premium AT
+Haval,haval,H6,h6,2.0T Supreme AT,2-0t-supreme-at,Nafta,2.0 L,Haval H6 2.0T Supreme AT
+Haval,haval,Jolion,jolion,1.5T Comfort CVT,1-5t-comfort-cvt,Nafta,1.5 L,Haval Jolion 1.5T Comfort CVT
+Haval,haval,Jolion,jolion,1.5T Premium CVT,1-5t-premium-cvt,Nafta,1.5 L,Haval Jolion 1.5T Premium CVT
+Honda,honda,CR-V,cr-v,1.5T EXL CVT 4x4,1-5t-exl-cvt-4x4,Nafta,1.5 L,Honda CR-V 1.5T EXL CVT 4x4
+Honda,honda,City,city,1.5L EX CVT,1-5l-ex-cvt,Nafta,1.5 L,Honda City 1.5L EX CVT
+Honda,honda,City,city,1.5L EXL CVT,1-5l-exl-cvt,Nafta,1.5 L,Honda City 1.5L EXL CVT
+Honda,honda,HR-V,hr-v,1.5L EX CVT,1-5l-ex-cvt,Nafta,1.5 L,Honda HR-V 1.5L EX CVT
+Honda,honda,HR-V,hr-v,1.5L EXL CVT,1-5l-exl-cvt,Nafta,1.5 L,Honda HR-V 1.5L EXL CVT
+Honda,honda,WR-V,wr-v,1.5L EX CVT,1-5l-ex-cvt,Nafta,1.5 L,Honda WR-V 1.5L EX CVT
+Honda,honda,WR-V,wr-v,1.5L EXL CVT,1-5l-exl-cvt,Nafta,1.5 L,Honda WR-V 1.5L EXL CVT
+Honda,honda,ZR-V,zr-v,1.5T EXL CVT,1-5t-exl-cvt,Nafta,1.5 L,Honda ZR-V 1.5T EXL CVT
+Hyundai,hyundai,Creta,creta,1.6L Safety MT,1-6l-safety-mt,Nafta,1.6 L,Hyundai Creta 1.6L Safety MT
+Hyundai,hyundai,Creta,creta,1.6L Premium AT,1-6l-premium-at,Nafta,1.6 L,Hyundai Creta 1.6L Premium AT
+Hyundai,hyundai,Creta,creta,1.0T Limited AT,1-0t-limited-at,Nafta,1.0 L,Hyundai Creta 1.0T Limited AT
+Hyundai,hyundai,HB20,hb20,1.0L Sense MT,1-0l-sense-mt,Nafta,1.0 L,Hyundai HB20 1.0L Sense MT
+Hyundai,hyundai,HB20,hb20,1.0L Comfort MT,1-0l-comfort-mt,Nafta,1.0 L,Hyundai HB20 1.0L Comfort MT
+Hyundai,hyundai,HB20,hb20,1.0T Premium AT,1-0t-premium-at,Nafta,1.0 L,Hyundai HB20 1.0T Premium AT
+Hyundai,hyundai,HB20S,hb20s,1.0L Comfort MT,1-0l-comfort-mt,Nafta,1.0 L,Hyundai HB20S 1.0L Comfort MT
+Hyundai,hyundai,HB20S,hb20s,1.0T Premium AT,1-0t-premium-at,Nafta,1.0 L,Hyundai HB20S 1.0T Premium AT
+Hyundai,hyundai,Santa Fe,santa-fe,2.5L Premium AT AWD,2-5l-premium-at-awd,Nafta,2.5 L,Hyundai Santa Fe 2.5L Premium AT AWD
+Hyundai,hyundai,Tucson,tucson,1.6T GL AT,1-6t-gl-at,Nafta,1.6 L,Hyundai Tucson 1.6T GL AT
+Hyundai,hyundai,Tucson,tucson,1.6T Premium AT,1-6t-premium-at,Nafta,1.6 L,Hyundai Tucson 1.6T Premium AT
+Hyundai,hyundai,Tucson,tucson,1.6T Limited AT 4x4,1-6t-limited-at-4x4,Nafta,1.6 L,Hyundai Tucson 1.6T Limited AT 4x4
+Isuzu,isuzu,D-Max,d-max,1.9TD 4x2 LS MT,1-9td-4x2-ls-mt,Diesel,1.9 L,Isuzu D-Max 1.9TD 4x2 LS MT
+Isuzu,isuzu,D-Max,d-max,1.9TD 4x4 LS AT,1-9td-4x4-ls-at,Diesel,1.9 L,Isuzu D-Max 1.9TD 4x4 LS AT
+Isuzu,isuzu,D-Max,d-max,3.0TD 4x4 V-Cross AT,3-0td-4x4-v-cross-at,Diesel,3.0 L,Isuzu D-Max 3.0TD 4x4 V-Cross AT
+Iveco,iveco,Daily,daily,3.0TD Furgón 35S14,3-0td-furgon-35s14,Diesel,3.0 L,Iveco Daily 3.0TD Furgón 35S14
+Iveco,iveco,Daily,daily,3.0TD Chasis 70C17,3-0td-chasis-70c17,Diesel,3.0 L,Iveco Daily 3.0TD Chasis 70C17
+JAC,jac,JS2,js2,1.5L Comfort CVT,1-5l-comfort-cvt,Nafta,1.5 L,JAC JS2 1.5L Comfort CVT
+JAC,jac,JS2,js2,1.5L Luxury CVT,1-5l-luxury-cvt,Nafta,1.5 L,JAC JS2 1.5L Luxury CVT
+JAC,jac,JS3,js3,1.5T Comfort CVT,1-5t-comfort-cvt,Nafta,1.5 L,JAC JS3 1.5T Comfort CVT
+JAC,jac,JS3,js3,1.5T Luxury CVT,1-5t-luxury-cvt,Nafta,1.5 L,JAC JS3 1.5T Luxury CVT
+JAC,jac,T8 Pro,t8-pro,2.0TD 4x2 Luxury MT,2-0td-4x2-luxury-mt,Diesel,2.0 L,JAC T8 Pro 2.0TD 4x2 Luxury MT
+JAC,jac,T8 Pro,t8-pro,2.0TD 4x4 Luxury AT,2-0td-4x4-luxury-at,Diesel,2.0 L,JAC T8 Pro 2.0TD 4x4 Luxury AT
+JMC,jmc,Vigus Pro,vigus-pro,2.0TD 4x2 Luxury MT,2-0td-4x2-luxury-mt,Diesel,2.0 L,JMC Vigus Pro 2.0TD 4x2 Luxury MT
+JMC,jmc,Vigus Pro,vigus-pro,2.0TD 4x4 Luxury AT,2-0td-4x4-luxury-at,Diesel,2.0 L,JMC Vigus Pro 2.0TD 4x4 Luxury AT
+JMEV,jmev,EV3,ev3,Comfort,comfort,Eléctrico,Eléctrico,JMEV EV3 Comfort
+JMEV,jmev,EV3,ev3,Premium,premium,Eléctrico,Eléctrico,JMEV EV3 Premium
+Jaguar,jaguar,E-Pace,e-pace,2.0T S AT AWD,2-0t-s-at-awd,Nafta,2.0 L,Jaguar E-Pace 2.0T S AT AWD
+Jaguar,jaguar,F-Pace,f-pace,2.0T R-Dynamic S AT AWD,2-0t-r-dynamic-s-at-awd,Nafta,2.0 L,Jaguar F-Pace 2.0T R-Dynamic S AT AWD
+Jeep,jeep,Avenger,avenger,1.0T Longitude AT,1-0t-longitude-at,Nafta,1.0 L,Jeep Avenger 1.0T Longitude AT
+Jeep,jeep,Avenger,avenger,1.0T Limited AT,1-0t-limited-at,Nafta,1.0 L,Jeep Avenger 1.0T Limited AT
+Jeep,jeep,Commander,commander,2.0TD Limited AT 4x4,2-0td-limited-at-4x4,Diesel,2.0 L,Jeep Commander 2.0TD Limited AT 4x4
+Jeep,jeep,Commander,commander,2.0TD Overland AT 4x4,2-0td-overland-at-4x4,Diesel,2.0 L,Jeep Commander 2.0TD Overland AT 4x4
+Jeep,jeep,Compass,compass,1.3T Sport AT,1-3t-sport-at,Nafta,1.3 L,Jeep Compass 1.3T Sport AT
+Jeep,jeep,Compass,compass,1.3T Longitude AT,1-3t-longitude-at,Nafta,1.3 L,Jeep Compass 1.3T Longitude AT
+Jeep,jeep,Compass,compass,1.3T Limited AT 4x4,1-3t-limited-at-4x4,Nafta,1.3 L,Jeep Compass 1.3T Limited AT 4x4
+Jeep,jeep,Grand Cherokee,grand-cherokee,3.6L V6 Limited AT 4x4,3-6l-v6-limited-at-4x4,Nafta,3.6 L,Jeep Grand Cherokee 3.6L V6 Limited AT 4x4
+Jeep,jeep,Grand Cherokee,grand-cherokee,3.6L V6 Overland AT 4x4,3-6l-v6-overland-at-4x4,Nafta,3.6 L,Jeep Grand Cherokee 3.6L V6 Overland AT 4x4
+Jeep,jeep,Grand Cherokee,grand-cherokee,3.6L V6 Summit AT 4x4,3-6l-v6-summit-at-4x4,Nafta,3.6 L,Jeep Grand Cherokee 3.6L V6 Summit AT 4x4
+Jeep,jeep,Renegade,renegade,1.3T Sport AT,1-3t-sport-at,Nafta,1.3 L,Jeep Renegade 1.3T Sport AT
+Jeep,jeep,Renegade,renegade,1.3T Longitude AT,1-3t-longitude-at,Nafta,1.3 L,Jeep Renegade 1.3T Longitude AT
+Jeep,jeep,Renegade,renegade,1.3T Limited AT,1-3t-limited-at,Nafta,1.3 L,Jeep Renegade 1.3T Limited AT
+Jeep,jeep,Wrangler,wrangler,2.0T Rubicon AT 4x4,2-0t-rubicon-at-4x4,Nafta,2.0 L,Jeep Wrangler 2.0T Rubicon AT 4x4
+Jeep,jeep,Wrangler,wrangler,2.0T Sahara AT 4x4,2-0t-sahara-at-4x4,Nafta,2.0 L,Jeep Wrangler 2.0T Sahara AT 4x4
+Jetour,jetour,Dashing,dashing,1.5T Comfort DCT,1-5t-comfort-dct,Nafta,1.5 L,Jetour Dashing 1.5T Comfort DCT
+Jetour,jetour,Dashing,dashing,1.5T Luxury DCT,1-5t-luxury-dct,Nafta,1.5 L,Jetour Dashing 1.5T Luxury DCT
+Jetour,jetour,T2,t2,1.6T Comfort DCT,1-6t-comfort-dct,Nafta,1.6 L,Jetour T2 1.6T Comfort DCT
+Jetour,jetour,T2,t2,1.6T Luxury DCT,1-6t-luxury-dct,Nafta,1.6 L,Jetour T2 1.6T Luxury DCT
+Jetour,jetour,X70 Plus,x70-plus,1.5T Comfort DCT,1-5t-comfort-dct,Nafta,1.5 L,Jetour X70 Plus 1.5T Comfort DCT
+Jetour,jetour,X70 Plus,x70-plus,1.5T Luxury DCT,1-5t-luxury-dct,Nafta,1.5 L,Jetour X70 Plus 1.5T Luxury DCT
+KIA,kia,Carnival,carnival,2.2TD Premium AT,2-2td-premium-at,Diesel,2.2 L,KIA Carnival 2.2TD Premium AT
+KIA,kia,Cerato,cerato,2.0L EX AT,2-0l-ex-at,Nafta,2.0 L,KIA Cerato 2.0L EX AT
+KIA,kia,Cerato,cerato,2.0L EX+ AT,2-0l-ex-at,Nafta,2.0 L,KIA Cerato 2.0L EX+ AT
+KIA,kia,Seltos,seltos,1.6L EX AT,1-6l-ex-at,Nafta,1.6 L,KIA Seltos 1.6L EX AT
+KIA,kia,Seltos,seltos,1.6T GT-Line AT AWD,1-6t-gt-line-at-awd,Nafta,1.6 L,KIA Seltos 1.6T GT-Line AT AWD
+KIA,kia,Sorento,sorento,2.5L EX AT,2-5l-ex-at,Nafta,2.5 L,KIA Sorento 2.5L EX AT
+KIA,kia,Sorento,sorento,2.5T GT-Line AT AWD,2-5t-gt-line-at-awd,Nafta,2.5 L,KIA Sorento 2.5T GT-Line AT AWD
+KIA,kia,Sportage,sportage,1.6T EX AT,1-6t-ex-at,Nafta,1.6 L,KIA Sportage 1.6T EX AT
+KIA,kia,Sportage,sportage,1.6T GT-Line AT AWD,1-6t-gt-line-at-awd,Nafta,1.6 L,KIA Sportage 1.6T GT-Line AT AWD
+KIA,kia,Stonic,stonic,1.0T EX AT,1-0t-ex-at,Nafta,1.0 L,KIA Stonic 1.0T EX AT
+KYC,kyc,K2,k2,Comfort,comfort,Eléctrico,Eléctrico,KYC K2 Comfort
+Kaiyi,kaiyi,X3 Pro,x3-pro,1.5L Comfort CVT,1-5l-comfort-cvt,Nafta,1.5 L,Kaiyi X3 Pro 1.5L Comfort CVT
+Kaiyi,kaiyi,X3 Pro,x3-pro,1.5L Luxury CVT,1-5l-luxury-cvt,Nafta,1.5 L,Kaiyi X3 Pro 1.5L Luxury CVT
+Land Rover,land-rover,Defender,defender,2.0T P300 SE AT AWD,2-0t-p300-se-at-awd,Nafta,2.0 L,Land Rover Defender 2.0T P300 SE AT AWD
+Land Rover,land-rover,Defender,defender,3.0L P400 X AT AWD,3-0l-p400-x-at-awd,Nafta,3.0 L,Land Rover Defender 3.0L P400 X AT AWD
+Land Rover,land-rover,Discovery Sport,discovery-sport,2.0T P250 S AT AWD,2-0t-p250-s-at-awd,Nafta,2.0 L,Land Rover Discovery Sport 2.0T P250 S AT AWD
+Land Rover,land-rover,Discovery Sport,discovery-sport,2.0T P300 R-Dynamic SE AT AWD,2-0t-p300-r-dynamic-se-at-awd,Nafta,2.0 L,Land Rover Discovery Sport 2.0T P300 R-Dynamic SE AT AWD
+Land Rover,land-rover,Range Rover Evoque,range-rover-evoque,2.0T P250 SE AT AWD,2-0t-p250-se-at-awd,Nafta,2.0 L,Land Rover Range Rover Evoque 2.0T P250 SE AT AWD
+Land Rover,land-rover,Range Rover Evoque,range-rover-evoque,2.0T P300 R-Dynamic HSE AT AWD,2-0t-p300-r-dynamic-hse-at-awd,Nafta,2.0 L,Land Rover Range Rover Evoque 2.0T P300 R-Dynamic HSE AT AWD
+Land Rover,land-rover,Range Rover Sport,range-rover-sport,3.0L P400 Dynamic SE AT AWD,3-0l-p400-dynamic-se-at-awd,Nafta,3.0 L,Land Rover Range Rover Sport 3.0L P400 Dynamic SE AT AWD
+Land Rover,land-rover,Range Rover Velar,range-rover-velar,2.0T P250 R-Dynamic S AT AWD,2-0t-p250-r-dynamic-s-at-awd,Nafta,2.0 L,Land Rover Range Rover Velar 2.0T P250 R-Dynamic S AT AWD
+Lexus,lexus,NX,nx,350h AWD,350h-awd,Nafta Eléctrico,2.5 L,Lexus NX 350h AWD
+Lexus,lexus,RX,rx,350h AWD,350h-awd,Nafta Eléctrico,2.5 L,Lexus RX 350h AWD
+Lexus,lexus,RX,rx,500h F Sport AWD,500h-f-sport-awd,Nafta Eléctrico,2.4 L,Lexus RX 500h F Sport AWD
+MG,mg,HS,hs,1.5T Comfort AT,1-5t-comfort-at,Nafta,1.5 L,MG HS 1.5T Comfort AT
+MG,mg,HS,hs,1.5T Luxury AT,1-5t-luxury-at,Nafta,1.5 L,MG HS 1.5T Luxury AT
+MG,mg,MG3,mg3,1.5L Comfort CVT,1-5l-comfort-cvt,Nafta,1.5 L,MG MG3 1.5L Comfort CVT
+MG,mg,MG5,mg5,1.5T Comfort CVT,1-5t-comfort-cvt,Nafta,1.5 L,MG MG5 1.5T Comfort CVT
+MG,mg,MG5,mg5,1.5T Luxury CVT,1-5t-luxury-cvt,Nafta,1.5 L,MG MG5 1.5T Luxury CVT
+MG,mg,RX5,rx5,2.0T Luxury AT,2-0t-luxury-at,Nafta,2.0 L,MG RX5 2.0T Luxury AT
+MG,mg,ZS,zs,1.5L Comfort CVT,1-5l-comfort-cvt,Nafta,1.5 L,MG ZS 1.5L Comfort CVT
+MG,mg,ZS,zs,1.5L Luxury CVT,1-5l-luxury-cvt,Nafta,1.5 L,MG ZS 1.5L Luxury CVT
+MG,mg,ZS EV,zs-ev,Comfort,comfort,Eléctrico,Eléctrico,MG ZS EV Comfort
+MG,mg,ZS EV,zs-ev,Luxury,luxury,Eléctrico,Eléctrico,MG ZS EV Luxury
+MINI,mini,Cooper,cooper,1.5T Pepper AT,1-5t-pepper-at,Nafta,1.5 L,MINI Cooper 1.5T Pepper AT
+MINI,mini,Cooper,cooper,2.0T S Wired AT,2-0t-s-wired-at,Nafta,2.0 L,MINI Cooper 2.0T S Wired AT
+MINI,mini,Countryman,countryman,1.5T AT,1-5t-at,Nafta,1.5 L,MINI Countryman 1.5T AT
+MINI,mini,Countryman,countryman,2.0T S ALL4 AT,2-0t-s-all4-at,Nafta,2.0 L,MINI Countryman 2.0T S ALL4 AT
+Maserati,maserati,Grecale,grecale,2.0T GT AT,2-0t-gt-at,Nafta,2.0 L,Maserati Grecale 2.0T GT AT
+Maserati,maserati,Grecale,grecale,2.0T Modena AT,2-0t-modena-at,Nafta,2.0 L,Maserati Grecale 2.0T Modena AT
+Maxus,maxus,T60,t60,2.8TD 4x2 Luxury MT,2-8td-4x2-luxury-mt,Diesel,2.8 L,Maxus T60 2.8TD 4x2 Luxury MT
+Maxus,maxus,T60,t60,2.8TD 4x4 Luxury AT,2-8td-4x4-luxury-at,Diesel,2.8 L,Maxus T60 2.8TD 4x4 Luxury AT
+Maxus,maxus,eDeliver 3,edeliver-3,Cargo,cargo,Eléctrico,Eléctrico,Maxus eDeliver 3 Cargo
+Mercedes-Benz,mercedes,Clase A,clase-a,A 200 Progressive,a-200-progressive,Nafta,1.3 L,Mercedes-Benz Clase A A 200 Progressive
+Mercedes-Benz,mercedes,Clase A,clase-a,A 200 AMG-Line,a-200-amg-line,Nafta,1.3 L,Mercedes-Benz Clase A A 200 AMG-Line
+Mercedes-Benz,mercedes,Clase A,clase-a,A 250 AMG-Line 4Matic,a-250-amg-line-4matic,Nafta,2.0 L,Mercedes-Benz Clase A A 250 AMG-Line 4Matic
+Mercedes-Benz,mercedes,Clase A,clase-a,AMG A 35 4Matic,amg-a-35-4matic,Nafta,2.0 L,Mercedes-Benz Clase A AMG A 35 4Matic
+Mercedes-Benz,mercedes,Clase C,clase-c,C 200 Avantgarde,c-200-avantgarde,Nafta,1.5 L,Mercedes-Benz Clase C C 200 Avantgarde
+Mercedes-Benz,mercedes,Clase C,clase-c,C 300 AMG-Line,c-300-amg-line,Nafta,2.0 L,Mercedes-Benz Clase C C 300 AMG-Line
+Mercedes-Benz,mercedes,Clase C,clase-c,AMG C 43 4Matic,amg-c-43-4matic,Nafta,2.0 L,Mercedes-Benz Clase C AMG C 43 4Matic
+Mercedes-Benz,mercedes,Clase GLA,clase-gla,GLA 200 Progressive,gla-200-progressive,Nafta,1.3 L,Mercedes-Benz Clase GLA GLA 200 Progressive
+Mercedes-Benz,mercedes,Clase GLA,clase-gla,GLA 250 AMG-Line 4Matic,gla-250-amg-line-4matic,Nafta,2.0 L,Mercedes-Benz Clase GLA GLA 250 AMG-Line 4Matic
+Mercedes-Benz,mercedes,Clase GLA,clase-gla,AMG GLA 35 4Matic,amg-gla-35-4matic,Nafta,2.0 L,Mercedes-Benz Clase GLA AMG GLA 35 4Matic
+Mercedes-Benz,mercedes,Clase GLB,clase-glb,GLB 200 Progressive,glb-200-progressive,Nafta,1.3 L,Mercedes-Benz Clase GLB GLB 200 Progressive
+Mercedes-Benz,mercedes,Clase GLB,clase-glb,GLB 250 AMG-Line 4Matic,glb-250-amg-line-4matic,Nafta,2.0 L,Mercedes-Benz Clase GLB GLB 250 AMG-Line 4Matic
+Mercedes-Benz,mercedes,Clase GLB,clase-glb,AMG GLB 35 4Matic,amg-glb-35-4matic,Nafta,2.0 L,Mercedes-Benz Clase GLB AMG GLB 35 4Matic
+Mercedes-Benz,mercedes,Clase GLC,clase-glc,GLC 300 4Matic AMG-Line,glc-300-4matic-amg-line,Nafta,2.0 L,Mercedes-Benz Clase GLC GLC 300 4Matic AMG-Line
+Mercedes-Benz,mercedes,Clase GLC,clase-glc,GLC 300 4Matic AMG-Line Coupé,glc-300-4matic-amg-line-coupe,Nafta,2.0 L,Mercedes-Benz Clase GLC GLC 300 4Matic AMG-Line Coupé
+Mercedes-Benz,mercedes,Clase GLC,clase-glc,AMG GLC 43 4Matic,amg-glc-43-4matic,Nafta,2.0 L,Mercedes-Benz Clase GLC AMG GLC 43 4Matic
+Mercedes-Benz,mercedes,Clase GLE,clase-gle,GLE 450 4Matic AMG-Line,gle-450-4matic-amg-line,Nafta,3.0 L,Mercedes-Benz Clase GLE GLE 450 4Matic AMG-Line
+Mercedes-Benz,mercedes,Clase GLE,clase-gle,GLE 450 4Matic AMG-Line Coupé,gle-450-4matic-amg-line-coupe,Nafta,3.0 L,Mercedes-Benz Clase GLE GLE 450 4Matic AMG-Line Coupé
+Mercedes-Benz,mercedes,Clase GLE,clase-gle,AMG GLE 53 4Matic+,amg-gle-53-4matic,Nafta,3.0 L,Mercedes-Benz Clase GLE AMG GLE 53 4Matic+
+Mercedes-Benz,mercedes,Sprinter,sprinter,2.1TD Furgón 415 MT,2-1td-furgon-415-mt,Diesel,2.1 L,Mercedes-Benz Sprinter 2.1TD Furgón 415 MT
+Mercedes-Benz,mercedes,Sprinter,sprinter,2.1TD Combi 415 MT,2-1td-combi-415-mt,Diesel,2.1 L,Mercedes-Benz Sprinter 2.1TD Combi 415 MT
+Mercedes-Benz,mercedes,Vito,vito,1.6TD Furgón V1 MT,1-6td-furgon-v1-mt,Diesel,1.6 L,Mercedes-Benz Vito 1.6TD Furgón V1 MT
+Mercedes-Benz,mercedes,Vito,vito,2.0TD Tourer V2 AT,2-0td-tourer-v2-at,Diesel,2.0 L,Mercedes-Benz Vito 2.0TD Tourer V2 AT
+Mitsubishi,mitsubishi,L200,l200,2.4TD 4x2 GL MT,2-4td-4x2-gl-mt,Diesel,2.4 L,Mitsubishi L200 2.4TD 4x2 GL MT
+Mitsubishi,mitsubishi,L200,l200,2.4TD 4x4 GLS AT,2-4td-4x4-gls-at,Diesel,2.4 L,Mitsubishi L200 2.4TD 4x4 GLS AT
+Mitsubishi,mitsubishi,L200,l200,2.4TD 4x4 HPE AT,2-4td-4x4-hpe-at,Diesel,2.4 L,Mitsubishi L200 2.4TD 4x4 HPE AT
+Mitsubishi,mitsubishi,Outlander,outlander,2.5L CVT 4x2,2-5l-cvt-4x2,Nafta,2.5 L,Mitsubishi Outlander 2.5L CVT 4x2
+Mitsubishi,mitsubishi,Outlander,outlander,2.5L CVT 4x4,2-5l-cvt-4x4,Nafta,2.5 L,Mitsubishi Outlander 2.5L CVT 4x4
+Nissan,nissan,Frontier,frontier,2.3TD 4x2 S MT,2-3td-4x2-s-mt,Diesel,2.3 L,Nissan Frontier 2.3TD 4x2 S MT
+Nissan,nissan,Frontier,frontier,2.3TD 4x2 SE AT,2-3td-4x2-se-at,Diesel,2.3 L,Nissan Frontier 2.3TD 4x2 SE AT
+Nissan,nissan,Frontier,frontier,2.3TD 4x4 SE AT,2-3td-4x4-se-at,Diesel,2.3 L,Nissan Frontier 2.3TD 4x4 SE AT
+Nissan,nissan,Frontier,frontier,2.3TD 4x4 Platinum AT,2-3td-4x4-platinum-at,Diesel,2.3 L,Nissan Frontier 2.3TD 4x4 Platinum AT
+Nissan,nissan,Frontier,frontier,2.3TD 4x4 X-Gear AT,2-3td-4x4-x-gear-at,Diesel,2.3 L,Nissan Frontier 2.3TD 4x4 X-Gear AT
+Nissan,nissan,Kicks,kicks,1.6L Sense MT,1-6l-sense-mt,Nafta,1.6 L,Nissan Kicks 1.6L Sense MT
+Nissan,nissan,Kicks,kicks,1.6L Advance CVT,1-6l-advance-cvt,Nafta,1.6 L,Nissan Kicks 1.6L Advance CVT
+Nissan,nissan,Kicks,kicks,1.6L Exclusive CVT,1-6l-exclusive-cvt,Nafta,1.6 L,Nissan Kicks 1.6L Exclusive CVT
+Nissan,nissan,Versa,versa,1.6L Sense MT,1-6l-sense-mt,Nafta,1.6 L,Nissan Versa 1.6L Sense MT
+Nissan,nissan,Versa,versa,1.6L Advance CVT,1-6l-advance-cvt,Nafta,1.6 L,Nissan Versa 1.6L Advance CVT
+Nissan,nissan,Versa,versa,1.6L Exclusive CVT,1-6l-exclusive-cvt,Nafta,1.6 L,Nissan Versa 1.6L Exclusive CVT
+Nissan,nissan,X-Trail,x-trail,2.5L Sense CVT,2-5l-sense-cvt,Nafta,2.5 L,Nissan X-Trail 2.5L Sense CVT
+Nissan,nissan,X-Trail,x-trail,2.5L Advance CVT,2-5l-advance-cvt,Nafta,2.5 L,Nissan X-Trail 2.5L Advance CVT
+Nissan,nissan,X-Trail,x-trail,2.5L Exclusive CVT 4x4,2-5l-exclusive-cvt-4x4,Nafta,2.5 L,Nissan X-Trail 2.5L Exclusive CVT 4x4
+Peugeot,peugeot,2008,2008,1.6L Active MT,1-6l-active-mt,Nafta,1.6 L,Peugeot 2008 1.6L Active MT
+Peugeot,peugeot,2008,2008,1.0T Allure AT,1-0t-allure-at,Nafta,1.0 L,Peugeot 2008 1.0T Allure AT
+Peugeot,peugeot,2008,2008,1.0T GT AT,1-0t-gt-at,Nafta,1.0 L,Peugeot 2008 1.0T GT AT
+Peugeot,peugeot,208,208,1.6L Like MT,1-6l-like-mt,Nafta,1.6 L,Peugeot 208 1.6L Like MT
+Peugeot,peugeot,208,208,1.6L Active MT,1-6l-active-mt,Nafta,1.6 L,Peugeot 208 1.6L Active MT
+Peugeot,peugeot,208,208,1.0T Allure AT,1-0t-allure-at,Nafta,1.0 L,Peugeot 208 1.0T Allure AT
+Peugeot,peugeot,208,208,1.0T GT AT,1-0t-gt-at,Nafta,1.0 L,Peugeot 208 1.0T GT AT
+Peugeot,peugeot,3008,3008,1.6T Allure AT,1-6t-allure-at,Nafta,1.6 L,Peugeot 3008 1.6T Allure AT
+Peugeot,peugeot,3008,3008,1.6T GT AT,1-6t-gt-at,Nafta,1.6 L,Peugeot 3008 1.6T GT AT
+Peugeot,peugeot,408,408,1.6T Allure AT,1-6t-allure-at,Nafta,1.6 L,Peugeot 408 1.6T Allure AT
+Peugeot,peugeot,408,408,1.6T GT AT,1-6t-gt-at,Nafta,1.6 L,Peugeot 408 1.6T GT AT
+Peugeot,peugeot,5008,5008,1.6T Allure AT,1-6t-allure-at,Nafta,1.6 L,Peugeot 5008 1.6T Allure AT
+Peugeot,peugeot,5008,5008,1.6T GT AT,1-6t-gt-at,Nafta,1.6 L,Peugeot 5008 1.6T GT AT
+Peugeot,peugeot,Expert,expert,1.6 HDi Business,1-6-hdi-business,Diesel,1.6 L,Peugeot Expert 1.6 HDi Business
+Peugeot,peugeot,Partner,partner,1.6 HDi Business,1-6-hdi-business,Diesel,1.6 L,Peugeot Partner 1.6 HDi Business
+Peugeot,peugeot,Partner,partner,1.6 HDi Pack,1-6-hdi-pack,Diesel,1.6 L,Peugeot Partner 1.6 HDi Pack
+Porsche,porsche,911,911,Carrera S PDK,carrera-s-pdk,Nafta,3.0 L,Porsche 911 Carrera S PDK
+Porsche,porsche,911,911,Turbo S PDK,turbo-s-pdk,Nafta,3.8 L,Porsche 911 Turbo S PDK
+Porsche,porsche,Cayenne,cayenne,3.0T AT,3-0t-at,Nafta,3.0 L,Porsche Cayenne 3.0T AT
+Porsche,porsche,Cayenne,cayenne,E-Hybrid AT,e-hybrid-at,Nafta Eléctrico,3.0 L,Porsche Cayenne E-Hybrid AT
+Porsche,porsche,Macan,macan,2.0T AT,2-0t-at,Nafta,2.0 L,Porsche Macan 2.0T AT
+Porsche,porsche,Macan,macan,T 2.9T AT,t-2-9t-at,Nafta,2.9 L,Porsche Macan T 2.9T AT
+Porsche,porsche,Macan,macan,GTS 2.9T AT,gts-2-9t-at,Nafta,2.9 L,Porsche Macan GTS 2.9T AT
+RAM,ram,1200,1200,1.3L Bighorn AT,1-3l-bighorn-at,Nafta,1.3 L,RAM 1200 1.3L Bighorn AT
+RAM,ram,1200,1200,1.3L Laramie AT,1-3l-laramie-at,Nafta,1.3 L,RAM 1200 1.3L Laramie AT
+RAM,ram,1500,1500,5.7L V8 Laramie AT 4x4,5-7l-v8-laramie-at-4x4,Nafta,5.7 L,RAM 1500 5.7L V8 Laramie AT 4x4
+RAM,ram,1500,1500,5.7L V8 Limited AT 4x4,5-7l-v8-limited-at-4x4,Nafta,5.7 L,RAM 1500 5.7L V8 Limited AT 4x4
+RAM,ram,Rampage,rampage,2.0TD Rebel AT 4x4,2-0td-rebel-at-4x4,Diesel,2.0 L,RAM Rampage 2.0TD Rebel AT 4x4
+RAM,ram,Rampage,rampage,2.0TD Laramie AT 4x4,2-0td-laramie-at-4x4,Diesel,2.0 L,RAM Rampage 2.0TD Laramie AT 4x4
+Renault,renault,Alaskan,alaskan,2.3TD 4x2 Confort MT,2-3td-4x2-confort-mt,Diesel,2.3 L,Renault Alaskan 2.3TD 4x2 Confort MT
+Renault,renault,Alaskan,alaskan,2.3TD 4x4 Iconic AT,2-3td-4x4-iconic-at,Diesel,2.3 L,Renault Alaskan 2.3TD 4x4 Iconic AT
+Renault,renault,Arkana,arkana,1.3T Zen CVT,1-3t-zen-cvt,Nafta,1.3 L,Renault Arkana 1.3T Zen CVT
+Renault,renault,Arkana,arkana,1.3T Intens CVT,1-3t-intens-cvt,Nafta,1.3 L,Renault Arkana 1.3T Intens CVT
+Renault,renault,Arkana,arkana,1.3T Iconic CVT,1-3t-iconic-cvt,Nafta,1.3 L,Renault Arkana 1.3T Iconic CVT
+Renault,renault,Duster,duster,1.6L Zen MT,1-6l-zen-mt,Nafta,1.6 L,Renault Duster 1.6L Zen MT
+Renault,renault,Duster,duster,1.3T Intens CVT,1-3t-intens-cvt,Nafta,1.3 L,Renault Duster 1.3T Intens CVT
+Renault,renault,Duster,duster,1.3T Iconic CVT 4x4,1-3t-iconic-cvt-4x4,Nafta,1.3 L,Renault Duster 1.3T Iconic CVT 4x4
+Renault,renault,Kangoo,kangoo,1.6L Confort 1PLC,1-6l-confort-1plc,Nafta,1.6 L,Renault Kangoo 1.6L Confort 1PLC
+Renault,renault,Kangoo,kangoo,1.6L Confort 2PLC,1-6l-confort-2plc,Nafta,1.6 L,Renault Kangoo 1.6L Confort 2PLC
+Renault,renault,Kangoo,kangoo,1.5TD Confort 1PLC,1-5td-confort-1plc,Diesel,1.5 L,Renault Kangoo 1.5TD Confort 1PLC
+Renault,renault,Kardian,kardian,1.0T Zen CVT,1-0t-zen-cvt,Nafta,1.0 L,Renault Kardian 1.0T Zen CVT
+Renault,renault,Kardian,kardian,1.0T Intens CVT,1-0t-intens-cvt,Nafta,1.0 L,Renault Kardian 1.0T Intens CVT
+Renault,renault,Kardian,kardian,1.0T Iconic CVT,1-0t-iconic-cvt,Nafta,1.0 L,Renault Kardian 1.0T Iconic CVT
+Renault,renault,Koleos,koleos,2.5L Intens CVT 4x4,2-5l-intens-cvt-4x4,Nafta,2.5 L,Renault Koleos 2.5L Intens CVT 4x4
+Renault,renault,Kwid,kwid,1.0L Zen MT,1-0l-zen-mt,Nafta,1.0 L,Renault Kwid 1.0L Zen MT
+Renault,renault,Kwid,kwid,1.0L Intens MT,1-0l-intens-mt,Nafta,1.0 L,Renault Kwid 1.0L Intens MT
+Renault,renault,Kwid,kwid,E-Tech Intens,e-tech-intens,Eléctrico,Eléctrico,Renault Kwid E-Tech Intens
+Renault,renault,Logan,logan,1.6L Life MT,1-6l-life-mt,Nafta,1.6 L,Renault Logan 1.6L Life MT
+Renault,renault,Logan,logan,1.6L Zen MT,1-6l-zen-mt,Nafta,1.6 L,Renault Logan 1.6L Zen MT
+Renault,renault,Logan,logan,1.0T Intens CVT,1-0t-intens-cvt,Nafta,1.0 L,Renault Logan 1.0T Intens CVT
+Renault,renault,Master,master,2.3TD Furgón L1H1 MT,2-3td-furgon-l1h1-mt,Diesel,2.3 L,Renault Master 2.3TD Furgón L1H1 MT
+Renault,renault,Master,master,2.3TD Furgón L2H2 MT,2-3td-furgon-l2h2-mt,Diesel,2.3 L,Renault Master 2.3TD Furgón L2H2 MT
+Renault,renault,Master,master,2.3TD Minibus MT,2-3td-minibus-mt,Diesel,2.3 L,Renault Master 2.3TD Minibus MT
+Renault,renault,Sandero,sandero,1.6L Life MT,1-6l-life-mt,Nafta,1.6 L,Renault Sandero 1.6L Life MT
+Renault,renault,Sandero,sandero,1.0T Zen CVT,1-0t-zen-cvt,Nafta,1.0 L,Renault Sandero 1.0T Zen CVT
+Renault,renault,Sandero,sandero,1.0T Intens CVT,1-0t-intens-cvt,Nafta,1.0 L,Renault Sandero 1.0T Intens CVT
+Renault,renault,Stepway,stepway,1.6L Zen MT,1-6l-zen-mt,Nafta,1.6 L,Renault Stepway 1.6L Zen MT
+Renault,renault,Stepway,stepway,1.0T Intens CVT,1-0t-intens-cvt,Nafta,1.0 L,Renault Stepway 1.0T Intens CVT
+Renault,renault,Stepway,stepway,1.0T Iconic CVT,1-0t-iconic-cvt,Nafta,1.0 L,Renault Stepway 1.0T Iconic CVT
+SWM,swm,G01F,g01f,1.5T Comfort AT,1-5t-comfort-at,Nafta,1.5 L,SWM G01F 1.5T Comfort AT
+SWM,swm,G01F,g01f,1.5T Luxury AT,1-5t-luxury-at,Nafta,1.5 L,SWM G01F 1.5T Luxury AT
+Sero Electric,sero-electric,Cargo,cargo,Furgón,furgon,Eléctrico,Eléctrico,Sero Electric Cargo Furgón
+Sero Electric,sero-electric,Sedán,sedan,Standard,standard,Eléctrico,Eléctrico,Sero Electric Sedán Standard
+Shineray,shineray,T30,t30,1.5L Comfort MT,1-5l-comfort-mt,Nafta,1.5 L,Shineray T30 1.5L Comfort MT
+SsangYong,ssangyong,Korando,korando,1.5T AT 4x2,1-5t-at-4x2,Nafta,1.5 L,SsangYong Korando 1.5T AT 4x2
+SsangYong,ssangyong,Korando,korando,1.5T AT 4x4,1-5t-at-4x4,Nafta,1.5 L,SsangYong Korando 1.5T AT 4x4
+SsangYong,ssangyong,Musso,musso,2.2TD Grand 4x4 AT,2-2td-grand-4x4-at,Diesel,2.2 L,SsangYong Musso 2.2TD Grand 4x4 AT
+SsangYong,ssangyong,Rexton,rexton,2.2TD 4x4 AT,2-2td-4x4-at,Diesel,2.2 L,SsangYong Rexton 2.2TD 4x4 AT
+SsangYong,ssangyong,Torres,torres,1.5T AT,1-5t-at,Nafta,1.5 L,SsangYong Torres 1.5T AT
+Subaru,subaru,Crosstrek,crosstrek,2.0L AWD CVT,2-0l-awd-cvt,Nafta,2.0 L,Subaru Crosstrek 2.0L AWD CVT
+Subaru,subaru,Forester,forester,2.5L AWD CVT,2-5l-awd-cvt,Nafta,2.5 L,Subaru Forester 2.5L AWD CVT
+Subaru,subaru,Impreza,impreza,2.0L AWD CVT,2-0l-awd-cvt,Nafta,2.0 L,Subaru Impreza 2.0L AWD CVT
+Subaru,subaru,Outback,outback,2.5L AWD CVT,2-5l-awd-cvt,Nafta,2.5 L,Subaru Outback 2.5L AWD CVT
+Subaru,subaru,WRX,wrx,2.4T AWD GT CVT,2-4t-awd-gt-cvt,Nafta,2.4 L,Subaru WRX 2.4T AWD GT CVT
+Suzuki,suzuki,Fronx,fronx,1.0T GL AT,1-0t-gl-at,Nafta,1.0 L,Suzuki Fronx 1.0T GL AT
+Suzuki,suzuki,Fronx,fronx,1.0T GLX AT,1-0t-glx-at,Nafta,1.0 L,Suzuki Fronx 1.0T GLX AT
+Suzuki,suzuki,Grand Vitara,grand-vitara,1.5T GL AT,1-5t-gl-at,Nafta,1.5 L,Suzuki Grand Vitara 1.5T GL AT
+Suzuki,suzuki,Grand Vitara,grand-vitara,1.5T GLX AT 4x4,1-5t-glx-at-4x4,Nafta,1.5 L,Suzuki Grand Vitara 1.5T GLX AT 4x4
+Suzuki,suzuki,Jimny,jimny,1.5L GL MT 4x4,1-5l-gl-mt-4x4,Nafta,1.5 L,Suzuki Jimny 1.5L GL MT 4x4
+Suzuki,suzuki,Jimny,jimny,1.5L GLX AT 4x4,1-5l-glx-at-4x4,Nafta,1.5 L,Suzuki Jimny 1.5L GLX AT 4x4
+Suzuki,suzuki,Swift,swift,1.2L GL MT,1-2l-gl-mt,Nafta,1.2 L,Suzuki Swift 1.2L GL MT
+Suzuki,suzuki,Swift,swift,1.2L GLX AT,1-2l-glx-at,Nafta,1.2 L,Suzuki Swift 1.2L GLX AT
+TANK,tank,300,300,2.0T AT 4x4,2-0t-at-4x4,Nafta,2.0 L,TANK 300 2.0T AT 4x4
+TANK,tank,500,500,3.0T V6 AT 4x4,3-0t-v6-at-4x4,Nafta,3.0 L,TANK 500 3.0T V6 AT 4x4
+Toyota,toyota,Camry,camry,3.5L V6 AT,3-5l-v6-at,Nafta,3.5 L,Toyota Camry 3.5L V6 AT
+Toyota,toyota,Corolla,corolla,2.0L XLi MT,2-0l-xli-mt,Nafta,2.0 L,Toyota Corolla 2.0L XLi MT
+Toyota,toyota,Corolla,corolla,2.0L XLi CVT,2-0l-xli-cvt,Nafta,2.0 L,Toyota Corolla 2.0L XLi CVT
+Toyota,toyota,Corolla,corolla,2.0L SEG CVT,2-0l-seg-cvt,Nafta,2.0 L,Toyota Corolla 2.0L SEG CVT
+Toyota,toyota,Corolla Cross,corolla-cross,2.0L XLi CVT,2-0l-xli-cvt,Nafta,2.0 L,Toyota Corolla Cross 2.0L XLi CVT
+Toyota,toyota,Corolla Cross,corolla-cross,2.0L SEG CVT,2-0l-seg-cvt,Nafta,2.0 L,Toyota Corolla Cross 2.0L SEG CVT
+Toyota,toyota,Corolla Cross,corolla-cross,Hybrid SEG E-CVT,hybrid-seg-e-cvt,Nafta Eléctrico,1.8 L,Toyota Corolla Cross Hybrid SEG E-CVT
+Toyota,toyota,GR86,gr86,2.4L AT,2-4l-at,Nafta,2.4 L,Toyota GR86 2.4L AT
+Toyota,toyota,Hilux,hilux,2.4TD 4x2 DX MT SC,2-4td-4x2-dx-mt-sc,Diesel,2.4 L,Toyota Hilux 2.4TD 4x2 DX MT SC
+Toyota,toyota,Hilux,hilux,2.4TD 4x2 DX MT DC,2-4td-4x2-dx-mt-dc,Diesel,2.4 L,Toyota Hilux 2.4TD 4x2 DX MT DC
+Toyota,toyota,Hilux,hilux,2.8TD 4x2 SR MT,2-8td-4x2-sr-mt,Diesel,2.8 L,Toyota Hilux 2.8TD 4x2 SR MT
+Toyota,toyota,Hilux,hilux,2.8TD 4x2 SRV AT,2-8td-4x2-srv-at,Diesel,2.8 L,Toyota Hilux 2.8TD 4x2 SRV AT
+Toyota,toyota,Hilux,hilux,2.8TD 4x4 SRV AT,2-8td-4x4-srv-at,Diesel,2.8 L,Toyota Hilux 2.8TD 4x4 SRV AT
+Toyota,toyota,Hilux,hilux,2.8TD 4x4 SRX AT,2-8td-4x4-srx-at,Diesel,2.8 L,Toyota Hilux 2.8TD 4x4 SRX AT
+Toyota,toyota,Hilux,hilux,2.8TD 4x4 GR-Sport AT,2-8td-4x4-gr-sport-at,Diesel,2.8 L,Toyota Hilux 2.8TD 4x4 GR-Sport AT
+Toyota,toyota,Land Cruiser,land-cruiser,2.8TD VX AT 4x4,2-8td-vx-at-4x4,Diesel,2.8 L,Toyota Land Cruiser 2.8TD VX AT 4x4
+Toyota,toyota,Land Cruiser Prado,land-cruiser-prado,2.8TD TX-L AT 4x4,2-8td-tx-l-at-4x4,Diesel,2.8 L,Toyota Land Cruiser Prado 2.8TD TX-L AT 4x4
+Toyota,toyota,Land Cruiser Prado,land-cruiser-prado,2.8TD VX AT 4x4,2-8td-vx-at-4x4,Diesel,2.8 L,Toyota Land Cruiser Prado 2.8TD VX AT 4x4
+Toyota,toyota,RAV4,rav4,2.5L CVT 4x2,2-5l-cvt-4x2,Nafta,2.5 L,Toyota RAV4 2.5L CVT 4x2
+Toyota,toyota,RAV4,rav4,Hybrid Limited E-CVT 4x4,hybrid-limited-e-cvt-4x4,Nafta Eléctrico,2.5 L,Toyota RAV4 Hybrid Limited E-CVT 4x4
+Toyota,toyota,SW4,sw4,2.8TD SRX AT 4x4 5 asientos,2-8td-srx-at-4x4-5-asientos,Diesel,2.8 L,Toyota SW4 2.8TD SRX AT 4x4 5 asientos
+Toyota,toyota,SW4,sw4,2.8TD SRX AT 4x4 7 asientos,2-8td-srx-at-4x4-7-asientos,Diesel,2.8 L,Toyota SW4 2.8TD SRX AT 4x4 7 asientos
+Toyota,toyota,SW4,sw4,2.8TD Diamond AT 4x4,2-8td-diamond-at-4x4,Diesel,2.8 L,Toyota SW4 2.8TD Diamond AT 4x4
+Toyota,toyota,SW4,sw4,2.8TD GR-Sport AT 4x4,2-8td-gr-sport-at-4x4,Diesel,2.8 L,Toyota SW4 2.8TD GR-Sport AT 4x4
+Toyota,toyota,Yaris,yaris,1.5L XS MT,1-5l-xs-mt,Nafta,1.5 L,Toyota Yaris 1.5L XS MT
+Toyota,toyota,Yaris,yaris,1.5L XS CVT,1-5l-xs-cvt,Nafta,1.5 L,Toyota Yaris 1.5L XS CVT
+Toyota,toyota,Yaris,yaris,1.5L XLS CVT,1-5l-xls-cvt,Nafta,1.5 L,Toyota Yaris 1.5L XLS CVT
+Volkswagen,volkswagen,Amarok,amarok,DC 4x2 Trendline,dc-4x2-trendline,Diesel,2.0 L,Volkswagen Amarok DC 4x2 Trendline
+Volkswagen,volkswagen,Amarok,amarok,DC 4x2 Comfortline,dc-4x2-comfortline,Diesel,2.0 L,Volkswagen Amarok DC 4x2 Comfortline
+Volkswagen,volkswagen,Amarok,amarok,DC 4x4 Highline AT,dc-4x4-highline-at,Diesel,2.0 L,Volkswagen Amarok DC 4x4 Highline AT
+Volkswagen,volkswagen,Amarok,amarok,DC V6 4x4 Extreme AT,dc-v6-4x4-extreme-at,Diesel,3.0 L,Volkswagen Amarok DC V6 4x4 Extreme AT
+Volkswagen,volkswagen,Amarok,amarok,DC V6 4x4 Heroes AT,dc-v6-4x4-heroes-at,Diesel,3.0 L,Volkswagen Amarok DC V6 4x4 Heroes AT
+Volkswagen,volkswagen,Nivus,nivus,170 TSi Comfortline AT,170-tsi-comfortline-at,Nafta,1.0 L,Volkswagen Nivus 170 TSi Comfortline AT
+Volkswagen,volkswagen,Nivus,nivus,170 TSi Highline AT,170-tsi-highline-at,Nafta,1.0 L,Volkswagen Nivus 170 TSi Highline AT
+Volkswagen,volkswagen,Polo 5P,polo-5p,1.6L Track MSi,1-6l-track-msi,Nafta,1.6 L,Volkswagen Polo 5P 1.6L Track MSi
+Volkswagen,volkswagen,Polo 5P,polo-5p,170 TSi Comfortline,170-tsi-comfortline,Nafta,1.0 L,Volkswagen Polo 5P 170 TSi Comfortline
+Volkswagen,volkswagen,Polo 5P,polo-5p,1.0L Highline 170 TSi,1-0l-highline-170-tsi,Nafta,1.0 L,Volkswagen Polo 5P 1.0L Highline 170 TSi
+Volkswagen,volkswagen,Saveiro,saveiro,1.6L Safety MT CS,1-6l-safety-mt-cs,Nafta,1.6 L,Volkswagen Saveiro 1.6L Safety MT CS
+Volkswagen,volkswagen,Saveiro,saveiro,1.6L Comfortline MT CS,1-6l-comfortline-mt-cs,Nafta,1.6 L,Volkswagen Saveiro 1.6L Comfortline MT CS
+Volkswagen,volkswagen,Saveiro,saveiro,1.6L Cross MT CD,1-6l-cross-mt-cd,Nafta,1.6 L,Volkswagen Saveiro 1.6L Cross MT CD
+Volkswagen,volkswagen,T-Cross,t-cross,170 TSi Trendline AT,170-tsi-trendline-at,Nafta,1.0 L,Volkswagen T-Cross 170 TSi Trendline AT
+Volkswagen,volkswagen,T-Cross,t-cross,170 TSi Comfortline AT,170-tsi-comfortline-at,Nafta,1.0 L,Volkswagen T-Cross 170 TSi Comfortline AT
+Volkswagen,volkswagen,T-Cross,t-cross,170 TSi Highline AT,170-tsi-highline-at,Nafta,1.0 L,Volkswagen T-Cross 170 TSi Highline AT
+Volkswagen,volkswagen,Taos,taos,250 TSi Comfortline AT,250-tsi-comfortline-at,Nafta,1.4 L,Volkswagen Taos 250 TSi Comfortline AT
+Volkswagen,volkswagen,Taos,taos,250 TSi Highline AT,250-tsi-highline-at,Nafta,1.4 L,Volkswagen Taos 250 TSi Highline AT
+Volkswagen,volkswagen,Taos,taos,250 TSi Extreme AT,250-tsi-extreme-at,Nafta,1.4 L,Volkswagen Taos 250 TSi Extreme AT
+Volkswagen,volkswagen,Tera,tera,1.0T Trend Base MT,1-0t-trend-base-mt,Nafta,1.0 L,Volkswagen Tera 1.0T Trend Base MT
+Volkswagen,volkswagen,Tera,tera,1.0T Trend MT,1-0t-trend-mt,Nafta,1.0 L,Volkswagen Tera 1.0T Trend MT
+Volkswagen,volkswagen,Tera,tera,1.0T Comfortline AT,1-0t-comfortline-at,Nafta,1.0 L,Volkswagen Tera 1.0T Comfortline AT
+Volkswagen,volkswagen,Tiguan,tiguan,250 TSi Comfortline AT,250-tsi-comfortline-at,Nafta,1.4 L,Volkswagen Tiguan 250 TSi Comfortline AT
+Volkswagen,volkswagen,Tiguan,tiguan,350 TSi Highline AT,350-tsi-highline-at,Nafta,2.0 L,Volkswagen Tiguan 350 TSi Highline AT
+Volkswagen,volkswagen,Tiguan,tiguan,380 TSi R-Line AT 4Motion,380-tsi-r-line-at-4motion,Nafta,2.0 L,Volkswagen Tiguan 380 TSi R-Line AT 4Motion
+Volkswagen,volkswagen,Vento GLI,vento-gli,2.0T GLI DSG,2-0t-gli-dsg,Nafta,2.0 L,Volkswagen Vento GLI 2.0T GLI DSG
+Volkswagen,volkswagen,Virtus,virtus,170 TSi Comfortline AT,170-tsi-comfortline-at,Nafta,1.0 L,Volkswagen Virtus 170 TSi Comfortline AT
+Volkswagen,volkswagen,Virtus,virtus,170 TSi Highline AT,170-tsi-highline-at,Nafta,1.0 L,Volkswagen Virtus 170 TSi Highline AT
+Volvo,volvo,XC40,xc40,T4 Momentum AT AWD,t4-momentum-at-awd,Nafta,2.0 L,Volvo XC40 T4 Momentum AT AWD
+Volvo,volvo,XC40,xc40,T5 R-Design AT AWD,t5-r-design-at-awd,Nafta,2.0 L,Volvo XC40 T5 R-Design AT AWD
+Volvo,volvo,XC40,xc40,Recharge Pure Electric,recharge-pure-electric,Eléctrico,Eléctrico,Volvo XC40 Recharge Pure Electric
+Volvo,volvo,XC60,xc60,T5 Momentum AT AWD,t5-momentum-at-awd,Nafta,2.0 L,Volvo XC60 T5 Momentum AT AWD
+Volvo,volvo,XC60,xc60,T8 Inscription AT AWD,t8-inscription-at-awd,Nafta Eléctrico,2.0 L,Volvo XC60 T8 Inscription AT AWD
+Volvo,volvo,XC90,xc90,T8 Inscription AT AWD,t8-inscription-at-awd,Nafta Eléctrico,2.0 L,Volvo XC90 T8 Inscription AT AWD

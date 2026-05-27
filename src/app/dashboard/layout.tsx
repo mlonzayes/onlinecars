@@ -23,6 +23,28 @@ export default async function DashboardLayout({
   const dealership = await getCurrentDealership();
   if (!dealership) redirect("/onboarding");
 
+  // Gate de acceso: trial vencido o cuenta suspendida bloquean el dashboard.
+  // El cron diario ya marca como "expired" los trials vencidos, pero hacemos
+  // un check defensivo acá: si trialEndsAt pasó y todavía está como "trial"
+  // (porque el cron no corrió aún), también lo tratamos como expirado.
+  const now = Date.now();
+  const trialExpiredButNotYetMarked =
+    dealership.subscriptionStatus === "trial" &&
+    dealership.trialEndsAt !== null &&
+    dealership.trialEndsAt.getTime() < now;
+
+  const isBlocked =
+    dealership.subscriptionStatus === "expired" ||
+    dealership.subscriptionStatus === "suspended" ||
+    trialExpiredButNotYetMarked;
+
+  if (isBlocked) {
+    // Pasamos el motivo en query para que la pantalla muestre copy distinto.
+    const reason =
+      dealership.subscriptionStatus === "suspended" ? "suspended" : "expired";
+    redirect(`/cuenta-pausada?reason=${reason}`);
+  }
+
   return (
     <SidebarProvider>
       <DashboardSidebar dealership={dealership} />

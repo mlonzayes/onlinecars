@@ -108,14 +108,30 @@ export const PATCH = withLogger<SaleParams>(async (request, { requestId, params 
     });
 
     if (vehicleStatus !== null) {
+      // Al completar la venta, además de marcar el vehículo como "sold",
+      // lo despublicamos automáticamente. Razones:
+      //  1) Los vendidos no deberían aparecer en el catálogo público
+      //  2) Liberan el slot del plan (el límite se cuenta por publicados)
+      // El user puede volver a publicarlo manualmente si quiere mostrarlo
+      // como "ya vendido" en la web.
+      const vehicleUpdate: Record<string, unknown> = { status: vehicleStatus };
+      if (nextStatus === "completed") {
+        vehicleUpdate.publishedAt = null;
+      }
       await tx.vehicle.update({
         where: { id: sale.vehicleId },
-        data: { status: vehicleStatus },
+        data: vehicleUpdate,
       });
     }
 
     return updatedSale;
   });
+
+  // Invalidar el cache del tenant si el vehículo cambió de visibilidad pública.
+  if (nextStatus === "completed") {
+    const { invalidateTenantHomeBundle } = await import("@/lib/tenant");
+    await invalidateTenantHomeBundle(dealership.slug);
+  }
 
   // Una transición de status cambia los counters de los stats (un draft pasa
   // a reserved → baja "draft" sube "reserved", etc). Invalidamos el cache.

@@ -33,6 +33,10 @@ const TRANSMISSION_SHORT: Record<string, string> = {
 interface VehicleCardProps {
   vehicle: VehicleCardData;
   basePath: string;
+  // Si true, NO renderiza el badge "Destacado" aunque el vehículo lo sea.
+  // Útil en secciones que ya implican destacados (como el carrusel de featured),
+  // donde el badge queda redundante.
+  hideFeaturedBadge?: boolean;
 }
 
 function formatPrice(price: unknown, currency: string): string {
@@ -52,7 +56,7 @@ function formatKm(km: number | null): string {
   return `${km.toLocaleString("es-AR")} km`;
 }
 
-export function VehicleCard({ vehicle, basePath }: VehicleCardProps) {
+export function VehicleCard({ vehicle, basePath, hideFeaturedBadge = false }: VehicleCardProps) {
   const primaryImage = vehicle.images.find((i) => i.isPrimary) ?? vehicle.images[0];
 
   return (
@@ -60,8 +64,8 @@ export function VehicleCard({ vehicle, basePath }: VehicleCardProps) {
       href={`${basePath}/vehiculo/${vehicle.id}`}
       className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:ring-1 hover:ring-[var(--tenant-primary)]/30"
     >
-      {/* Featured Badge */}
-      {vehicle.featured && (
+      {/* Featured Badge — solo si vehicle.featured y el caller no lo oculta */}
+      {vehicle.featured && !hideFeaturedBadge && (
         <div className="absolute left-3 top-3 z-10 flex items-center gap-1 rounded-full bg-amber-400/90 px-2.5 py-1 text-xs font-bold text-amber-950 shadow-md backdrop-blur-sm">
           <Star className="h-3 w-3 fill-current" />
           Destacado

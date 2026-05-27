@@ -173,7 +173,7 @@ export function TenantFooter({
           <p className="text-xs text-slate-500">
             Potenciado por{" "}
             <a
-              href="https://motorflow.com.ar"
+              href="https://motorflowapp.com"
               className="font-medium text-[var(--tenant-primary)] hover:underline"
               target="_blank"
               rel="noopener noreferrer"

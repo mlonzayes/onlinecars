@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   ALLOWED_IMAGE_TYPES,
   MAX_IMAGES_PER_VEHICLE,
@@ -33,6 +34,7 @@ export function VehicleImageUploader({
   const [isDragOver, setIsDragOver] = useState(false);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const remaining = MAX_IMAGES_PER_VEHICLE - images.length - uploading;
   const maxMb = MAX_IMAGE_SIZE_BYTES / 1024 / 1024;
@@ -99,9 +101,9 @@ export function VehicleImageUploader({
     handleFiles(e.dataTransfer.files);
   }
 
-  async function handleDelete(imageId: string) {
-    if (disabled) return;
-    if (!confirm("¿Eliminar esta imagen? Esta acción no se puede deshacer.")) return;
+  async function handleDeleteConfirmed() {
+    if (!confirmDeleteId) return;
+    const imageId = confirmDeleteId;
 
     const res = await fetch(`/api/vehiculos/${vehicleId}/images/${imageId}`, {
       method: "DELETE",
@@ -109,11 +111,13 @@ export function VehicleImageUploader({
 
     if (!res.ok) {
       toast.error("No se pudo eliminar la imagen.");
+      setConfirmDeleteId(null);
       return;
     }
 
     setImages((prev) => prev.filter((img) => img.id !== imageId));
     toast.success("Imagen eliminada.");
+    setConfirmDeleteId(null);
     router.refresh();
   }
 
@@ -253,7 +257,7 @@ export function VehicleImageUploader({
               {!disabled && (
                 <button
                   type="button"
-                  onClick={() => handleDelete(img.id)}
+                  onClick={() => setConfirmDeleteId(img.id)}
                   className="absolute right-1.5 top-1.5 rounded bg-background/90 px-2 py-1 text-xs opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
                   aria-label="Eliminar imagen"
                 >
@@ -272,6 +276,16 @@ export function VehicleImageUploader({
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        onOpenChange={(open) => !open && setConfirmDeleteId(null)}
+        title="Eliminar imagen"
+        description="Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        destructive
+        onConfirm={handleDeleteConfirmed}
+      />
     </div>
   );
 }

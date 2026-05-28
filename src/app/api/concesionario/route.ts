@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { getCurrentDealership } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { dealershipUpdateSchema } from "@/lib/validators/dealership";
 import { NextResponse } from "next/server";
 import { withLogger } from "@/lib/api-handler";
@@ -117,8 +118,15 @@ export const PUT = withLogger(async (request, { requestId }) => {
 
     logger.info(requestId, "dealership.update.ok", { dealershipId: updated.id });
     return NextResponse.json({ data: updated });
-  } catch (error: any) {
-    if (error.code === "P2002" && error.meta?.target?.includes("website")) {
+  } catch (error: unknown) {
+    // P2002 = unique constraint violation. Si el target incluye "website",
+    // sabemos que otro dealer ya registró ese dominio.
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002" &&
+      Array.isArray(error.meta?.target) &&
+      (error.meta.target as string[]).includes("website")
+    ) {
       logger.warn(requestId, "dealership.update.website_conflict", { website: updateData.website });
       // Si dio error en BD y ya habíamos registrado en Vercel el nuevo, habría que hacer rollback en Vercel
       // Para simplificar, lo sacamos de Vercel (best-effort)

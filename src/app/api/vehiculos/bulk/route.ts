@@ -25,7 +25,7 @@ import { getCurrentDealership } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { vehicleBulkSchema } from "@/lib/validators/vehicle-bulk";
 import { BLOCKING_SALE_STATUSES } from "@/lib/sale-guards";
-import { getPlanLimits, canPublishMoreVehicles } from "@/lib/plans";
+import { getPlanLimits } from "@/lib/plans";
 import { invalidateTenantHomeBundle } from "@/lib/tenant";
 import { Prisma, type Dealership } from "@prisma/client";
 

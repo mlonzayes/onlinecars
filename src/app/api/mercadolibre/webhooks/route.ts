@@ -20,7 +20,7 @@ import { prisma } from "@/lib/prisma";
 import { getQuestion } from "@/lib/mercadolibre/client";
 import type { MLWebhookNotification } from "@/lib/mercadolibre/types";
 
-function verifyMLSignature(request: Request, body: string): boolean {
+function verifyMLSignature(request: Request, _body: string): boolean {
   const secret = process.env.ML_WEBHOOK_SECRET;
   if (!secret) {
     // Si no hay secret configurado, pasamos (entorno de desarrollo)

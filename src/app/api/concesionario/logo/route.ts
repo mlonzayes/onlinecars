@@ -63,7 +63,7 @@ export const POST = withLogger(async (request, { requestId }) => {
   const filename = `${globalThis.crypto.randomUUID()}.${extensionForMime(detectedMime)}`;
   const keyPrefix = `tenant/${dealership.id}/logo`;
 
-  const { url, key } = await storage.upload({
+  const { url } = await storage.upload({
     buffer,
     mimeType: detectedMime,
     keyPrefix,

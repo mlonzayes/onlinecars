@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CURRENCIES, SALE_STATUSES } from "@/lib/constants";
+import { CURRENCIES } from "@/lib/constants";
 
 // Monto en número positivo (el frontend manda number, Prisma guarda Decimal).
 const amountSchema = z.number().positive("Debe ser mayor a 0");

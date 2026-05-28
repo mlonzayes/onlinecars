@@ -112,8 +112,8 @@ export function WebsiteSettings({ dealership, theme }: WebsiteSettingsProps) {
         throw new Error(data.error || "No se pudo guardar el dominio");
       }
       toast.success("Dominio guardado", { duration: 2000 });
-    } catch (err: any) {
-      toast.error(err.message || "No se pudo guardar el dominio");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "No se pudo guardar el dominio");
     } finally {
       setSavingDomain(false);
     }
@@ -153,6 +153,7 @@ export function WebsiteSettings({ dealership, theme }: WebsiteSettingsProps) {
           <div className="flex items-center gap-4">
             {logo ? (
               <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-white">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={logo} alt="Logo preview" className="h-full w-full object-contain" />
               </div>
             ) : (

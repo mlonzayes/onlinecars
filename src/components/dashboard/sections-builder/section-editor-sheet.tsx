@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
   SECTION_TYPE_LABELS,
-  type MediaPurpose,
   type SectionType,
 } from "@/lib/constants";
 import type {

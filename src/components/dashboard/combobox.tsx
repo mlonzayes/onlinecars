@@ -89,6 +89,7 @@ export function Combobox<T extends { id: string }>({
           type="button"
           role="combobox"
           aria-expanded={open}
+          aria-controls={`${id}-listbox`}
           aria-required={required}
           onClick={() => setOpen((v) => !v)}
           className={cn(
@@ -103,7 +104,7 @@ export function Combobox<T extends { id: string }>({
         </button>
 
         {open && (
-          <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-md">
+          <div id={`${id}-listbox`} className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-md">
             <div className="p-2">
               <Input
                 autoFocus

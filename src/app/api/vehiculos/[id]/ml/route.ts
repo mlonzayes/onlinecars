@@ -18,7 +18,6 @@ import {
 import {
   publishItem,
   updateItemStatus,
-  uploadPicture,
 } from "@/lib/mercadolibre/client";
 
 type Params = { id: string };

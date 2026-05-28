@@ -29,7 +29,7 @@ export const DELETE = withLogger<Params>(async (_req, { requestId, params }) => 
     });
     logger.info(requestId, "invite.delete.ok", { inviteId: params.id });
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: "Error al eliminar la invitación" }, { status: 500 });
   }
 });

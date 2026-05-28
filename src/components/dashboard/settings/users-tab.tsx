@@ -73,7 +73,7 @@ export function UsersTab({
       toast.success("Link mágico generado. Copialo y envialo al vendedor.");
       // Forzar recarga de la página para ver la nueva invitación
       window.location.reload();
-    } catch (error) {
+    } catch (_error) {
       toast.error("Ocurrió un error al crear la invitación.");
     } finally {
       setLoading(false);

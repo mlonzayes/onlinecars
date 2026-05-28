@@ -54,7 +54,7 @@ export function CustomersTable({ customers, limits }: CustomersTableProps) {
   function setLoading(id: string, loading: boolean) {
     setLoadingIds((prev) => {
       const next = new Set(prev);
-      loading ? next.add(id) : next.delete(id);
+      if (loading) next.add(id); else next.delete(id);
       return next;
     });
   }

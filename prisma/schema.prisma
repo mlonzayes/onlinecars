@@ -28,7 +28,7 @@ model Dealership {
   address     String?
   city        String?
   province    String?
-  website     String?  // Dominio personalizado
+  website     String?  @unique // Dominio personalizado
   theme       Json?    // Configuración de colores/branding
   active      Boolean  @default(true)
   plan        String   @default("base") // base | media | premium | enterprise

@@ -7,6 +7,10 @@ import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { invalidateTenantHomeBundle } from "@/lib/tenant";
 
+// IMPORTANTE: customDomain quedó deprecado. El dominio personalizado ahora vive
+// en Dealership.website (columna directa) y se edita vía PUT /api/concesionario
+// con validación regex + integración con Vercel. NO agregar customDomain acá
+// nunca más — si lo veés en algún log, es código stale del cliente.
 const themeUpdateSchema = z.object({
   colorPrimary: z
     .string()
@@ -15,15 +19,16 @@ const themeUpdateSchema = z.object({
   darkMode: z.boolean().optional(),
   heroType: z.enum(["none", "image", "video"]).optional(),
   heroUrl: z.string().url("URL inválida").nullable().optional(),
-  customDomain: z.string().max(253).nullable().optional(),
   // Marcas oficiales seleccionadas (IDs del JSON src/data/brands.json).
   // Se editan desde el panel BrandsSettings dentro del editor de la sección "brands".
   selectedBrandIds: z.array(z.string()).optional(),
-});
+}).strict();
 
 // PATCH /api/concesionario/theme
 // Actualiza solo el theme del concesionario.
-// Body: { colorPrimary?: string; darkMode?: boolean; heroType?: string; heroUrl?: string; customDomain?: string }
+// Body: { colorPrimary?, darkMode?, heroType?, heroUrl?, selectedBrandIds? }
+// Schema es .strict() — rechaza campos desconocidos con 400. Si ves errores
+// "Unrecognized key", probablemente el cliente tiene un bundle JS stale.
 // Response 200: { data: { theme } }
 export const PATCH = withLogger(async (request, { requestId }) => {
   const { userId } = await auth();
@@ -63,7 +68,6 @@ export const PATCH = withLogger(async (request, { requestId }) => {
     darkMode: false,
     heroType: "none",
     heroUrl: null,
-    customDomain: null,
     ...currentTheme,
     ...parsed.data,
   };

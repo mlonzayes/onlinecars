@@ -5,7 +5,7 @@ import type {
   TenantHomeBundleSection,
 } from "@/lib/tenant";
 import { seedDefaultSections } from "@/lib/sections/seed";
-import type { MediaPurpose, SectionType } from "@/lib/constants";
+import { SECTION_TYPES, type MediaPurpose, type SectionType } from "@/lib/constants";
 import type { DealershipTheme } from "@/types";
 
 export type SectionMedia = TenantHomeBundleMedia & { sectionType: SectionType };
@@ -29,10 +29,18 @@ export async function getSectionsPageData(
   //   - Dealership al día → no-op
   // Esto evita que dependa exclusivamente de la migración SQL que puede no
   // haberse aplicado todavía en el ambiente actual.
-  await prisma.$transaction(
-    async (tx) => seedDefaultSections(tx, dealershipId, legacyTheme),
-    { timeout: 15_000 }
-  );
+  
+  // Lazy seed: el count va por fuera de la transacción para evitar timeouts (P2028).
+  const existingSectionsCount = await prisma.dealershipSection.count({
+    where: { dealershipId },
+  });
+
+  if (existingSectionsCount < SECTION_TYPES.length) {
+    await prisma.$transaction(
+      async (tx) => seedDefaultSections(tx, dealershipId, legacyTheme),
+      { timeout: 15_000 }
+    );
+  }
 
   const [sectionRows, mediaRows] = await Promise.all([
     prisma.dealershipSection.findMany({

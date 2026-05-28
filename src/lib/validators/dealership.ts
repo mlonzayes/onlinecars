@@ -14,7 +14,12 @@ export const dealershipCreateSchema = z.object({
   address: z.string().max(300).optional(),
   city: z.string().max(100).optional(),
   province: z.string().max(100).optional(),
-  website: z.string().url().optional().or(z.literal("")),
+  website: z
+    .string()
+    .regex(/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i, "Debe ser un dominio válido (ej: www.midominio.com)")
+    .optional()
+    .nullable()
+    .or(z.literal("").transform(() => null)),
 });
 
 export const dealershipUpdateSchema = dealershipCreateSchema.partial().omit({ slug: true }).extend({

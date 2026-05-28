@@ -7,6 +7,7 @@ import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { invalidateTenantHomeBundle } from "@/lib/tenant";
 import { getPlanLimits } from "@/lib/plans";
+import { addDomainToVercel, removeDomainFromVercel } from "@/lib/vercel";
 
 // GET /api/concesionario
 // Retorna los datos del concesionario del usuario autenticado.
@@ -75,18 +76,57 @@ export const PUT = withLogger(async (request, { requestId }) => {
     updateData.whatsappFabEnabled = false;
   }
 
-  const updated = await prisma.dealership.update({
-    where: { id: dealership.id },
-    data: updateData,
-  });
+  // Si cambia el dominio, sincronizar con Vercel
+  if ("website" in updateData && updateData.website !== dealership.website) {
+    const oldDomain = dealership.website;
+    const newDomain = updateData.website;
 
-  // Invalidamos con el slug NUEVO y el viejo — por las dudas que se haya
-  // cambiado el slug en este update (aunque hoy el schema no lo permita).
-  await invalidateTenantHomeBundle(updated.slug);
-  if (updated.slug !== dealership.slug) {
-    await invalidateTenantHomeBundle(dealership.slug);
+    if (oldDomain) {
+      await removeDomainFromVercel(oldDomain);
+    }
+    if (newDomain) {
+      const result = await addDomainToVercel(newDomain);
+      if (!result.success) {
+        // Caso especial: env vars de Vercel faltantes (típico en dev local).
+        // En ese caso saltamos la integración silenciosamente y guardamos el
+        // dominio en DB igual — esto permite testear el flow en localhost.
+        // En prod, las env vars TIENEN que estar — si faltan en prod es una
+        // misconfig del deploy y vale fallar.
+        const isMissingEnv = result.error === "missing_env";
+        const isProd = process.env.NODE_ENV === "production";
+        if (!isMissingEnv || isProd) {
+          logger.error(requestId, "dealership.update.vercel_error", { domain: newDomain, error: result.error });
+          return NextResponse.json({ error: "No se pudo registrar el dominio en la plataforma." }, { status: 400 });
+        }
+        logger.warn(requestId, "dealership.update.vercel_skipped", { domain: newDomain, reason: "missing_env_in_dev" });
+      }
+    }
   }
 
-  logger.info(requestId, "dealership.update.ok", { dealershipId: updated.id });
-  return NextResponse.json({ data: updated });
+  try {
+    const updated = await prisma.dealership.update({
+      where: { id: dealership.id },
+      data: updateData,
+    });
+
+    // Invalidamos con el slug NUEVO y el viejo
+    await invalidateTenantHomeBundle(updated.slug);
+    if (updated.slug !== dealership.slug) {
+      await invalidateTenantHomeBundle(dealership.slug);
+    }
+
+    logger.info(requestId, "dealership.update.ok", { dealershipId: updated.id });
+    return NextResponse.json({ data: updated });
+  } catch (error: any) {
+    if (error.code === "P2002" && error.meta?.target?.includes("website")) {
+      logger.warn(requestId, "dealership.update.website_conflict", { website: updateData.website });
+      // Si dio error en BD y ya habíamos registrado en Vercel el nuevo, habría que hacer rollback en Vercel
+      // Para simplificar, lo sacamos de Vercel (best-effort)
+      if (updateData.website && updateData.website !== dealership.website) {
+        await removeDomainFromVercel(updateData.website as string).catch(() => {});
+      }
+      return NextResponse.json({ error: "El dominio ya está registrado por otra concesionaria." }, { status: 409 });
+    }
+    throw error;
+  }
 });

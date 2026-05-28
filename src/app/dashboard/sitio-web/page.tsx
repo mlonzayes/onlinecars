@@ -59,7 +59,7 @@ export default async function SitioWebPage() {
       </Card>
 
       <WebsiteSettings
-        dealership={dealership}
+        dealership={{ slug: dealership.slug, logo: dealership.logo, website: dealership.website }}
         theme={theme}
       />
     </div>

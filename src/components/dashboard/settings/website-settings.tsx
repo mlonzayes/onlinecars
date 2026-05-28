@@ -8,10 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { DealershipTheme } from "@/types";
-import type { Dealership } from "@prisma/client";
 
 interface WebsiteSettingsProps {
-  dealership: Dealership;
+  dealership: {
+    slug: string;
+    logo: string | null;
+    website: string | null;
+  };
   theme: DealershipTheme | null;
 }
 
@@ -19,7 +22,7 @@ const DEFAULT_COLOR = "#2563eb";
 
 export function WebsiteSettings({ dealership, theme }: WebsiteSettingsProps) {
   const [colorPrimary, setColorPrimary] = useState(theme?.colorPrimary ?? DEFAULT_COLOR);
-  const [customDomain, setCustomDomain] = useState(theme?.customDomain ?? "");
+  const [customDomain, setCustomDomain] = useState(dealership.website ?? "");
   const [logo, setLogo] = useState(dealership.logo ?? "");
   const [savingLogo, setSavingLogo] = useState(false);
   const [deletingLogo, setDeletingLogo] = useState(false);
@@ -93,15 +96,24 @@ export function WebsiteSettings({ dealership, theme }: WebsiteSettingsProps) {
   async function handleSaveDomain() {
     setSavingDomain(true);
     try {
-      const res = await fetch("/api/concesionario/theme", {
-        method: "PATCH",
+      const res = await fetch("/api/concesionario", {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ customDomain: customDomain || null }),
+        body: JSON.stringify({ website: customDomain.trim() || null }),
       });
-      if (!res.ok) throw new Error();
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 409) {
+          throw new Error("El dominio ya está registrado por otra concesionaria.");
+        }
+        if (res.status === 400 && data.details?.fieldErrors?.website) {
+          throw new Error(data.details.fieldErrors.website[0]);
+        }
+        throw new Error(data.error || "No se pudo guardar el dominio");
+      }
       toast.success("Dominio guardado", { duration: 2000 });
-    } catch {
-      toast.error("No se pudo guardar el dominio");
+    } catch (err: any) {
+      toast.error(err.message || "No se pudo guardar el dominio");
     } finally {
       setSavingDomain(false);
     }

@@ -77,29 +77,30 @@ export const PUT = withLogger(async (request, { requestId }) => {
     updateData.whatsappFabEnabled = false;
   }
 
-  // Si cambia el dominio, sincronizar con Vercel
+  // Sincronización con Vercel — BEST-EFFORT, nunca bloquea el guardado en DB.
+  // La DB es la fuente de verdad de qué dominio pertenece a qué dealer. Si Vercel
+  // falla (env vars faltantes, API caída, rate limit), lo logueamos pero igual
+  // guardamos. El registro en Vercel se puede reintentar manualmente o cuando se
+  // configuren las credenciales. NOTA: el routing del dominio custom todavía no
+  // está implementado en el middleware — registrar en Vercel solo no alcanza
+  // para que el dominio sirva el tenant. Eso es trabajo aparte.
   if ("website" in updateData && updateData.website !== dealership.website) {
     const oldDomain = dealership.website;
     const newDomain = updateData.website;
 
     if (oldDomain) {
-      await removeDomainFromVercel(oldDomain);
+      await removeDomainFromVercel(oldDomain).catch(() => {});
     }
     if (newDomain) {
       const result = await addDomainToVercel(newDomain);
       if (!result.success) {
-        // Caso especial: env vars de Vercel faltantes (típico en dev local).
-        // En ese caso saltamos la integración silenciosamente y guardamos el
-        // dominio en DB igual — esto permite testear el flow en localhost.
-        // En prod, las env vars TIENEN que estar — si faltan en prod es una
-        // misconfig del deploy y vale fallar.
-        const isMissingEnv = result.error === "missing_env";
-        const isProd = process.env.NODE_ENV === "production";
-        if (!isMissingEnv || isProd) {
-          logger.error(requestId, "dealership.update.vercel_error", { domain: newDomain, error: result.error });
-          return NextResponse.json({ error: "No se pudo registrar el dominio en la plataforma." }, { status: 400 });
+        // missing_env es esperado en ambientes sin credenciales (dev, deploy
+        // sin configurar) → warn. Cualquier otro error de Vercel → error real.
+        if (result.error === "missing_env") {
+          logger.warn(requestId, "dealership.update.vercel_skipped", { domain: newDomain, reason: "missing_env" });
+        } else {
+          logger.error(requestId, "dealership.update.vercel_sync_failed", { domain: newDomain, error: result.error });
         }
-        logger.warn(requestId, "dealership.update.vercel_skipped", { domain: newDomain, reason: "missing_env_in_dev" });
       }
     }
   }

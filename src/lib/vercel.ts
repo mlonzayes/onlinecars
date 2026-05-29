@@ -10,7 +10,10 @@ const VERCEL_API_URL = "https://api.vercel.com";
 export async function addDomainToVercel(domain: string) {
   const projectId = process.env.VERCEL_PROJECT_ID;
   const teamId = process.env.VERCEL_TEAM_ID;
-  const token = process.env.VERCEL_API_TOKEN;
+  // Aceptamos ambos nombres: VERCEL_AUTH_TOKEN (el que se cargó en el proyecto)
+  // y VERCEL_API_TOKEN (el nombre que usaba el código original). Evita el bug
+  // silencioso de "missing_env" cuando la var existe pero con otro nombre.
+  const token = process.env.VERCEL_AUTH_TOKEN ?? process.env.VERCEL_API_TOKEN;
 
   if (!projectId || !token) {
     logger.warn(undefined, "VERCEL_PROJECT_ID o VERCEL_API_TOKEN no configurados. Saltando Vercel API.", { domain });
@@ -53,7 +56,7 @@ export async function addDomainToVercel(domain: string) {
 export async function removeDomainFromVercel(domain: string) {
   const projectId = process.env.VERCEL_PROJECT_ID;
   const teamId = process.env.VERCEL_TEAM_ID;
-  const token = process.env.VERCEL_API_TOKEN;
+  const token = process.env.VERCEL_AUTH_TOKEN ?? process.env.VERCEL_API_TOKEN;
 
   if (!projectId || !token) {
     logger.warn(undefined, "VERCEL_PROJECT_ID o VERCEL_API_TOKEN no configurados. Saltando Vercel API.", { domain });

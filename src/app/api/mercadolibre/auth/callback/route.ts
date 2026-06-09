@@ -3,17 +3,30 @@
  * Callback OAuth2 de Mercado Libre.
  *
  * Recibe: ?code=...&state=...
- * - Intercambia el code por access + refresh tokens
- * - Obtiene el nickname del vendedor
- * - Guarda los tokens encriptados en DB
- * - Redirige al dashboard de configuración
+ *
+ * Verificaciones (en orden — defense in depth):
+ *  1) verifyState(state): firma HMAC válida + no expirado (TTL 10min)
+ *  2) auth(): user de Clerk autenticado
+ *  3) membership: el user es miembro del dealership decodificado del state
+ *  4) plan gating: el dealer todavía permite ML
+ *
+ * Sin (2) y (3) un atacante podría forjar un state apuntando a otro tenant
+ * y dejar SUS tokens de ML asociados al dealer víctima ("ML account hijack").
+ *
+ * Después: intercambia code → tokens, los guarda encriptados, redirige al
+ * dashboard.
  */
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { withLogger } from "@/lib/api-handler";
+import { logger } from "@/lib/logger";
+import { prisma } from "@/lib/prisma";
+import { getPlanLimits } from "@/lib/plans";
 import { exchangeCode, getMLUserInfo } from "@/lib/mercadolibre/client";
 import { saveTokens } from "@/lib/mercadolibre/token-store";
+import { verifyState } from "@/lib/mercadolibre/oauth-state";
 
-export const GET = withLogger(async (request, _ctx) => {
+export const GET = withLogger(async (request, { requestId }) => {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
@@ -34,13 +47,50 @@ export const GET = withLogger(async (request, _ctx) => {
     );
   }
 
-  // Decodificar dealershipId del state
-  let dealershipId: string;
-  try {
-    dealershipId = Buffer.from(state, "base64url").toString("utf8");
-  } catch {
+  const stateResult = verifyState(state);
+  if (!stateResult.ok) {
+    logger.warn(requestId, "ml.callback.invalid_state", { reason: stateResult.reason });
     return NextResponse.redirect(
       `${appUrl}/dashboard/portales?ml_error=invalid_state`
+    );
+  }
+  const dealershipId = stateResult.dealershipId;
+
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.redirect(new URL("/sign-in", request.url).toString());
+  }
+
+  const membership = await prisma.dealershipUser.findFirst({
+    where: { clerkUserId: userId, dealershipId },
+    select: { id: true },
+  });
+
+  if (!membership) {
+    logger.warn(requestId, "ml.callback.dealership_mismatch", {
+      userId, dealershipId,
+    });
+    return NextResponse.redirect(
+      `${appUrl}/dashboard/portales?ml_error=invalid_state`
+    );
+  }
+
+  // Plan gating — re-verificamos acá. Si el plan cambió entre el start y el
+  // callback (downgrade durante el flow), no permitimos completar la conexión.
+  const dealership = await prisma.dealership.findUnique({
+    where: { id: dealershipId },
+    select: { id: true, plan: true },
+  });
+  if (!dealership) {
+    return NextResponse.redirect(`${appUrl}/dashboard/portales?ml_error=invalid_state`);
+  }
+  if (!getPlanLimits(dealership).allowMLIntegration) {
+    logger.warn(requestId, "ml.callback.plan_gated", {
+      dealershipId,
+      plan: dealership.plan,
+    });
+    return NextResponse.redirect(
+      `${appUrl}/dashboard/portales?ml_error=${encodeURIComponent("Mercado Libre está disponible a partir del plan Media.")}`
     );
   }
 

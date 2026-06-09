@@ -5,6 +5,7 @@ import { VehicleForm } from "@/components/dashboard/vehicle-form";
 import { findBlockingSale } from "@/lib/sale-guards";
 import { MLVehiclePanel } from "@/components/dashboard/ml-vehicle-panel";
 import { canSeeCosts, canEditCosts } from "@/lib/permissions";
+import { getPlanLimits } from "@/lib/plans";
 
 export default async function EditarVehiculoPage({
   params,
@@ -61,6 +62,7 @@ export default async function EditarVehiculoPage({
         vehicle={serializedVehicle}
         blockingSale={blockingSale}
         canEditCosts={canEditCosts(dealership.currentUser)}
+        maxImagesPerVehicle={getPlanLimits(dealership).maxImagesPerVehicle}
       />
       <MLVehiclePanel
         vehicleId={id}

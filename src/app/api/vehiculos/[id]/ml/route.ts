@@ -19,6 +19,7 @@ import {
   publishItem,
   updateItemStatus,
 } from "@/lib/mercadolibre/client";
+import { getPlanLimits } from "@/lib/plans";
 
 type Params = { id: string };
 
@@ -29,6 +30,19 @@ export const POST = withLogger<Params>(async (request, ctx) => {
   const dealership = await getCurrentDealership();
   if (!dealership) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  }
+
+  // Plan gating — defense in depth. La UI ya esconde el botón pero acá lo
+  // bloqueamos por si llaman al endpoint directo.
+  if (!getPlanLimits(dealership).allowMLIntegration) {
+    logger.warn(requestId, "ml.publish.plan_gated", {
+      dealershipId: dealership.id,
+      plan: dealership.plan,
+    });
+    return NextResponse.json(
+      { error: "Mercado Libre está disponible a partir del plan Media." },
+      { status: 403 }
+    );
   }
 
   const vehicleId = ctx.params.id;
@@ -235,6 +249,7 @@ export const DELETE = withLogger<Params>(async (_request, ctx) => {
 // ─── PATCH — Pausar / Reactivar ───────────────────────────────────────────────
 
 export const PATCH = withLogger<Params>(async (request, ctx) => {
+  const { requestId } = ctx;
   const dealership = await getCurrentDealership();
   if (!dealership) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
@@ -248,6 +263,20 @@ export const PATCH = withLogger<Params>(async (request, ctx) => {
     return NextResponse.json(
       { error: "action debe ser 'pause' o 'reactivate'" },
       { status: 400 }
+    );
+  }
+
+  // Plan gating SOLO para reactivate. Pausar lo dejamos abierto: un dealer
+  // downgradeado tiene que poder apagar lo que tenía publicado. Reactivar es
+  // volver a usar la feature, eso sí lo bloqueamos.
+  if (action === "reactivate" && !getPlanLimits(dealership).allowMLIntegration) {
+    logger.warn(requestId, "ml.reactivate.plan_gated", {
+      dealershipId: dealership.id,
+      plan: dealership.plan,
+    });
+    return NextResponse.json(
+      { error: "Reactivar publicaciones requiere plan Media o superior." },
+      { status: 403 }
     );
   }
 

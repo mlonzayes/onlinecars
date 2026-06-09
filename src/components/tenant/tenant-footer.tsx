@@ -15,6 +15,9 @@ interface TenantFooterProps {
   city: string | null;
   province: string | null;
   basePath: string;
+  // Si true, muestra el badge "Potenciado por motorflow". Controlado por plan
+  // del dealership (Base lo tiene, Media+ lo esconde — gancho de upgrade).
+  showPoweredBy: boolean;
 }
 
 export function TenantFooter({
@@ -28,13 +31,14 @@ export function TenantFooter({
   city,
   province,
   basePath,
+  showPoweredBy,
 }: TenantFooterProps) {
   const year = new Date().getFullYear();
   const whatsappUrl = whatsapp ? `https://wa.me/${whatsapp.replace(/\D/g, "")}` : null;
   const locationParts = [address, city, province].filter(Boolean);
 
   return (
-    <footer className="border-t border-slate-200 bg-zinc-100">
+    <footer className="border-t border-[var(--tenant-border)] bg-[var(--tenant-surface-hover)]">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           {/* Col 1 — Brand */}
@@ -53,18 +57,18 @@ export function TenantFooter({
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--tenant-primary)] text-white shadow-sm">
                   <Car className="h-5 w-5" />
                 </div>
-                <span className="text-lg font-semibold tracking-tight text-slate-900">
+                <span className="text-lg font-semibold tracking-tight text-[var(--tenant-fg)]">
                   {name}
                 </span>
               </div>
             )}
             {description && (
-              <p className="max-w-md text-sm leading-relaxed text-slate-600">
+              <p className="max-w-md text-sm leading-relaxed text-[var(--tenant-fg-muted)]">
                 {description}
               </p>
             )}
             {locationParts.length > 0 && (
-              <div className="flex items-start gap-2 text-sm text-slate-500">
+              <div className="flex items-start gap-2 text-sm text-[var(--tenant-fg-subtle)]">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>{locationParts.join(", ")}</span>
               </div>
@@ -73,14 +77,14 @@ export function TenantFooter({
 
           {/* Col 2 — Quick Links */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--tenant-fg)]">
               Navegación
             </h3>
             <ul className="space-y-2">
               <li>
                 <Link
                   href={basePath}
-                  className="text-sm text-slate-600 transition-colors hover:text-[var(--tenant-primary)]"
+                  className="text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary)]"
                 >
                   Inicio
                 </Link>
@@ -88,7 +92,7 @@ export function TenantFooter({
               <li>
                 <Link
                   href={`${basePath}/catalogo`}
-                  className="text-sm text-slate-600 transition-colors hover:text-[var(--tenant-primary)]"
+                  className="text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary)]"
                 >
                   Catálogo
                 </Link>
@@ -96,7 +100,7 @@ export function TenantFooter({
               <li>
                 <Link
                   href={`${basePath}/cotizar`}
-                  className="text-sm text-slate-600 transition-colors hover:text-[var(--tenant-primary)]"
+                  className="text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary)]"
                 >
                   Vender mi auto
                 </Link>
@@ -104,7 +108,7 @@ export function TenantFooter({
               <li>
                 <Link
                   href={`${basePath}#opiniones`}
-                  className="text-sm text-slate-600 transition-colors hover:text-[var(--tenant-primary)]"
+                  className="text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary)]"
                 >
                   Opiniones
                 </Link>
@@ -112,7 +116,7 @@ export function TenantFooter({
               <li>
                 <Link
                   href={`${basePath}#contacto`}
-                  className="text-sm text-slate-600 transition-colors hover:text-[var(--tenant-primary)]"
+                  className="text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary)]"
                 >
                   Contacto
                 </Link>
@@ -122,7 +126,7 @@ export function TenantFooter({
 
           {/* Col 3 — Contacto */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--tenant-fg)]">
               Contacto
             </h3>
             <ul className="space-y-2.5">
@@ -130,7 +134,7 @@ export function TenantFooter({
                 <li>
                   <a
                     href={`tel:${phone}`}
-                    className="flex items-center gap-2 text-sm text-slate-600 transition-colors hover:text-[var(--tenant-primary)]"
+                    className="flex items-center gap-2 text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary)]"
                   >
                     <Phone className="h-4 w-4 shrink-0" />
                     {phone}
@@ -141,7 +145,7 @@ export function TenantFooter({
                 <li>
                   <a
                     href={`mailto:${email}`}
-                    className="flex items-center gap-2 text-sm text-slate-600 transition-colors hover:text-[var(--tenant-primary)]"
+                    className="flex items-center gap-2 text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary)]"
                   >
                     <Mail className="h-4 w-4 shrink-0" />
                     {email}
@@ -154,7 +158,7 @@ export function TenantFooter({
                     href={whatsappUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-slate-600 transition-colors hover:text-emerald-600"
+                    className="flex items-center gap-2 text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-emerald-600"
                   >
                     <MessageCircle className="h-4 w-4 shrink-0" />
                     WhatsApp
@@ -166,21 +170,23 @@ export function TenantFooter({
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:gap-2">
-          <p className="text-xs text-slate-500">
+        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-[var(--tenant-border)] pt-6 sm:flex-row sm:gap-2">
+          <p className="text-xs text-[var(--tenant-fg-subtle)]">
             © {year} {name}. Todos los derechos reservados.
           </p>
-          <p className="text-xs text-slate-500">
-            Potenciado por{" "}
-            <a
-              href="https://motorflowapp.com"
-              className="font-medium text-[var(--tenant-primary)] hover:underline"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              motorflow
-            </a>
-          </p>
+          {showPoweredBy && (
+            <p className="text-xs text-[var(--tenant-fg-subtle)]">
+              Potenciado por{" "}
+              <a
+                href="https://motorflowapp.com"
+                className="font-medium text-[var(--tenant-primary)] hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                motorflow
+              </a>
+            </p>
+          )}
         </div>
       </div>
     </footer>

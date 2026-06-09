@@ -18,15 +18,15 @@ export default async function TenantOpinionPage({ params }: { params: Promise<{ 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-extrabold text-gray-900">
+        <h1 className="text-3xl font-extrabold text-[var(--tenant-fg)]">
           Dejanos tu opinión
         </h1>
-        <p className="mt-2 text-gray-500">
+        <p className="mt-2 text-[var(--tenant-fg-muted)]">
           Tu experiencia nos ayuda a mejorar y a que otros clientes confíen en nosotros.
         </p>
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+      <div className="rounded-2xl border border-[var(--tenant-border)] bg-[var(--tenant-surface)] p-6 shadow-sm sm:p-8">
         <ReviewForm slug={slug} dealershipName={dealership.name} />
       </div>
     </div>

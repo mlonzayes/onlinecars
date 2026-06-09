@@ -35,15 +35,15 @@ export function SortSelect() {
   }
 
   return (
-    <label className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm">
-      <ArrowDownWideNarrow className="h-3.5 w-3.5 text-slate-400" />
-      <span className="hidden text-xs font-semibold uppercase tracking-wide text-slate-500 sm:inline">
+    <label className="flex items-center gap-2 rounded-full border border-[var(--tenant-border)] bg-[var(--tenant-surface)] px-3 py-1.5 text-sm font-medium text-[var(--tenant-fg)] shadow-sm">
+      <ArrowDownWideNarrow className="h-3.5 w-3.5 text-[var(--tenant-fg-subtle)]" />
+      <span className="hidden text-xs font-semibold uppercase tracking-wide text-[var(--tenant-fg-muted)] sm:inline">
         Ordenar
       </span>
       <select
         value={current}
         onChange={(e) => handleChange(e.target.value)}
-        className="bg-transparent text-sm font-medium text-slate-700 outline-none"
+        className="bg-transparent text-sm font-medium text-[var(--tenant-fg)] outline-none"
       >
         {OPTIONS.map((opt) => (
           <option key={opt.value} value={opt.value}>

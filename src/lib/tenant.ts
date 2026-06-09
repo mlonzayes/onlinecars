@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { prisma } from "./prisma";
 import type { Dealership, DealershipMedia, DealershipSection } from "@prisma/client";
 import { redis } from "./redis";
@@ -7,6 +8,38 @@ import { SECTION_TYPES, type MediaPurpose, type SectionType } from "./constants"
 import { DEFAULT_SECTION_COPY, DEFAULT_SECTION_CONFIG } from "./tenant-defaults";
 import type { SectionConfigByType } from "./sections/config-types";
 import { seedDefaultSections } from "./sections/seed";
+
+/**
+ * Calcula el `basePath` correcto para los links del sitio público del tenant.
+ *
+ * - En producción con subdomain (`{slug}.motorflowapp.com`): devuelve "" — las
+ *   pages del tenant viven en la raíz del subdomain, los links deben ser
+ *   absolutos al subdomain (`/catalogo`, `/cotizar`, etc).
+ * - En localhost / vercel preview / dominio principal: devuelve "/tenant/{slug}"
+ *   — las pages del tenant viven bajo ese prefijo, hay que armar los links
+ *   con el prefix completo (`/tenant/{slug}/catalogo`, etc).
+ *
+ * Antes el código tenía `/tenant/{slug}` hardcoded en todas las pages. En
+ * producción los clicks resultaban en `subdomain.../tenant/{slug}/...` que el
+ * middleware re-reescribía a `/tenant/{slug}/tenant/{slug}/...` → 404.
+ */
+export async function getTenantBasePath(slug: string): Promise<string> {
+  const headersList = await headers();
+  const host = headersList.get("host") ?? "";
+  const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "motorflowapp.com";
+  // Sacamos el puerto (host puede venir "x.com:3000") para comparar el dominio.
+  const hostname = host.split(":")[0];
+
+  if (hostname.endsWith(`.${appDomain}`)) {
+    const sub = hostname.slice(0, -(appDomain.length + 1));
+    // Si el sub coincide con el slug, estamos sirviendo el tenant desde su
+    // subdomain → basePath vacío. Cualquier otro caso (incluido "app"/"www")
+    // cae al fallback.
+    if (sub === slug) return "";
+  }
+
+  return `/tenant/${slug}`;
+}
 
 /**
  * Obtiene un dealership por su slug.
@@ -27,9 +60,12 @@ export async function getDealershipBySlug(slug: string): Promise<Dealership | nu
   }
 
   // findUnique con compound where (slug + active) genera SQL con OR redundante en
-  // Prisma 7. Buscamos solo por slug y filtramos active en JS.
+  // Prisma 7. Buscamos solo por slug y filtramos en JS.
+  // siteEnabled gateado acá: si el dealer no activó su sitio, TODAS las rutas
+  // públicas del tenant ven 404 — incluye páginas, API públicos y rewrites del
+  // middleware (que terminan cayendo acá).
   const dealership = await prisma.dealership.findUnique({ where: { slug } });
-  if (!dealership || !dealership.active) return null;
+  if (!dealership || !dealership.active || !dealership.siteEnabled) return null;
 
   try {
     await redis.set(key, dealership, { ex: TENANT_HOME_TTL_SECONDS });
@@ -80,21 +116,32 @@ function buildOrderBy(
   }
 }
 
-export async function getPublishedVehicles(
+export interface PublicVehicleFilters {
+  brand?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  minYear?: number;
+  maxYear?: number;
+  fuelType?: string;
+  transmission?: string;
+  condition?: string;
+  bodyType?: string;
+  sort?: PublicVehicleSort;
+}
+
+export interface PaginationOptions {
+  page: number;
+  limit: number;
+}
+
+/**
+ * Construye el `where` de Prisma a partir de los filtros públicos. Se usa
+ * tanto en `findMany` como en `count` — extraído acá para no duplicar la lógica.
+ */
+function buildPublishedVehiclesWhere(
   dealershipId: string,
-  filters?: {
-    brand?: string;
-    minPrice?: number;
-    maxPrice?: number;
-    minYear?: number;
-    maxYear?: number;
-    fuelType?: string;
-    transmission?: string;
-    condition?: string;
-    bodyType?: string;
-    sort?: PublicVehicleSort;
-  }
-) {
+  filters?: PublicVehicleFilters
+): Record<string, unknown> {
   const where: Record<string, unknown> = {
     dealershipId,
     publishedAt: { not: null },
@@ -121,22 +168,55 @@ export async function getPublishedVehicles(
     };
   }
 
+  return where;
+}
+
+export async function getPublishedVehicles(
+  dealershipId: string,
+  filters?: PublicVehicleFilters,
+  pagination?: PaginationOptions
+) {
+  const where = buildPublishedVehiclesWhere(dealershipId, filters);
+
   return prisma.vehicle.findMany({
     where,
     include: {
       images: { orderBy: { order: "asc" } },
     },
     orderBy: buildOrderBy(filters?.sort ?? "recent"),
+    ...(pagination
+      ? {
+          skip: (pagination.page - 1) * pagination.limit,
+          take: pagination.limit,
+        }
+      : {}),
   });
 }
 
 /**
- * Obtiene un vehículo publicado por su ID dentro de un dealership.
+ * Cuenta los vehículos publicados que matchean los filtros. Lo usamos en
+ * paralelo con `getPublishedVehicles(paginated)` para armar los controles
+ * de paginación.
  */
-export async function getPublishedVehicleById(dealershipId: string, vehicleId: string) {
+export async function countPublishedVehicles(
+  dealershipId: string,
+  filters?: PublicVehicleFilters
+): Promise<number> {
+  const where = buildPublishedVehiclesWhere(dealershipId, filters);
+  return prisma.vehicle.count({ where });
+}
+
+/**
+ * Resuelve un vehículo publicado por su publicSlug (URL-friendly).
+ * Reemplazó a `getPublishedVehicleById` para no exponer UUIDs en el sitio.
+ */
+export async function getPublishedVehicleBySlug(
+  dealershipId: string,
+  publicSlug: string
+) {
   return prisma.vehicle.findFirst({
     where: {
-      id: vehicleId,
+      publicSlug,
       dealershipId,
       publishedAt: { not: null },
     },
@@ -245,6 +325,7 @@ function tenantDealershipKey(slug: string): string {
 
 export interface TenantHomeBundleVehicle {
   id: string;
+  publicSlug: string;
   title: string;
   brand: string;
   model: string;
@@ -442,6 +523,7 @@ async function fetchTenantHomeBundleFromDb(
     },
     vehicles: candidates.map((v) => ({
       id: v.id,
+      publicSlug: v.publicSlug,
       title: v.title,
       brand: v.brand,
       model: v.model,

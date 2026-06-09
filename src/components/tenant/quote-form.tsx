@@ -87,11 +87,11 @@ export function QuoteForm({ whatsappUrl }: QuoteFormProps) {
 
       <form
         onSubmit={handleSubmit}
-        className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 sm:p-8"
+        className="space-y-5 rounded-2xl border border-[var(--tenant-border)] bg-[var(--tenant-surface)] p-6 sm:p-8"
       >
         {/* Datos del vendedor */}
         <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-700">
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--tenant-fg)]">
             Tus datos
           </h3>
           <div className="mt-3 grid gap-4 sm:grid-cols-2">
@@ -123,8 +123,8 @@ export function QuoteForm({ whatsappUrl }: QuoteFormProps) {
         </div>
 
         {/* Datos del vehículo */}
-        <div className="border-t border-slate-200 pt-5">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-700">
+        <div className="border-t border-[var(--tenant-border)] pt-5">
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--tenant-fg)]">
             Datos del vehículo
           </h3>
           <div className="mt-3 grid gap-4 sm:grid-cols-2">
@@ -178,7 +178,7 @@ export function QuoteForm({ whatsappUrl }: QuoteFormProps) {
           </div>
 
           <div className="mt-4">
-            <label className="mb-1 block text-xs font-medium text-slate-600">
+            <label className="mb-1 block text-xs font-medium text-[var(--tenant-fg-muted)]">
               Comentarios adicionales
             </label>
             <textarea
@@ -187,7 +187,7 @@ export function QuoteForm({ whatsappUrl }: QuoteFormProps) {
               rows={4}
               maxLength={1000}
               placeholder="Estado general, equipamiento, detalles relevantes..."
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-[var(--tenant-primary)] focus:ring-2 focus:ring-[var(--tenant-primary)]/20"
+              className="w-full rounded-xl border border-[var(--tenant-border-strong)] bg-[var(--tenant-surface)] px-3 py-2 text-sm text-[var(--tenant-fg)] outline-none transition focus:border-[var(--tenant-primary)] focus:ring-2 focus:ring-[var(--tenant-primary)]/20"
             />
           </div>
         </div>
@@ -225,7 +225,7 @@ interface FieldProps {
 function Field({ label, value, onChange, placeholder, type = "text", required }: FieldProps) {
   return (
     <div>
-      <label className="mb-1 block text-xs font-medium text-slate-600">
+      <label className="mb-1 block text-xs font-medium text-[var(--tenant-fg-muted)]">
         {label}
         {required && " *"}
       </label>
@@ -235,7 +235,7 @@ function Field({ label, value, onChange, placeholder, type = "text", required }:
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         required={required}
-        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-[var(--tenant-primary)] focus:ring-2 focus:ring-[var(--tenant-primary)]/20"
+        className="w-full rounded-xl border border-[var(--tenant-border-strong)] bg-[var(--tenant-surface)] px-3 py-2 text-sm text-[var(--tenant-fg)] outline-none transition focus:border-[var(--tenant-primary)] focus:ring-2 focus:ring-[var(--tenant-primary)]/20"
       />
     </div>
   );
@@ -251,11 +251,11 @@ interface SelectFieldProps {
 function SelectField({ label, value, onChange, options }: SelectFieldProps) {
   return (
     <div>
-      <label className="mb-1 block text-xs font-medium text-slate-600">{label}</label>
+      <label className="mb-1 block text-xs font-medium text-[var(--tenant-fg-muted)]">{label}</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-[var(--tenant-primary)] focus:ring-2 focus:ring-[var(--tenant-primary)]/20"
+        className="w-full rounded-xl border border-[var(--tenant-border-strong)] bg-[var(--tenant-surface)] px-3 py-2 text-sm text-[var(--tenant-fg)] outline-none transition focus:border-[var(--tenant-primary)] focus:ring-2 focus:ring-[var(--tenant-primary)]/20"
       >
         <option value="">Seleccionar</option>
         {options.map((opt) => (

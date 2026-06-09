@@ -33,12 +33,12 @@ export async function Navbar() {
           >
             Servicios
           </a>
-          <a
-            href="#planes"
+          <Link
+            href="/precios"
             className="text-sm font-medium text-gray-600 transition hover:text-gray-900"
           >
             Planes
-          </a>
+          </Link>
           <a
             href="#faq"
             className="text-sm font-medium text-gray-600 transition hover:text-gray-900"
@@ -54,9 +54,9 @@ export async function Navbar() {
         </div>
 
         <div className="hidden md:flex items-center gap-3">
-          {/* Contacto — siempre visible (desktop + mobile). Scroll al pre-registro. */}
+          {/* Contacto — siempre visible (desktop + mobile). Scroll al Contacto. */}
           <a
-            href="#pre-registro"
+            href="#contacto"
             className="inline-flex items-center gap-1.5 rounded-lg bg-blue-100 px-3 py-1.5 text-sm font-medium text-blue-700 transition hover:bg-blue-200"
           >
             <PiEnvelope className="size-3.5" />

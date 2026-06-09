@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { WebsiteSettings } from "@/components/dashboard/settings/website-settings";
+import { TemplateSelector } from "@/components/dashboard/settings/template-selector";
 import { SectionsBuilderClient } from "@/components/dashboard/sections-builder/sections-builder-client";
 import { getSectionsPageData } from "./sections-page-data";
 import type { DealershipTheme } from "@/types";
@@ -59,9 +60,16 @@ export default async function SitioWebPage() {
       </Card>
 
       <WebsiteSettings
-        dealership={{ slug: dealership.slug, logo: dealership.logo, website: dealership.website }}
+        dealership={{
+          slug: dealership.slug,
+          logo: dealership.logo,
+          website: dealership.website,
+          siteEnabled: dealership.siteEnabled,
+        }}
         theme={theme}
       />
+
+      <TemplateSelector currentTemplateId={dealership.templateId} />
     </div>
   );
 }

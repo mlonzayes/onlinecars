@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import { Prisma } from "@prisma/client";
 import { getCurrentDealership } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { vehicleCreateSchema } from "@/lib/validators/vehicle";
@@ -7,6 +8,7 @@ import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { invalidateTenantHomeBundle } from "@/lib/tenant";
 import { canSeeCosts, canEditCosts } from "@/lib/permissions";
+import { generateVehicleSlug } from "@/lib/utils/slug";
 
 // Sacamos costPrice/costCurrency de una lista de vehículos si el user no tiene permiso.
 // Devolvemos `null` en vez de `undefined` para no romper el shape de la response.
@@ -121,22 +123,68 @@ export const POST = withLogger(async (request, { requestId }) => {
   const { costPrice, costCurrency, ...rest } = parsed.data;
   const allowedToEditCosts = canEditCosts(dealership.currentUser);
 
-  const vehicle = await prisma.vehicle.create({
-    data: {
-      ...rest,
-      price: parsed.data.price,
-      ...(allowedToEditCosts
-        ? { costPrice: costPrice ?? null, costCurrency: costCurrency ?? null }
-        : {}),
+  // publicSlug: identificador URL-friendly único por dealer. Generamos uno
+  // aleatorio con sufijo hex; en el caso EXTREMADAMENTE raro de colisión con
+  // otro vehículo del mismo dealer, reintentamos hasta 3 veces. Probabilidad
+  // de colisión: ~1 en 4 mil millones por brand+model+year. 3 retries dan
+  // certeza práctica.
+  const MAX_SLUG_RETRIES = 3;
+  let vehicle = null as Awaited<ReturnType<typeof prisma.vehicle.create>> | null;
+  let lastError: unknown = null;
+
+  for (let attempt = 0; attempt < MAX_SLUG_RETRIES; attempt++) {
+    const publicSlug = generateVehicleSlug(rest.brand, rest.model, rest.year);
+    try {
+      vehicle = await prisma.vehicle.create({
+        data: {
+          ...rest,
+          price: parsed.data.price,
+          ...(allowedToEditCosts
+            ? { costPrice: costPrice ?? null, costCurrency: costCurrency ?? null }
+            : {}),
+          dealershipId: dealership.id,
+          publicSlug,
+        },
+      });
+      break;
+    } catch (err) {
+      lastError = err;
+      // P2002 = unique constraint violation. Solo reintentamos si fue por
+      // publicSlug; cualquier otro target (VIN, motorNumber, etc.) NO debe
+      // disparar retry — es un duplicado real que el user tiene que resolver.
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === "P2002" &&
+        Array.isArray(err.meta?.target) &&
+        (err.meta.target as string[]).includes("publicSlug")
+      ) {
+        logger.warn(requestId, "vehicles.create.slug_collision", {
+          dealershipId: dealership.id,
+          attempt: attempt + 1,
+        });
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  if (!vehicle) {
+    logger.error(requestId, "vehicles.create.slug_exhausted_retries", {
       dealershipId: dealership.id,
-    },
-  });
+      error: lastError instanceof Error ? lastError.message : String(lastError),
+    });
+    return NextResponse.json(
+      { error: "No se pudo generar un identificador único. Intentá de nuevo." },
+      { status: 500 }
+    );
+  }
 
   await invalidateTenantHomeBundle(dealership.slug);
 
   logger.info(requestId, "vehicles.create.ok", {
     dealershipId: dealership.id,
     vehicleId: vehicle.id,
+    publicSlug: vehicle.publicSlug,
   });
 
   return NextResponse.json({ data: vehicle }, { status: 201 });

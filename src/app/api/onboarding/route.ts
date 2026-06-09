@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { dealershipCreateSchema } from "@/lib/validators/dealership";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 
 // Duración del período de prueba para nuevos dealerships.
-// 25 días desde el momento del onboarding.
-const TRIAL_DAYS = 25;
+// 15 días desde el momento del onboarding. Si cambiás esto, actualizá también
+// el copy del landing/waitlist que menciona "demo gratuita de N días".
+const TRIAL_DAYS = 15;
 
 // POST /api/onboarding
 // Body: DealershipCreateInput
@@ -63,22 +64,10 @@ export const POST = withLogger(async (req, { requestId }) => {
     );
   }
 
-  // Trial: 25 días desde ahora. Status arranca en "trial".
+  // Trial: TRIAL_DAYS desde ahora. Status arranca en "trial".
   // El cron diario marca como "expired" cuando trialEndsAt < now().
   const trialEndsAt = new Date();
   trialEndsAt.setUTCDate(trialEndsAt.getUTCDate() + TRIAL_DAYS);
-
-  // Si el usuario completó el flow por invitación, su email coincide con un
-  // WaitlistEntry. Lo marcamos como "accepted" para cerrar el funnel y dejar
-  // trazabilidad de qué lead se convirtió en qué dealership.
-  let waitlistEmail: string | null = null;
-  try {
-    const clerk = await clerkClient();
-    const clerkUser = await clerk.users.getUser(userId);
-    waitlistEmail = clerkUser.emailAddresses[0]?.emailAddress?.toLowerCase() ?? null;
-  } catch {
-    // Si falla el lookup de Clerk seguimos — no es bloqueante.
-  }
 
   const dealership = await prisma.$transaction(async (tx) => {
     const d = await tx.dealership.create({
@@ -92,17 +81,6 @@ export const POST = withLogger(async (req, { requestId }) => {
       data: { clerkUserId: userId, dealershipId: d.id, role: "admin" },
     });
 
-    if (waitlistEmail) {
-      await tx.waitlistEntry.updateMany({
-        where: { email: waitlistEmail, status: "invited" },
-        data: {
-          status: "accepted",
-          acceptedAt: new Date(),
-          clerkUserId: userId,
-        },
-      });
-    }
-
     return d;
   });
 
@@ -111,7 +89,6 @@ export const POST = withLogger(async (req, { requestId }) => {
     dealershipId: dealership.id,
     slug: dealership.slug,
     trialEndsAt: trialEndsAt.toISOString(),
-    matchedWaitlistEmail: waitlistEmail,
   });
 
   return NextResponse.json(

@@ -16,6 +16,7 @@ import {
 } from "@/lib/validators/vehicle-image";
 import { blockingSaleErrorBody, findBlockingSale } from "@/lib/sale-guards";
 import { invalidateTenantHomeBundle } from "@/lib/tenant";
+import { getPlanLimits } from "@/lib/plans";
 
 type VehicleParams = { id: string };
 
@@ -61,16 +62,26 @@ export const POST = withLogger<VehicleParams>(async (request, { requestId, param
     return NextResponse.json(blockingSaleErrorBody(blockingSale), { status: 409 });
   }
 
-  if (vehicle._count.images >= MAX_IMAGES_PER_VEHICLE) {
+  // Tope efectivo = min(plan, sanity cap del producto). El plan da el techo
+  // comercial, MAX_IMAGES_PER_VEHICLE evita abuso aún en Premium/Enterprise.
+  const planLimits = getPlanLimits(dealership);
+  const planMax = planLimits.maxImagesPerVehicle;
+  const effectiveMax = Math.min(MAX_IMAGES_PER_VEHICLE, planMax);
+
+  if (vehicle._count.images >= effectiveMax) {
+    const isPlanLimit = planMax < MAX_IMAGES_PER_VEHICLE;
     logger.warn(requestId, "vehicles.images.upload.limit_reached", {
       dealershipId: dealership.id,
       vehicleId,
       currentCount: vehicle._count.images,
+      effectiveMax,
+      planMax,
+      reason: isPlanLimit ? "plan" : "product",
     });
-    return NextResponse.json(
-      { error: `Máximo ${MAX_IMAGES_PER_VEHICLE} imágenes por vehículo` },
-      { status: 400 }
-    );
+    const message = isPlanLimit
+      ? `Llegaste al máximo de ${effectiveMax} fotos por vehículo de tu plan. Mejorá a Media para subir más.`
+      : `Máximo ${MAX_IMAGES_PER_VEHICLE} imágenes por vehículo`;
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 
   let file: File | null = null;

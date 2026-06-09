@@ -48,12 +48,12 @@ export function ReviewsSection({ section, reviews, basePath }: ReviewsSectionPro
             ))}
           </div>
         ) : (
-          <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-10 text-center">
+          <div className="rounded-2xl border-2 border-dashed border-[var(--tenant-border)] bg-[var(--tenant-bg)] p-10 text-center">
             <MessageSquareQuote className="mx-auto mb-3 h-8 w-8 text-slate-300" />
-            <p className="text-sm font-semibold text-slate-700">
+            <p className="text-sm font-semibold text-[var(--tenant-fg)]">
               Aún no hay opiniones públicas
             </p>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-[var(--tenant-fg-muted)]">
               Sé el primero en compartir tu experiencia.
             </p>
           </div>

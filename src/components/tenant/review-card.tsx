@@ -10,7 +10,7 @@ interface ReviewCardProps {
 
 export function ReviewCard({ review }: ReviewCardProps) {
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
+    <div className="flex flex-col gap-4 rounded-2xl border border-[var(--tenant-border)] bg-[var(--tenant-surface)] p-6 shadow-sm transition-shadow hover:shadow-md">
       <div className="flex items-center gap-1">
         {Array.from({ length: 5 }).map((_, i) => (
           <Star
@@ -21,16 +21,16 @@ export function ReviewCard({ review }: ReviewCardProps) {
           />
         ))}
       </div>
-      <p className="flex-1 text-sm leading-relaxed text-gray-600 italic">
+      <p className="flex-1 text-sm leading-relaxed text-[var(--tenant-fg-muted)] italic">
         &ldquo;{review.content}&rdquo;
       </p>
       <div className="mt-2 flex items-center gap-3 border-t border-gray-50 pt-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-500">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--tenant-surface-hover)] text-sm font-bold text-[var(--tenant-fg-muted)]">
           {review.name.charAt(0).toUpperCase()}
         </div>
         <div>
-          <p className="text-sm font-semibold text-gray-900">{review.name}</p>
-          <p className="text-xs text-gray-400">Cliente Verificado</p>
+          <p className="text-sm font-semibold text-[var(--tenant-fg)]">{review.name}</p>
+          <p className="text-xs text-[var(--tenant-fg-subtle)]">Cliente Verificado</p>
         </div>
       </div>
     </div>

@@ -39,15 +39,15 @@ export function WhyChooseUs() {
         return (
           <div
             key={feature.title}
-            className="flex flex-col items-start rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+            className="flex flex-col items-start rounded-xl border border-[var(--tenant-border)] bg-[var(--tenant-surface)] p-6 shadow-sm transition-shadow hover:shadow-md"
           >
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--tenant-primary)]/10 text-[var(--tenant-primary)]">
               <Icon className="h-6 w-6" />
             </div>
-            <h3 className="text-base font-semibold text-slate-900">
+            <h3 className="text-base font-semibold text-[var(--tenant-fg)]">
               {feature.title}
             </h3>
-            <p className="mt-2 text-sm leading-relaxed text-slate-600">
+            <p className="mt-2 text-sm leading-relaxed text-[var(--tenant-fg-muted)]">
               {feature.description}
             </p>
           </div>

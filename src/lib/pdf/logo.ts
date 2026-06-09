@@ -75,6 +75,37 @@ export async function resolveDealerLogo(
   return null;
 }
 
+/**
+ * Resuelve la foto principal del vehículo como data URI base64. Usada SOLO en
+ * el PDF de planes premium/enterprise para reemplazar el segundo logo del
+ * dealer por la foto del auto en venta. Misma restricción que los logos:
+ * pdfmake solo soporta PNG y JPEG.
+ *
+ * Devuelve null si:
+ *  - no se pasó URL
+ *  - el fetch falló
+ *  - el formato no es PNG/JPEG
+ * En cualquiera de esos casos el caller cae al fallback (mostrar dealerLogo).
+ */
+export async function resolveVehicleImage(
+  imageUrl: string | null | undefined,
+  appOrigin: string
+): Promise<{ dataUri: string } | null> {
+  if (!imageUrl) return null;
+  try {
+    const buffer = await loadImageBuffer(imageUrl, appOrigin);
+    const mime = detectImageMime(buffer);
+    if (mime === "image/png" || mime === "image/jpeg") {
+      return {
+        dataUri: `data:${mime};base64,${buffer.toString("base64")}`,
+      };
+    }
+  } catch {
+    // Silencioso — el PDF cae al fallback con el logo del dealer.
+  }
+  return null;
+}
+
 async function readMotorflowLogo(): Promise<QuotationLogo> {
   const filePath = path.join(process.cwd(), ...MOTORFLOW_LOGO_PATH);
   const buffer = await fs.readFile(filePath);

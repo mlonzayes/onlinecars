@@ -11,14 +11,14 @@ export function DualCTA({ basePath }: DualCTAProps) {
   return (
     <div className="grid gap-5 sm:gap-6 md:grid-cols-2">
       {/* Comprar */}
-      <div className="group relative overflow-hidden rounded-3xl bg-slate-50 p-8 sm:p-10">
+      <div className="group relative overflow-hidden rounded-3xl bg-[var(--tenant-bg)] p-8 sm:p-10">
         <div className="relative z-10 max-w-md">
-          <h3 className="text-2xl font-bold leading-tight text-slate-900 sm:text-3xl">
+          <h3 className="text-2xl font-bold leading-tight text-[var(--tenant-fg)] sm:text-3xl">
             ¿Estás buscando
             <br />
             tu próximo auto?
           </h3>
-          <p className="mt-3 text-sm text-slate-600 sm:text-base">
+          <p className="mt-3 text-sm text-[var(--tenant-fg-muted)] sm:text-base">
             Recorré nuestro stock completo y filtrá por marca, condición o presupuesto
             para encontrar el ideal.
           </p>
@@ -52,7 +52,7 @@ export function DualCTA({ basePath }: DualCTAProps) {
           </p>
           <Link
             href={`${basePath}/cotizar`}
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-sm transition-transform hover:-translate-y-0.5"
+            className="mt-6 inline-flex items-center gap-2 rounded-full bg-[var(--tenant-surface)] px-5 py-2.5 text-sm font-semibold text-[var(--tenant-fg)] shadow-sm transition-transform hover:-translate-y-0.5"
           >
             Cotizar mi auto
             <ArrowUpRight className="h-4 w-4" />

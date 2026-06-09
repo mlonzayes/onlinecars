@@ -26,24 +26,24 @@ export function FinancingSection({ section, basePath }: FinancingSectionProps) {
     >
       <AnimateOnScroll
         preset="fadeUp"
-        className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-slate-50 p-8 text-center sm:p-12"
+        className="mx-auto max-w-3xl rounded-3xl border border-[var(--tenant-border)] bg-[var(--tenant-bg)] p-8 text-center sm:p-12"
       >
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--tenant-primary)]/10 text-[var(--tenant-primary)]">
           <Banknote className="h-7 w-7" />
         </div>
 
         {section.content ? (
-          <p className="mx-auto max-w-2xl whitespace-pre-line text-base leading-relaxed text-slate-700">
+          <p className="mx-auto max-w-2xl whitespace-pre-line text-base leading-relaxed text-[var(--tenant-fg)]">
             {section.content}
           </p>
         ) : (
-          <p className="mx-auto max-w-2xl text-base leading-relaxed text-slate-700">
+          <p className="mx-auto max-w-2xl text-base leading-relaxed text-[var(--tenant-fg)]">
             Estamos preparando los planes de financiación. Mientras tanto, contactanos
             y te armamos una propuesta a medida.
           </p>
         )}
 
-        <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
+        <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-[var(--tenant-fg-subtle)]">
           Próximamente — planes administrables
         </p>
 

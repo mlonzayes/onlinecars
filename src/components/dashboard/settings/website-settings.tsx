@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Globe, Image as ImageIcon, Palette, Link2, Loader2 } from "lucide-react";
+import { Globe, Image as ImageIcon, Palette, Link2, Power, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import type { DealershipTheme } from "@/types";
 
 interface WebsiteSettingsProps {
@@ -14,6 +16,7 @@ interface WebsiteSettingsProps {
     slug: string;
     logo: string | null;
     website: string | null;
+    siteEnabled: boolean;
   };
   theme: DealershipTheme | null;
 }
@@ -21,13 +24,20 @@ interface WebsiteSettingsProps {
 const DEFAULT_COLOR = "#2563eb";
 
 export function WebsiteSettings({ dealership, theme }: WebsiteSettingsProps) {
+  const router = useRouter();
   const [colorPrimary, setColorPrimary] = useState(theme?.colorPrimary ?? DEFAULT_COLOR);
-  const [customDomain, setCustomDomain] = useState(dealership.website ?? "");
   const [logo, setLogo] = useState(dealership.logo ?? "");
   const [savingLogo, setSavingLogo] = useState(false);
   const [deletingLogo, setDeletingLogo] = useState(false);
-  const [savingDomain, setSavingDomain] = useState(false);
+  // Defensive ?? false: si el dealer fue cacheado en Redis ANTES de la
+  // migration de siteEnabled, el campo viene undefined. useState lo trataría
+  // como uncontrolled y Base UI tira warning al hacer el primer cambio.
+  const [siteEnabled, setSiteEnabled] = useState(dealership.siteEnabled ?? false);
+  const [togglingSite, setTogglingSite] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Dominio custom en standby (Fase 2) — read-only en la UI. Lo mostramos
+  // como referencia pero no es editable. Ver el badge "Próximamente" abajo.
+  const customDomain = dealership.website ?? "";
 
   const appDomain = "motorflowapp.com";
 
@@ -93,50 +103,107 @@ export function WebsiteSettings({ dealership, theme }: WebsiteSettingsProps) {
     }
   }
 
-  async function handleSaveDomain() {
-    setSavingDomain(true);
+  async function handleToggleSite(next: boolean) {
+    // Optimistic UI: aplicamos el cambio antes de la respuesta. Si falla,
+    // revertimos. El cache del bundle del tenant lo invalida el handler PUT.
+    const previous = siteEnabled;
+    setSiteEnabled(next);
+    setTogglingSite(true);
     try {
       const res = await fetch("/api/concesionario", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ website: customDomain.trim() || null }),
+        body: JSON.stringify({ siteEnabled: next }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        if (res.status === 409) {
-          throw new Error("El dominio ya está registrado por otra concesionaria.");
-        }
-        if (res.status === 400 && data.details?.fieldErrors?.website) {
-          throw new Error(data.details.fieldErrors.website[0]);
-        }
-        throw new Error(data.error || "No se pudo guardar el dominio");
-      }
-      toast.success("Dominio guardado", { duration: 2000 });
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "No se pudo guardar el dominio");
+      if (!res.ok) throw new Error();
+      // Forzamos refresh de RSC para que el server component vuelva a leer el
+      // dealer (y los chequeos derivados — ej. que el link del sitio quede
+      // activable sin recargar la pestaña).
+      router.refresh();
+      toast.success(next ? "Sitio activado" : "Sitio pausado", { duration: 2000 });
+    } catch {
+      setSiteEnabled(previous);
+      toast.error("No se pudo cambiar el estado");
     } finally {
-      setSavingDomain(false);
+      setTogglingSite(false);
     }
   }
 
+  const publicUrl = `https://${dealership.slug}.${appDomain}`;
+
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      {/* Subdominio (read-only) — full width */}
+      {/* Toggle ON/OFF — PRIMERA card, aparte. Es el control principal de la sección. */}
+      <Card
+        className={`lg:col-span-2 transition-colors ${
+          siteEnabled ? "border-green-200" : "border-amber-200"
+        }`}
+      >
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Power
+              className={`h-5 w-5 ${
+                siteEnabled ? "text-green-600" : "text-amber-600"
+              }`}
+            />
+            {siteEnabled ? "Sitio público activo" : "Sitio público pausado"}
+          </CardTitle>
+          <CardDescription>
+            {siteEnabled
+              ? "Cualquiera puede ver tu catálogo en el subdominio. Tu panel funciona como siempre."
+              : "Los visitantes ven 404. Activá el sitio cuando esté listo para mostrar."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-sm font-medium text-foreground">
+              {siteEnabled ? "Pausar sitio" : "Activar sitio"}
+            </p>
+            <Switch
+              checked={siteEnabled}
+              onCheckedChange={handleToggleSite}
+              disabled={togglingSite}
+              aria-label={siteEnabled ? "Pausar sitio" : "Activar sitio"}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Dirección del sitio — segunda card, full width. El link es el bloque entero
+          si el sitio está activo (no un botón aparte). Si está pausado, queda como
+          texto plano para no incitar al click hacia un 404. */}
       <Card className="lg:col-span-2">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Globe className="h-5 w-5 text-blue-500" />
-            Tu sitio web
+            Dirección de tu sitio
           </CardTitle>
-          <CardDescription>Tu concesionario está disponible en este subdominio.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-lg border bg-muted/50 px-4 py-3">
-            <p className="text-sm text-muted-foreground">Dirección de tu sitio</p>
-            <p className="mt-1 text-lg font-bold text-foreground">
-              {dealership.slug}.{appDomain}
-            </p>
-          </div>
+          {siteEnabled ? (
+            <a
+              href={publicUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center justify-between gap-2 rounded-lg border bg-muted/50 px-4 py-3 transition-colors hover:border-blue-300 hover:bg-blue-50/50"
+            >
+              <span className="text-lg font-bold text-foreground group-hover:text-blue-700">
+                {dealership.slug}.{appDomain}
+              </span>
+              <span className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-blue-600">
+                Abrir <ExternalLink className="h-3 w-3" />
+              </span>
+            </a>
+          ) : (
+            <div className="rounded-lg border bg-muted/50 px-4 py-3">
+              <p className="text-lg font-bold text-foreground/60">
+                {dealership.slug}.{appDomain}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Activá el sitio para que esta dirección responda.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -218,25 +285,32 @@ export function WebsiteSettings({ dealership, theme }: WebsiteSettingsProps) {
         </CardContent>
       </Card>
 
-      {/* Dominio personalizado — full width */}
-      <Card className="lg:col-span-2">
+      {/* Dominio personalizado — EN STANDBY (Fase 2). Mostrado como "Próximamente".
+          Para reactivar: poner CUSTOM_DOMAINS_ENABLED=true en el handler de
+          /api/concesionario + terminar el routing del middleware, y volver a
+          habilitar los controles de abajo (sacar disabled + el badge). */}
+      <Card className="lg:col-span-2 relative overflow-hidden">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Link2 className="h-5 w-5 text-green-500" />
             Dominio personalizado
+            <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+              Próximamente
+            </span>
           </CardTitle>
           <CardDescription>
-            Asociá tu propio dominio a tu sitio web.
+            Vas a poder asociar tu propio dominio (ej: www.tuconcesionario.com.ar) a tu sitio.
+            Esta función estará disponible próximamente en los planes Premium.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 opacity-50 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="custom-domain">Tu dominio</Label>
               <Input
                 id="custom-domain"
                 value={customDomain}
-                onChange={(e) => setCustomDomain(e.target.value)}
+                disabled
                 placeholder="www.miconcesionario.com.ar"
               />
             </div>
@@ -248,8 +322,8 @@ export function WebsiteSettings({ dealership, theme }: WebsiteSettingsProps) {
               </div>
             </div>
           </div>
-          <Button onClick={handleSaveDomain} disabled={savingDomain} className="w-full sm:w-auto">
-            {savingDomain ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Guardando...</> : "Guardar dominio"}
+          <Button disabled className="w-full sm:w-auto">
+            Próximamente
           </Button>
         </CardContent>
       </Card>

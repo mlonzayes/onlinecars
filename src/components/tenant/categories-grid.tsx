@@ -32,12 +32,12 @@ export function CategoriesGrid({ basePath }: CategoriesGridProps) {
           <Link
             key={type}
             href={`${basePath}/catalogo?bodyType=${type}`}
-            className="group flex flex-col items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[var(--tenant-primary)] hover:shadow-lg hover:ring-1 hover:ring-[var(--tenant-primary)]/20"
+            className="group flex flex-col items-center justify-center gap-3 rounded-xl border border-[var(--tenant-border)] bg-[var(--tenant-surface)] p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[var(--tenant-primary)] hover:shadow-lg hover:ring-1 hover:ring-[var(--tenant-primary)]/20"
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-colors group-hover:bg-[var(--tenant-primary)] group-hover:text-white">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--tenant-surface-hover)] text-[var(--tenant-fg-muted)] transition-colors group-hover:bg-[var(--tenant-primary)] group-hover:text-white">
               <Icon className="h-6 w-6" />
             </div>
-            <span className="text-sm font-semibold text-slate-700 group-hover:text-[var(--tenant-primary)]">
+            <span className="text-sm font-semibold text-[var(--tenant-fg)] group-hover:text-[var(--tenant-primary)]">
               {VEHICLE_BODY_TYPE_LABELS[type]}
             </span>
           </Link>

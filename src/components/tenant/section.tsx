@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 interface SectionProps {
   children: React.ReactNode;
   className?: string;
-  // Fondo de la sección. "muted" usa bg-slate-50 para alternar contra el bg-white default.
+  // Fondo de la sección. "muted" usa bg-[var(--tenant-bg)] para alternar contra el bg-[var(--tenant-surface)] default.
   background?: "white" | "muted";
   // Si querés padding diferente al estándar.
   padding?: "default" | "tight" | "none";
@@ -45,7 +45,7 @@ export function Section({
     <section
       id={id}
       className={cn(
-        background === "muted" ? "bg-slate-50" : "bg-white",
+        background === "muted" ? "bg-[var(--tenant-bg)]" : "bg-[var(--tenant-surface)]",
         PADDING_CLASSES[padding],
         className
       )}
@@ -66,7 +66,7 @@ export function Section({
             {title && (
               <h2
                 className={cn(
-                  "mt-2 text-2xl font-semibold text-slate-900 sm:text-3xl",
+                  "mt-2 text-2xl font-semibold text-[var(--tenant-fg)] sm:text-3xl",
                   eyebrow && "mt-2"
                 )}
               >
@@ -76,7 +76,7 @@ export function Section({
             {description && (
               <p
                 className={cn(
-                  "mt-3 text-base text-slate-600",
+                  "mt-3 text-base text-[var(--tenant-fg-muted)]",
                   align === "center" && "mx-auto max-w-2xl"
                 )}
               >

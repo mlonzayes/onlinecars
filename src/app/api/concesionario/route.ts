@@ -10,6 +10,14 @@ import { invalidateTenantHomeBundle } from "@/lib/tenant";
 import { getPlanLimits } from "@/lib/plans";
 import { addDomainToVercel, removeDomainFromVercel } from "@/lib/vercel";
 
+// Feature flag: dominios custom en STANDBY (Fase 2). Mientras esté en false:
+//   - El campo `website` se ignora silenciosamente en el PUT (no se guarda)
+//   - No se llama a la API de Vercel
+//   - La UI muestra "Próximamente"
+// Para reactivar en Fase 2: poner en true + terminar el routing en el middleware
+// (getDealershipByDomain + rewrite). Ver website-settings.tsx para la UI.
+const CUSTOM_DOMAINS_ENABLED = false;
+
 // GET /api/concesionario
 // Retorna los datos del concesionario del usuario autenticado.
 // Response 200: { data: Dealership }
@@ -77,14 +85,16 @@ export const PUT = withLogger(async (request, { requestId }) => {
     updateData.whatsappFabEnabled = false;
   }
 
-  // Sincronización con Vercel — BEST-EFFORT, nunca bloquea el guardado en DB.
-  // La DB es la fuente de verdad de qué dominio pertenece a qué dealer. Si Vercel
-  // falla (env vars faltantes, API caída, rate limit), lo logueamos pero igual
-  // guardamos. El registro en Vercel se puede reintentar manualmente o cuando se
-  // configuren las credenciales. NOTA: el routing del dominio custom todavía no
-  // está implementado en el middleware — registrar en Vercel solo no alcanza
-  // para que el dominio sirva el tenant. Eso es trabajo aparte.
-  if ("website" in updateData && updateData.website !== dealership.website) {
+  // Dominios custom en STANDBY (Fase 2). Mientras CUSTOM_DOMAINS_ENABLED sea
+  // false: ignoramos el campo website por completo — no se guarda ni se toca
+  // Vercel. La UI lo muestra como "Próximamente".
+  if (!CUSTOM_DOMAINS_ENABLED) {
+    delete updateData.website;
+  } else if ("website" in updateData && updateData.website !== dealership.website) {
+    // Sincronización con Vercel — BEST-EFFORT, nunca bloquea el guardado en DB.
+    // La DB es la fuente de verdad. Si Vercel falla, lo logueamos pero guardamos.
+    // NOTA: el routing del dominio custom todavía no está en el middleware —
+    // registrar en Vercel solo no alcanza para servir el tenant. Trabajo aparte.
     const oldDomain = dealership.website;
     const newDomain = updateData.website;
 
@@ -94,8 +104,6 @@ export const PUT = withLogger(async (request, { requestId }) => {
     if (newDomain) {
       const result = await addDomainToVercel(newDomain);
       if (!result.success) {
-        // missing_env es esperado en ambientes sin credenciales (dev, deploy
-        // sin configurar) → warn. Cualquier otro error de Vercel → error real.
         if (result.error === "missing_env") {
           logger.warn(requestId, "dealership.update.vercel_skipped", { domain: newDomain, reason: "missing_env" });
         } else {

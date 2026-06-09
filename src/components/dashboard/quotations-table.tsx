@@ -9,6 +9,7 @@ import {
   FileText,
   Loader2,
   MoreHorizontal,
+  Pencil,
   Trash2,
   XCircle,
 } from "lucide-react";
@@ -362,6 +363,7 @@ export function QuotationsTable({
                 const isLoading = loadingIds.has(row.id);
                 const isSelected = selectedIds.has(row.id);
                 const isDeletable = DELETABLE_STATUSES.has(row.status);
+                const isEditable = row.status === "pending";
 
                 return (
                   <TableRow
@@ -443,6 +445,18 @@ export function QuotationsTable({
                             <FileText className="mr-2 h-4 w-4" />
                             Ver PDF
                           </DropdownMenuItem>
+                          {isEditable && (
+                            <DropdownMenuItem
+                              render={
+                                <Link
+                                  href={`/dashboard/cotizaciones/${row.id}/editar`}
+                                />
+                              }
+                            >
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Editar
+                            </DropdownMenuItem>
+                          )}
                           {isDeletable && (
                             <>
                               <DropdownMenuSeparator />

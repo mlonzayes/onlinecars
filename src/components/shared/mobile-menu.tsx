@@ -58,7 +58,7 @@ export function MobileMenu({ isLoginEnabled, isSignedIn }: MobileMenuProps) {
             <div className="h-px w-full bg-gray-100 my-2" />
             
             <a
-              href="#pre-registro"
+              href="#contacto"
               className="inline-flex justify-center items-center gap-1.5 rounded-lg bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-200"
               onClick={() => setIsOpen(false)}
             >

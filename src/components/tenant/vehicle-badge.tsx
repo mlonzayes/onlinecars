@@ -18,7 +18,7 @@ interface VehicleBadgeProps {
 }
 
 export function VehicleBadge({ tag, className = "" }: VehicleBadgeProps) {
-  const style = BADGE_STYLES[tag] || "bg-gray-100 text-gray-800";
+  const style = BADGE_STYLES[tag] || "bg-[var(--tenant-surface-hover)] text-[var(--tenant-fg)]";
   const label = PRICE_TAG_LABELS[tag] || tag;
 
   return (

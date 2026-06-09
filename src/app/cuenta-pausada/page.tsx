@@ -16,7 +16,7 @@ const SUPPORT_WHATSAPP = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP ?? "5491100000
 const COPY = {
   expired: {
     title: "Tu prueba terminó",
-    body: "Tu período de prueba de 25 días finalizó. Contactanos para activar tu plan y seguir gestionando tu concesionario.",
+    body: "Tu período de prueba de 15 días finalizó. Contactanos para activar tu plan y seguir gestionando tu concesionario.",
     whatsappMsg: "Hola! Mi prueba en motorflow terminó y quiero activar un plan.",
   },
   suspended: {

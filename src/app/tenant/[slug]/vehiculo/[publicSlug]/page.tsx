@@ -13,20 +13,24 @@ import {
   MessageCircle,
   Star,
 } from "lucide-react";
-import { getDealershipBySlug, getPublishedVehicleById } from "@/lib/tenant";
+import {
+  getDealershipBySlug,
+  getPublishedVehicleBySlug,
+  getTenantBasePath,
+} from "@/lib/tenant";
 import { VehicleGallery } from "@/components/tenant/vehicle-gallery";
 import { TenantContactForm } from "@/components/tenant/contact-form";
 
 interface VehicleDetailPageProps {
-  params: Promise<{ slug: string; id: string }>;
+  params: Promise<{ slug: string; publicSlug: string }>;
 }
 
 export async function generateMetadata({ params }: VehicleDetailPageProps): Promise<Metadata> {
-  const { slug, id } = await params;
+  const { slug, publicSlug } = await params;
   const dealership = await getDealershipBySlug(slug);
   if (!dealership) return { title: "No encontrado" };
 
-  const vehicle = await getPublishedVehicleById(dealership.id, id);
+  const vehicle = await getPublishedVehicleBySlug(dealership.id, publicSlug);
   if (!vehicle) return { title: "Vehículo no encontrado" };
 
   const price = formatPrice(vehicle.price, vehicle.currency);
@@ -77,14 +81,14 @@ const TRANSMISSION_LABELS: Record<string, string> = {
 };
 
 export default async function VehicleDetailPage({ params }: VehicleDetailPageProps) {
-  const { slug, id } = await params;
+  const { slug, publicSlug } = await params;
   const dealership = await getDealershipBySlug(slug);
   if (!dealership) notFound();
 
-  const vehicle = await getPublishedVehicleById(dealership.id, id);
+  const vehicle = await getPublishedVehicleBySlug(dealership.id, publicSlug);
   if (!vehicle) notFound();
 
-  const basePath = `/tenant/${slug}`;
+  const basePath = await getTenantBasePath(slug);
 
   const whatsappMessage = encodeURIComponent(
     `Hola! Me interesa el ${vehicle.title} (${formatPrice(vehicle.price, vehicle.currency)}). ¿Está disponible?`
@@ -120,7 +124,7 @@ export default async function VehicleDetailPage({ params }: VehicleDetailPagePro
       {/* Back */}
       <Link
         href={basePath}
-        className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 transition-colors hover:text-[var(--tenant-primary)]"
+        className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary)]"
       >
         <ArrowLeft className="h-4 w-4" />
         Volver al catálogo
@@ -146,24 +150,24 @@ export default async function VehicleDetailPage({ params }: VehicleDetailPagePro
               <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-800">
                 Disponible
               </span>
-              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">
+              <span className="rounded-full bg-[var(--tenant-surface-hover)] px-3 py-1 text-xs font-semibold text-[var(--tenant-fg)]">
                 {vehicle.condition === "new" ? "0 km" : "Usado"}
               </span>
             </div>
 
             {/* Title & Price */}
             <div>
-              <h1 className="text-2xl font-extrabold text-gray-900 sm:text-3xl">
+              <h1 className="text-2xl font-extrabold text-[var(--tenant-fg)] sm:text-3xl">
                 {vehicle.title}
               </h1>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-[var(--tenant-fg-muted)]">
                 {vehicle.brand} {vehicle.model} · {vehicle.year}
               </p>
               <div className="mt-4 flex items-baseline gap-2">
-                <span className="text-3xl font-black text-gray-900 sm:text-4xl">
+                <span className="text-3xl font-black text-[var(--tenant-fg)] sm:text-4xl">
                   {formatPrice(vehicle.price, vehicle.currency)}
                 </span>
-                <span className="text-sm font-medium uppercase text-gray-400">
+                <span className="text-sm font-medium uppercase text-[var(--tenant-fg-subtle)]">
                   {vehicle.currency}
                 </span>
               </div>
@@ -174,16 +178,16 @@ export default async function VehicleDetailPage({ params }: VehicleDetailPagePro
               {specs.map((spec) => (
                 <div
                   key={spec.label}
-                  className="flex items-center gap-3 rounded-2xl bg-gray-50 px-4 py-3 transition-colors hover:bg-gray-100"
+                  className="flex items-center gap-3 rounded-2xl bg-[var(--tenant-bg)] px-4 py-3 transition-colors hover:bg-[var(--tenant-surface-hover)]"
                 >
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100">
-                    <spec.icon className="h-4 w-4 text-gray-500" />
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--tenant-surface-hover)]">
+                    <spec.icon className="h-4 w-4 text-[var(--tenant-fg-muted)]" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-gray-400">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-[var(--tenant-fg-subtle)]">
                       {spec.label}
                     </p>
-                    <p className="truncate text-sm font-semibold text-gray-900">
+                    <p className="truncate text-sm font-semibold text-[var(--tenant-fg)]">
                       {spec.value}
                     </p>
                   </div>
@@ -209,22 +213,22 @@ export default async function VehicleDetailPage({ params }: VehicleDetailPagePro
 
       {/* Description */}
       {vehicle.description && (
-        <section className="mt-12 rounded-3xl bg-gray-50 p-8 sm:p-10">
-          <h2 className="mb-4 text-xl font-bold text-gray-900">
+        <section className="mt-12 rounded-3xl bg-[var(--tenant-bg)] p-8 sm:p-10">
+          <h2 className="mb-4 text-xl font-bold text-[var(--tenant-fg)]">
             Descripción
           </h2>
-          <p className="whitespace-pre-line leading-relaxed text-gray-600">
+          <p className="whitespace-pre-line leading-relaxed text-[var(--tenant-fg-muted)]">
             {vehicle.description}
           </p>
         </section>
       )}
 
       {/* Contact Form */}
-      <section className="mt-12 rounded-3xl bg-white shadow-sm ring-1 ring-gray-900/5 p-8 sm:p-10">
-        <h2 className="mb-2 text-xl font-bold text-gray-900">
+      <section className="mt-12 rounded-3xl bg-[var(--tenant-surface)] shadow-sm ring-1 ring-gray-900/5 p-8 sm:p-10">
+        <h2 className="mb-2 text-xl font-bold text-[var(--tenant-fg)]">
           Consultá por este vehículo
         </h2>
-        <p className="mb-6 text-sm text-gray-500">
+        <p className="mb-6 text-sm text-[var(--tenant-fg-muted)]">
           Completá el formulario y te contactamos.
         </p>
         <TenantContactForm

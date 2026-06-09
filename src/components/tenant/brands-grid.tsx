@@ -55,7 +55,7 @@ function BrandCard({ brand, basePath }: BrandCardProps) {
   return (
     <Link
       href={`${basePath}/catalogo?brand=${encodeURIComponent(brand.name)}`}
-      className="group flex aspect-[3/2] flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-[var(--tenant-primary)] hover:shadow-lg hover:ring-1 hover:ring-[var(--tenant-primary)]/20"
+      className="group flex aspect-[3/2] flex-col items-center justify-center gap-2 rounded-xl border border-[var(--tenant-border)] bg-[var(--tenant-surface)] p-4 transition-all hover:-translate-y-0.5 hover:border-[var(--tenant-primary)] hover:shadow-lg hover:ring-1 hover:ring-[var(--tenant-primary)]/20"
     >
       {brand.logoUrl ? (
         <div className="flex h-10 flex-1 items-center justify-center">
@@ -67,9 +67,9 @@ function BrandCard({ brand, basePath }: BrandCardProps) {
           />
         </div>
       ) : (
-        <Car className="h-10 w-10 flex-1 text-slate-400 transition-colors group-hover:text-[var(--tenant-primary)]" />
+        <Car className="h-10 w-10 flex-1 text-[var(--tenant-fg-subtle)] transition-colors group-hover:text-[var(--tenant-primary)]" />
       )}
-      <span className="text-xs font-semibold text-slate-600 group-hover:text-[var(--tenant-primary)] sm:text-sm">
+      <span className="text-xs font-semibold text-[var(--tenant-fg-muted)] group-hover:text-[var(--tenant-primary)] sm:text-sm">
         {brand.name}
       </span>
     </Link>

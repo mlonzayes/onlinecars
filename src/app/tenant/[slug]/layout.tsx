@@ -1,21 +1,12 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
-import { getDealershipBySlug } from "@/lib/tenant";
+import { getDealershipBySlug, getTenantBasePath } from "@/lib/tenant";
+import { resolveTemplate } from "@/lib/tenant-templates";
 import { TenantHeader } from "@/components/tenant/tenant-header";
 import { TenantFooter } from "@/components/tenant/tenant-footer";
 import { WhatsAppFab } from "@/components/tenant/whatsapp-fab";
 import { getPlanLimits } from "@/lib/plans";
 import type { DealershipTheme } from "@/types";
-
-// Poppins: fuente del tenant (decisión de diseño del rediseño).
-// Auto-optimized por next/font, expone --font-poppins que usa .tenant-scope en globals.css.
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-poppins",
-  display: "swap",
-});
 
 interface TenantLayoutProps {
   children: React.ReactNode;
@@ -67,15 +58,24 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   const primaryColor = theme?.colorPrimary ?? "#2563eb";
   const primaryDark = adjustBrightness(primaryColor, -20);
 
-  const basePath = `/tenant/${slug}`;
+  // Resolve template — el helper hace fallback a "classic" si el id no es válido.
+  const template = resolveTemplate(dealership.templateId);
+
+  const basePath = await getTenantBasePath(slug);
 
   return (
     <div
-      className={`tenant-scope flex min-h-screen flex-col bg-gray-50 ${poppins.variable}`}
+      // bg-[var(--tenant-bg)] + text-[var(--tenant-fg)] aplican los tokens
+      // del template seleccionado a toda la subtree. data-template está para
+      // estilos extra que necesiten condicionales por id (raro pero útil).
+      data-template={template.id}
+      data-tone={template.tone}
+      className={`tenant-scope flex min-h-screen flex-col bg-[var(--tenant-bg)] text-[var(--tenant-fg)] ${template.font.variable}`}
       style={
         {
           "--tenant-primary": primaryColor,
           "--tenant-primary-dark": primaryDark,
+          ...template.tokens,
         } as React.CSSProperties
       }
     >
@@ -99,6 +99,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
         city={dealership.city}
         province={dealership.province}
         basePath={basePath}
+        showPoweredBy={getPlanLimits(dealership).showPoweredBy}
       />
       {/* FAB de WhatsApp: requiere TRES condiciones simultáneas:
             1) El dealer cargó un número (dealership.whatsapp)

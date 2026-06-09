@@ -23,12 +23,12 @@ export function AboutSection({ section, media }: AboutSectionProps) {
   const textBlock = (
     <div className="space-y-4">
       {section.subtitle && (
-        <p className="text-base font-medium text-slate-600 sm:text-lg">
+        <p className="text-base font-medium text-[var(--tenant-fg-muted)] sm:text-lg">
           {section.subtitle}
         </p>
       )}
       {section.content && (
-        <p className="whitespace-pre-line text-base leading-relaxed text-slate-700">
+        <p className="whitespace-pre-line text-base leading-relaxed text-[var(--tenant-fg)]">
           {section.content}
         </p>
       )}
@@ -36,7 +36,7 @@ export function AboutSection({ section, media }: AboutSectionProps) {
   );
 
   const imageBlock = aboutImage ? (
-    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-slate-100 shadow-md">
+    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[var(--tenant-surface-hover)] shadow-md">
       <Image
         src={aboutImage.url}
         alt={section.title}

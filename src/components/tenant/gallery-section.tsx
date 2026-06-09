@@ -37,12 +37,12 @@ export function GallerySection({ section, media }: GallerySectionProps) {
         title={section.title}
         description={section.subtitle ?? undefined}
       >
-        <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white p-10 text-center">
+        <div className="rounded-2xl border-2 border-dashed border-[var(--tenant-border)] bg-[var(--tenant-surface)] p-10 text-center">
           <ImageIcon className="mx-auto mb-3 h-8 w-8 text-slate-300" />
-          <p className="text-sm font-semibold text-slate-700">
+          <p className="text-sm font-semibold text-[var(--tenant-fg)]">
             Aún no hay imágenes en la galería
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-[var(--tenant-fg-muted)]">
             El concesionario subirá fotos de sus instalaciones próximamente.
           </p>
         </div>
@@ -66,7 +66,7 @@ export function GallerySection({ section, media }: GallerySectionProps) {
         {galleryImages.map((image) => (
           <div
             key={image.id}
-            className="relative aspect-square overflow-hidden rounded-xl bg-slate-100 shadow-sm transition-shadow hover:shadow-md"
+            className="relative aspect-square overflow-hidden rounded-xl bg-[var(--tenant-surface-hover)] shadow-sm transition-shadow hover:shadow-md"
           >
             <Image
               src={image.url}

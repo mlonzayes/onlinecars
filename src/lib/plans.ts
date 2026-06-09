@@ -4,48 +4,63 @@ export type PlanType = "base" | "media" | "premium" | "enterprise";
 
 export interface PlanLimits {
   maxVehicles: number;
-  maxCustomers: number;
   maxUsers: number;
+  // Máximo de imágenes por vehículo. Base apretado para que el dealer vea el
+  // techo en el día a día y suba a Media. Vender autos online ES vender fotos.
+  maxImagesPerVehicle: number;
   allowBulkActions: boolean;
   allowMLIntegration: boolean;
   // Botón flotante de WhatsApp en el sitio público del tenant.
   // Feature de retención clave: el dealer ve consultas convertirse en chats
   // directos sin formularios → motiva el upgrade desde el plan base.
   allowWhatsappFab: boolean;
+  // Si true, el sitio público del tenant muestra el badge "Powered by motorflow"
+  // en el footer. Gancho de upgrade clásico: el dealer quiere su sitio limpio.
+  showPoweredBy: boolean;
 }
+
+// Nota sobre clientes (CRM): NO hay límite por diseño.
+// Razón: Sale.customer tiene onDelete: Restrict, así que un cliente con venta
+// asociada no se puede borrar. Si pusiéramos límite, el dealer quedaría
+// atrapado sin poder operar al alcanzarlo. Los clientes son histórico contable,
+// no recurso operativo.
 
 export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
   base: {
     maxVehicles: 30,
-    maxCustomers: 50,
     maxUsers: 1, // Solo el dueño
+    maxImagesPerVehicle: 8,
     allowBulkActions: false,
     allowMLIntegration: false,
     allowWhatsappFab: false, // Gancho para upgrade
+    showPoweredBy: true, // Badge "Powered by motorflow" en el footer del tenant
   },
   media: {
     maxVehicles: 100,
-    maxCustomers: 2000,
     maxUsers: 3, // Dueño + 2 vendedores
+    maxImagesPerVehicle: 15,
     allowBulkActions: true,
-    allowMLIntegration: true, // ML habilitado a partir de este plan (~90k)
+    allowMLIntegration: true, // ML habilitado a partir de este plan
     allowWhatsappFab: true,
+    showPoweredBy: false,
   },
   premium: {
     maxVehicles: Infinity,
-    maxCustomers: 10000,
     maxUsers: Infinity,
+    maxImagesPerVehicle: Infinity,
     allowBulkActions: true,
     allowMLIntegration: true,
     allowWhatsappFab: true,
+    showPoweredBy: false,
   },
   enterprise: {
     maxVehicles: Infinity,
-    maxCustomers: Infinity,
     maxUsers: Infinity,
+    maxImagesPerVehicle: Infinity,
     allowBulkActions: true,
     allowMLIntegration: true,
     allowWhatsappFab: true,
+    showPoweredBy: false,
   },
 };
 

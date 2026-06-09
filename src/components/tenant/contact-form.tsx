@@ -89,7 +89,7 @@ export function TenantContactForm({ slug, vehicleId, vehicleTitle }: TenantConta
         style={HONEYPOT_STYLE}
       />
       <div>
-        <label htmlFor="contact-name" className="mb-1.5 block text-sm font-medium text-gray-700">
+        <label htmlFor="contact-name" className="mb-1.5 block text-sm font-medium text-[var(--tenant-fg)]">
           Nombre <span className="text-red-500">*</span>
         </label>
         <input
@@ -97,7 +97,7 @@ export function TenantContactForm({ slug, vehicleId, vehicleTitle }: TenantConta
           type="text"
           value={form.name}
           onChange={(e) => handleChange("name", e.target.value)}
-          className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-[var(--tenant-primary)] focus:ring-2 focus:ring-[var(--tenant-primary)]/20"
+          className="w-full rounded-xl border border-[var(--tenant-border-strong)] bg-[var(--tenant-surface)] px-4 py-2.5 text-sm text-[var(--tenant-fg)] outline-none transition-all placeholder:text-[var(--tenant-fg-subtle)] focus:border-[var(--tenant-primary)] focus:ring-2 focus:ring-[var(--tenant-primary)]/20"
           placeholder="Tu nombre"
           required
         />
@@ -105,7 +105,7 @@ export function TenantContactForm({ slug, vehicleId, vehicleTitle }: TenantConta
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="contact-email" className="mb-1.5 block text-sm font-medium text-gray-700">
+          <label htmlFor="contact-email" className="mb-1.5 block text-sm font-medium text-[var(--tenant-fg)]">
             Email
           </label>
           <input
@@ -113,12 +113,12 @@ export function TenantContactForm({ slug, vehicleId, vehicleTitle }: TenantConta
             type="email"
             value={form.email}
             onChange={(e) => handleChange("email", e.target.value)}
-            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-[var(--tenant-primary)] focus:ring-2 focus:ring-[var(--tenant-primary)]/20"
+            className="w-full rounded-xl border border-[var(--tenant-border-strong)] bg-[var(--tenant-surface)] px-4 py-2.5 text-sm text-[var(--tenant-fg)] outline-none transition-all placeholder:text-[var(--tenant-fg-subtle)] focus:border-[var(--tenant-primary)] focus:ring-2 focus:ring-[var(--tenant-primary)]/20"
             placeholder="tu@email.com"
           />
         </div>
         <div>
-          <label htmlFor="contact-phone" className="mb-1.5 block text-sm font-medium text-gray-700">
+          <label htmlFor="contact-phone" className="mb-1.5 block text-sm font-medium text-[var(--tenant-fg)]">
             Teléfono
           </label>
           <input
@@ -126,14 +126,14 @@ export function TenantContactForm({ slug, vehicleId, vehicleTitle }: TenantConta
             type="tel"
             value={form.phone}
             onChange={(e) => handleChange("phone", e.target.value)}
-            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-[var(--tenant-primary)] focus:ring-2 focus:ring-[var(--tenant-primary)]/20"
+            className="w-full rounded-xl border border-[var(--tenant-border-strong)] bg-[var(--tenant-surface)] px-4 py-2.5 text-sm text-[var(--tenant-fg)] outline-none transition-all placeholder:text-[var(--tenant-fg-subtle)] focus:border-[var(--tenant-primary)] focus:ring-2 focus:ring-[var(--tenant-primary)]/20"
             placeholder="+54 11 1234-5678"
           />
         </div>
       </div>
 
       <div>
-        <label htmlFor="contact-message" className="mb-1.5 block text-sm font-medium text-gray-700">
+        <label htmlFor="contact-message" className="mb-1.5 block text-sm font-medium text-[var(--tenant-fg)]">
           Mensaje
         </label>
         <textarea
@@ -141,7 +141,7 @@ export function TenantContactForm({ slug, vehicleId, vehicleTitle }: TenantConta
           value={form.message}
           onChange={(e) => handleChange("message", e.target.value)}
           rows={4}
-          className="w-full resize-none rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-[var(--tenant-primary)] focus:ring-2 focus:ring-[var(--tenant-primary)]/20"
+          className="w-full resize-none rounded-xl border border-[var(--tenant-border-strong)] bg-[var(--tenant-surface)] px-4 py-2.5 text-sm text-[var(--tenant-fg)] outline-none transition-all placeholder:text-[var(--tenant-fg-subtle)] focus:border-[var(--tenant-primary)] focus:ring-2 focus:ring-[var(--tenant-primary)]/20"
           placeholder="Contanos qué estás buscando..."
         />
       </div>

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getTenantHomeBundle } from "@/lib/tenant";
+import { getTenantHomeBundle, getTenantBasePath } from "@/lib/tenant";
 import { SectionRenderer } from "@/components/tenant/section-renderer";
 
 interface TenantHomePageProps {
@@ -11,7 +11,7 @@ export default async function TenantHomePage({ params }: TenantHomePageProps) {
   const bundle = await getTenantHomeBundle(slug);
   if (!bundle) notFound();
 
-  const basePath = `/tenant/${slug}`;
+  const basePath = await getTenantBasePath(slug);
 
   // Las secciones ya vienen ordenadas por `order asc` desde el bundle.
   // El dispatcher se ocupa de filtrar las deshabilitadas y de matchear cada

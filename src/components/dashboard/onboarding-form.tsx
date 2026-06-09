@@ -11,12 +11,12 @@ import { dealershipCreateSchema, type DealershipCreateInput } from "@/lib/valida
 import { slugify } from "@/lib/utils";
 import { PROVINCIAS_ARGENTINA } from "@/lib/constants";
 
-type FormFields = Omit<DealershipCreateInput, "description" | "whatsapp" | "address" | "website">;
+type FormFields = Omit<DealershipCreateInput, "description" | "whatsapp" | "website">;
 type FieldErrors = Partial<Record<keyof FormFields, string>>;
 
 export function OnboardingForm() {
   const router = useRouter();
-  const [fields, setFields] = useState<FormFields>({ name: "", slug: "", phone: "", email: "", city: "", province: "" });
+  const [fields, setFields] = useState<FormFields>({ name: "", slug: "", phone: "", email: "", address: "", city: "", province: "" });
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [serverError, setServerError] = useState<string | null>(null);
@@ -44,7 +44,14 @@ export function OnboardingForm() {
     const parsed = dealershipCreateSchema.safeParse(fields);
     if (!parsed.success) {
       const flat = parsed.error.flatten().fieldErrors;
-      setFieldErrors({ name: flat.name?.[0], slug: flat.slug?.[0], email: flat.email?.[0] });
+      setFieldErrors({
+        name: flat.name?.[0],
+        slug: flat.slug?.[0],
+        email: flat.email?.[0],
+        address: flat.address?.[0],
+        city: flat.city?.[0],
+        province: flat.province?.[0],
+      });
       return;
     }
 
@@ -115,21 +122,34 @@ export function OnboardingForm() {
             </div>
           </div>
 
+          <div className="space-y-1.5">
+            <Label htmlFor="address">Dirección *</Label>
+            <Input
+              id="address"
+              placeholder="Ej: Av. Perón 1234"
+              value={fields.address ?? ""}
+              onChange={handleField("address")}
+            />
+            {fieldErrors.address && <p className="text-sm text-destructive">{fieldErrors.address}</p>}
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="city">Ciudad</Label>
+              <Label htmlFor="city">Ciudad *</Label>
               <Input id="city" placeholder="Ej: Rosario" value={fields.city ?? ""} onChange={handleField("city")} />
+              {fieldErrors.city && <p className="text-sm text-destructive">{fieldErrors.city}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="province">Provincia</Label>
+              <Label htmlFor="province">Provincia *</Label>
               <Select
+                value={fields.province ?? ""}
                 onValueChange={(val) => {
                   if (typeof val === "string") {
                     setFields((prev) => ({ ...prev, province: val }));
                   }
                 }}
               >
-                <SelectTrigger id="province">
+                <SelectTrigger id="province" className="w-full">
                   <SelectValue placeholder="Seleccioná" />
                 </SelectTrigger>
                 <SelectContent>
@@ -138,6 +158,7 @@ export function OnboardingForm() {
                   ))}
                 </SelectContent>
               </Select>
+              {fieldErrors.province && <p className="text-sm text-destructive">{fieldErrors.province}</p>}
             </div>
           </div>
 

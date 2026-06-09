@@ -15,6 +15,7 @@ import {
 
 interface FeaturedVehicle {
   id: string;
+  publicSlug: string;
   title: string;
   brand: string;
   model: string;
@@ -159,7 +160,7 @@ export function FeaturedTabs({
 
   if (visible.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-slate-300 bg-white py-12 text-center text-sm text-slate-500">
+      <p className="rounded-xl border border-dashed border-[var(--tenant-border-strong)] bg-[var(--tenant-surface)] py-12 text-center text-sm text-[var(--tenant-fg-muted)]">
         Sin vehículos destacados todavía.
       </p>
     );
@@ -175,7 +176,7 @@ export function FeaturedTabs({
               type="button"
               onClick={scrollPrev}
               aria-label="Anterior"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[var(--tenant-primary)] hover:text-[var(--tenant-primary)]"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--tenant-border)] bg-[var(--tenant-surface)] text-[var(--tenant-fg)] shadow-sm transition-all hover:-translate-y-0.5 hover:border-[var(--tenant-primary)] hover:text-[var(--tenant-primary)]"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -183,7 +184,7 @@ export function FeaturedTabs({
               type="button"
               onClick={scrollNext}
               aria-label="Siguiente"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[var(--tenant-primary)] hover:text-[var(--tenant-primary)]"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--tenant-border)] bg-[var(--tenant-surface)] text-[var(--tenant-fg)] shadow-sm transition-all hover:-translate-y-0.5 hover:border-[var(--tenant-primary)] hover:text-[var(--tenant-primary)]"
             >
               <ChevronRight className="h-4 w-4" />
             </button>

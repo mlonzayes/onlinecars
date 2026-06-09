@@ -6,6 +6,7 @@ import { Prisma } from "@prisma/client";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { invalidateTenantHomeBundle } from "@/lib/tenant";
+import { canPublishMoreVehicles, getPlanLimits } from "@/lib/plans";
 
 type VehicleParams = { id: string };
 
@@ -42,6 +43,32 @@ export const PATCH = withLogger<VehicleParams>(async (_request, { requestId, par
   }
 
   const newPublishedAt = existing.publishedAt ? null : new Date();
+  const isPublishing = newPublishedAt !== null;
+
+  // Plan gating: solo cuando va a publicar (despublicar nunca se bloquea).
+  // El mismo gate vive en PUT /api/vehiculos/[id] cuando se transiciona draft→published
+  // y en el bulk publish — replicado acá para que el toggle directo no escape el límite.
+  if (isPublishing) {
+    const publishedCount = await prisma.vehicle.count({
+      where: { dealershipId: dealership.id, publishedAt: { not: null } },
+    });
+    if (!canPublishMoreVehicles(dealership, publishedCount)) {
+      const limit = getPlanLimits(dealership).maxVehicles;
+      logger.warn(requestId, "vehicles.publish.plan_limit_reached", {
+        dealershipId: dealership.id,
+        vehicleId: id,
+        publishedCount,
+        limit,
+        plan: dealership.plan,
+      });
+      return NextResponse.json(
+        {
+          error: `Alcanzaste el límite de tu plan: ${limit} vehículos publicados. Despublicá alguno o mejorá tu plan para publicar este.`,
+        },
+        { status: 403 }
+      );
+    }
+  }
 
   try {
     const vehicle = await prisma.vehicle.update({

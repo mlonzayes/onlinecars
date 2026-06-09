@@ -1,6 +1,5 @@
-import Image from "next/image";
-import { PiSparkle, PiEnvelope, PiPhone } from "react-icons/pi";
-import { WaitlistForm } from "@/components/shared/waitlist-form";
+import { PiSparkle } from "react-icons/pi";
+import { LandingContactForm } from "@/components/landing/contact-form";
 import { Navbar } from "@/components/shared/navbar";
 import { ScrollReveal } from "@/components/landing/scroll-reveal";
 import { TextReveal } from "@/components/landing/text-reveal";
@@ -8,12 +7,13 @@ import { FloatingOrbs } from "@/components/landing/floating-orbs";
 import { ServicesSection } from "@/components/landing/services-section";
 import { HowItWorksSection } from "@/components/landing/how-it-works-section";
 import { BlogSection } from "@/components/landing/blog-section";
-import { PricingCard, type PricingCardProps } from "@/components/landing/pricing-card";
+import { PricingCards } from "@/components/landing/pricing-cards";
 import { FaqItem } from "@/components/landing/faq-item";
 import { PartnersGrid, type Integration } from "@/components/landing/partners-grid";
 import { PiStorefront, PiBank, PiWhatsappLogo } from "react-icons/pi";
 import { HeroCar } from "@/components/landing/hero-car";
 import { getRecentPosts } from "@/data/posts";
+import { Footer } from "@/components/shared/footer";
 
 // =====================================================================
 // Hero
@@ -69,11 +69,11 @@ function HeroSection() {
 
           <ScrollReveal y={15} delay={1} duration={0.6} ease="back.out(1.4)" className="mt-6 flex flex-wrap gap-2.5">
             <a
-              href="#pre-registro"
+              href="#contacto"
               className="group relative inline-flex items-center justify-center overflow-hidden rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-600/30 transition-all hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-600/40"
             >
               <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-              <span className="relative">Anotarme al pre-registro</span>
+              <span className="relative">Contactanos</span>
             </a>
             <a
               href="#planes"
@@ -95,58 +95,6 @@ function HeroSection() {
 // =====================================================================
 // Pricing
 // =====================================================================
-const PLANS: PricingCardProps[] = [
-  {
-    name: "Base",
-    priceArs: 39990,
-    description: "Para arrancar con presencia online.",
-    features: [
-      "Hasta 30 vehículos publicados",
-      "Sitio web propio con tu marca",
-      "Captación de leads con seguimiento",
-      "1 usuario administrador",
-      "Soporte por email",
-    ],
-  },
-  {
-    name: "Media",
-    priceArs: 89990,
-    description: "Para concesionarios en crecimiento.",
-    highlighted: true,
-    features: [
-      "Hasta 100 vehículos publicados",
-      "Hasta 3 usuarios",
-      "Subdominio personalizado",
-      "Estadísticas básicas",
-      "Soporte prioritario",
-    ],
-  },
-  {
-    name: "Premium",
-    priceArs: 149990,
-    description: "Para operación media y alta.",
-    features: [
-      "Vehículos ilimitados",
-      "Hasta 10 usuarios",
-      "Dominio propio (yourdealer.com)",
-      "Integración MercadoLibre",
-      "Estadísticas avanzadas + reportes",
-    ],
-  },
-  {
-    name: "Enterprise",
-    priceArs: null,
-    description: "Soluciones a medida.",
-    features: [
-      "Usuarios ilimitados",
-      "Integraciones custom",
-      "Account manager dedicado",
-      "Importadores y APIs propios",
-      "SLA garantizado",
-    ],
-  },
-];
-
 function PricingSection() {
   return (
     <section id="planes" className="relative overflow-hidden bg-white px-4 py-14 sm:py-16">
@@ -169,34 +117,13 @@ function PricingSection() {
           </ScrollReveal>
         </div>
 
-        {/* Cada PricingCard envuelta en su propio ScrollReveal con dirección y delay
-            distinto — rompe el patrón uniforme de stagger lineal. */}
-        <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {PLANS.map((p, i) => {
-            // Delays escalonados pero no perfectamente uniformes (jitter intencional)
-            const delays = [0, 0.18, 0.05, 0.24];
-            // Direcciones alternadas para que no entren todas iguales
-            const fromX = i % 2 === 0 ? -25 : 25;
-            return (
-              <ScrollReveal
-                key={p.name}
-                x={fromX}
-                y={20}
-                scale={0.94}
-                delay={delays[i]}
-                duration={0.85}
-                ease="back.out(1.3)"
-                className="h-full"
-              >
-                <PricingCard {...p} />
-              </ScrollReveal>
-            );
-          })}
-        </div>
+        <ScrollReveal y={20} delay={0.15} duration={0.7} className="mt-10">
+          <PricingCards />
+        </ScrollReveal>
 
         <ScrollReveal y={10} delay={0.4}>
           <p className="mt-6 text-center text-[11px] text-gray-400">
-            Precios indicativos en pesos argentinos. Sujetos a confirmación al lanzamiento.
+            Precios referenciales. Pesos argentinos.
           </p>
         </ScrollReveal>
       </div>
@@ -209,9 +136,9 @@ function PricingSection() {
 // =====================================================================
 const FAQS: { question: string; answer: React.ReactNode }[] = [
   {
-    question: "¿Cuándo lanzan?",
+    question: "¿Cómo contrato un plan?",
     answer:
-      "Estamos en la última recta del MVP. Esperamos abrir el acceso a los primeros pre-registrados en pocas semanas. Los anotados reciben aviso por email apenas habilitemos cuentas.",
+      "Dejanos tu consulta en el formulario de contacto y un asesor se va a comunicar con vos para coordinar el alta de tu concesionario.",
   },
   {
     question: "¿Necesito conocimientos técnicos?",
@@ -338,12 +265,12 @@ function PartnersSection() {
 }
 
 // =====================================================================
-// Pre-registro / CTA final
+// Contacto / CTA final
 // =====================================================================
-function PreRegistroSection() {
+function ContactSection() {
   return (
     <section
-      id="pre-registro"
+      id="contacto"
       className="relative overflow-hidden bg-gradient-to-br from-blue-600 to-blue-800 px-4 py-16 sm:py-20"
     >
       {/* Orbs animados — más grandes y vibrantes que en otras secciones */}
@@ -358,19 +285,18 @@ function PreRegistroSection() {
       <div className="relative mx-auto max-w-xl text-center">
         <h2 className="text-2xl font-extrabold text-white sm:text-3xl">
           <TextReveal stagger={0.06}>
-            Lanzamos pronto. No te quedés afuera.
+            ¿Listo para dar el salto?
           </TextReveal>
         </h2>
         <ScrollReveal y={15} blur={4} delay={0.4}>
           <p className="mt-3 text-base text-blue-100">
-            Los primeros concesionarios en anotarse tienen acceso prioritario y
-            condiciones especiales de lanzamiento.
+            Completá el formulario para contratar un plan o sacarte cualquier duda.
           </p>
         </ScrollReveal>
 
         <ScrollReveal y={30} scale={0.92} blur={6} delay={0.6} duration={0.95} ease="back.out(1.3)" className="mt-8">
           <div className="rounded-xl bg-white p-5 text-left shadow-2xl shadow-blue-900/40 sm:p-6">
-            <WaitlistForm />
+            <LandingContactForm />
           </div>
         </ScrollReveal>
       </div>
@@ -378,115 +304,6 @@ function PreRegistroSection() {
   );
 }
 
-// =====================================================================
-// Footer
-// =====================================================================
-function Footer() {
-  return (
-    <footer className="bg-gray-900 px-4 pt-12 pb-6">
-      <div className="mx-auto max-w-5xl">
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Brand + tagline */}
-          <div className="lg:col-span-1">
-            <Image
-              src="/logo/motorflow_dark.png"
-              alt="motorflow"
-              width={150}
-              height={40}
-              className="h-auto w-auto"
-            />
-            <p className="mt-3 text-sm leading-relaxed text-gray-400">
-              La plataforma para concesionarios que quieren vender online sin
-              depender de portales ni comisiones.
-            </p>
-          </div>
-
-          {/* Producto */}
-          <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">
-              Producto
-            </h3>
-            <ul className="mt-4 flex flex-col gap-2.5 text-sm text-gray-400">
-              <li><a href="#como-funciona" className="transition hover:text-white">Cómo funciona</a></li>
-              <li><a href="#servicios" className="transition hover:text-white">Servicios</a></li>
-              <li><a href="#planes" className="transition hover:text-white">Planes</a></li>
-              <li><a href="/blog" className="transition hover:text-white">Blog</a></li>
-              <li><a href="#faq" className="transition hover:text-white">FAQ</a></li>
-              <li><a href="#pre-registro" className="transition hover:text-white">Pre-registro</a></li>
-            </ul>
-          </div>
-
-          {/* Contacto */}
-          <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">
-              Contacto
-            </h3>
-            <ul className="mt-4 flex flex-col gap-3 text-sm text-gray-400">
-              <li>
-                <a
-                  href="mailto:ventas@motorflowapp.com"
-                  className="inline-flex items-center gap-2 transition hover:text-white"
-                >
-                  <PiEnvelope className="h-4 w-4 shrink-0" />
-                  ventas@motorflowapp.com
-                </a>
-              </li>
-              <li>
-                <a
-                  href="tel:+541100000000"
-                  className="inline-flex items-center gap-2 transition hover:text-white"
-                >
-                  <PiPhone className="h-4 w-4 shrink-0" />
-                  +54 11 0000-0000
-                </a>
-              </li>
-              <li className="text-xs text-gray-500">
-                Lun a Vie · 9 a 18 hs (ART)
-              </li>
-            </ul>
-          </div>
-
-          {/* Empresa */}
-          <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">
-              Empresa
-            </h3>
-            <ul className="mt-4 flex flex-col gap-2.5 text-sm text-gray-400">
-              <li>
-                <a
-                  href="https://mwstudiodigital.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="transition hover:text-white"
-                >
-                  MW Studio Digital
-                </a>
-              </li>
-              <li><a href="#" className="transition hover:text-white">Términos</a></li>
-              <li><a href="#" className="transition hover:text-white">Privacidad</a></li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Línea inferior */}
-        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-gray-800 pt-6 text-xs text-gray-500 sm:flex-row">
-          <span>© {new Date().getFullYear()} motorflow. Todos los derechos reservados.</span>
-          <span>
-            Un producto de{" "}
-            <a
-              href="https://mwstudiodigital.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold text-gray-300 transition hover:text-white"
-            >
-              MW Studio Digital
-            </a>
-          </span>
-        </div>
-      </div>
-    </footer>
-  );
-}
 
 // =====================================================================
 // Page
@@ -504,7 +321,7 @@ export default function HomePage() {
       <BlogSection posts={recentPosts} />
       <FaqSection />
       <ServicesSection />
-      <PreRegistroSection />
+      <ContactSection />
       <Footer />
     </div>
   );

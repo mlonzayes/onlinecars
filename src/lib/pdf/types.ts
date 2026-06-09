@@ -31,6 +31,11 @@ export interface QuotationPDFData {
   // Logo del dealer para mostrar al lado de los datos en el strip. null si
   // el dealer no subió logo o si está en un formato no soportado (WebP, etc).
   dealerLogo: { dataUri: string } | null;
+  // Foto principal del vehículo, embebida como data URI. Se usa en planes
+  // premium/enterprise (saleType) para reemplazar el dealerLogo del strip por
+  // la foto del auto. Null si: el plan no aplica, no hay vehículo, no hay
+  // imagen, o el formato no es soportado.
+  vehicleImage: { dataUri: string } | null;
   showPoweredBy: boolean;
   colorPrimary: string;
 

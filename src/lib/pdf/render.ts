@@ -9,7 +9,11 @@ import type {
   VehicleCondition,
 } from "@/lib/constants";
 import type { DealershipTheme } from "@/types";
-import { resolveDealerLogo, resolveQuotationLogo } from "./logo";
+import {
+  resolveDealerLogo,
+  resolveQuotationLogo,
+  resolveVehicleImage,
+} from "./logo";
 import { buildQuotationDocDefinition } from "./quotation-document";
 import type {
   PurchaseQuotationPDFData,
@@ -18,8 +22,11 @@ import type {
 } from "./types";
 
 export type QuotationForPDF = Prisma.QuotationGetPayload<{
-  include: { vehicle: true };
+  include: { vehicle: { include: { images: true } } };
 }>;
+
+// Planes que muestran foto del auto en lugar del segundo logo del dealer.
+const PLANS_WITH_VEHICLE_PHOTO_IN_PDF = new Set(["premium", "enterprise"]);
 
 const DEFAULT_COLOR_PRIMARY = "#2563eb";
 
@@ -136,11 +143,30 @@ export async function renderQuotationPdf({
   const origin =
     appOrigin ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const theme = readTheme(dealership.theme);
-  // Los dos logos se resuelven en paralelo. Si el dealer no tiene logo o el
-  // formato no es soportado, `dealerLogo` queda null y el strip lo omite.
-  const [logo, dealerLogo] = await Promise.all([
+
+  // Foto principal del vehículo para el strip — solo si plan habilita la feature
+  // Y es una sale (las purchases no tienen vehicle del catálogo). Si todo
+  // matchea elegimos la foto isPrimary, sino la de menor `order`.
+  const planAllowsVehiclePhoto =
+    PLANS_WITH_VEHICLE_PHOTO_IN_PDF.has(dealership.plan);
+  let vehiclePrimaryImageUrl: string | null = null;
+  if (
+    planAllowsVehiclePhoto &&
+    quotation.type === "sale" &&
+    quotation.vehicle?.images.length
+  ) {
+    const primary =
+      quotation.vehicle.images.find((img) => img.isPrimary) ??
+      [...quotation.vehicle.images].sort((a, b) => a.order - b.order)[0];
+    vehiclePrimaryImageUrl = primary?.url ?? null;
+  }
+
+  // Logos + foto se resuelven en paralelo. Cualquiera que falle queda null y
+  // el render cae al fallback que corresponda.
+  const [logo, dealerLogo, vehicleImage] = await Promise.all([
     resolveQuotationLogo(dealership, origin),
     resolveDealerLogo(dealership, origin),
+    resolveVehicleImage(vehiclePrimaryImageUrl, origin),
   ]);
 
   const data: QuotationPDFData = {
@@ -161,6 +187,7 @@ export async function renderQuotationPdf({
     },
     logo,
     dealerLogo,
+    vehicleImage,
     showPoweredBy: dealership.plan === "base",
     colorPrimary: theme?.colorPrimary ?? DEFAULT_COLOR_PRIMARY,
     sale: quotation.type === "sale" ? buildSaleData(quotation) : undefined,

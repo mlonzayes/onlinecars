@@ -31,6 +31,16 @@ model Dealership {
   website     String?  @unique // Dominio personalizado
   theme       Json?    // Configuración de colores/branding
   active      Boolean  @default(true)
+  // Controla si el sitio público {slug}.motorflowapp.com responde con el catálogo
+  // o con 404. Default false → el dealer tiene que activarlo manualmente desde el
+  // dashboard cuando esté listo para lanzar. Distinto de `active` (que es
+  // "cuenta vigente") — un dealer activo puede tener el sitio en pausa.
+  siteEnabled Boolean  @default(false)
+  // Plantilla visual del sitio público. Cada plantilla define un set de tokens
+  // (colores, surfaces, bordes, radius) + una fuente. La fuente activa solo
+  // se carga si el dealer la elige (next/font tree-shake).
+  // Valores válidos: ver TENANT_TEMPLATES en src/lib/tenant-templates.ts.
+  templateId  String   @default("classic")
   plan        String   @default("base") // base | media | premium | enterprise
   // Estado de la suscripción / acceso del dealership.
   //   trial     → en período de prueba (trialEndsAt define cuándo termina)
@@ -169,6 +179,7 @@ model Vehicle {
   status       String    @default("available") // available | reserved | sold
   featured     Boolean   @default(false)
   publishedAt  DateTime?
+  publicSlug   String
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -182,6 +193,7 @@ model Vehicle {
   mlListing    MercadoLibreListing?
   quotations   Quotation[]
 
+  @@unique([dealershipId, publicSlug])
   @@index([dealershipId, status])
   @@index([brand, model, year])
   @@map("vehicles")

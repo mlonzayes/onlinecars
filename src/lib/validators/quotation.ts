@@ -97,14 +97,36 @@ export type QuotationCreateInput = z.infer<typeof quotationCreateSchema>;
 export type SaleQuotationCreateInput = z.infer<typeof saleQuotationCreateSchema>;
 export type PurchaseQuotationCreateInput = z.infer<typeof purchaseQuotationCreateSchema>;
 
-// Update permite modificar metadata liviana. Las transiciones de status van por
-// un endpoint dedicado (ver quotationStatusUpdateSchema).
+// Update LIGHT: cambios chicos sobre una cotización (notas, extender validez).
+// Lo usan los botones rápidos del detail. NO toca campos sensibles.
 export const quotationUpdateSchema = z.object({
   notes: z.string().trim().max(2000).nullable().optional(),
   validUntil: z.string().datetime().optional(),
 });
 
 export type QuotationUpdateInput = z.infer<typeof quotationUpdateSchema>;
+
+// Edit FULL: reescritura completa de una cotización pending. Reutiliza el
+// shape del create — el dealer corrige typos (precio, cliente, vehículo, etc.)
+// y se aplica como overwrite. NO regenera el `code` ni el `emittedAt`. Solo
+// permitido sobre cotizaciones en estado `pending` (enforced en el handler).
+//
+// Discriminated union igual al create. `validityDays` opcional acá: si no se
+// pasa, mantenemos el validUntil actual; si se pasa, recalculamos.
+const saleQuotationEditSchema = saleQuotationCreateSchema.extend({
+  validityDays: z.number().int().positive().max(365).optional(),
+});
+
+const purchaseQuotationEditSchema = purchaseQuotationCreateSchema.extend({
+  validityDays: z.number().int().positive().max(365).optional(),
+});
+
+export const quotationEditSchema = z.discriminatedUnion("type", [
+  saleQuotationEditSchema,
+  purchaseQuotationEditSchema,
+]);
+
+export type QuotationEditInput = z.infer<typeof quotationEditSchema>;
 
 // Solo se aceptan transiciones explícitas desde pending. expired se computa
 // en lectura (ver quotation-status.ts) y no es un valor que se setee por API.

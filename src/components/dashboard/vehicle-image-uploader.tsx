@@ -18,12 +18,15 @@ interface VehicleImageUploaderProps {
   initialImages: VehicleImage[];
   // Si true, bloquea upload, delete y reorder. Usado cuando hay venta activa.
   disabled?: boolean;
+  // Límite efectivo por plan. Si no se pasa, cae al techo global.
+  maxImagesPerVehicle?: number;
 }
 
 export function VehicleImageUploader({
   vehicleId,
   initialImages,
   disabled = false,
+  maxImagesPerVehicle,
 }: VehicleImageUploaderProps) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -36,7 +39,12 @@ export function VehicleImageUploader({
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const remaining = MAX_IMAGES_PER_VEHICLE - images.length - uploading;
+  // Tope efectivo: min entre el plan del dealership y el sanity cap del producto.
+  const effectiveMax = Math.min(
+    MAX_IMAGES_PER_VEHICLE,
+    maxImagesPerVehicle ?? MAX_IMAGES_PER_VEHICLE
+  );
+  const remaining = effectiveMax - images.length - uploading;
   const maxMb = MAX_IMAGE_SIZE_BYTES / 1024 / 1024;
 
   async function uploadOne(file: File): Promise<VehicleImage | null> {
@@ -74,7 +82,7 @@ export function VehicleImageUploader({
     const arr = Array.from(files);
     if (arr.length > remaining) {
       toast.error(
-        `Solo podés subir ${remaining} imágenes más (max ${MAX_IMAGES_PER_VEHICLE} por vehículo).`
+        `Solo podés subir ${remaining} imágenes más (max ${effectiveMax} por vehículo).`
       );
       return;
     }

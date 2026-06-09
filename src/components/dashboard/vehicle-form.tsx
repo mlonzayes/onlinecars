@@ -62,6 +62,8 @@ interface VehicleFormProps {
   blockingSale?: BlockingSale | null;
   // Si el user logueado puede ver/editar el precio de costo. Default false.
   canEditCosts?: boolean;
+  // Tope de imágenes por vehículo según plan. Si no se pasa, cae al techo global.
+  maxImagesPerVehicle?: number;
 }
 
 const BLOCKING_SALE_LABELS: Record<BlockingSale["status"], string> = {
@@ -557,6 +559,7 @@ export function VehicleForm({
   vehicle,
   blockingSale,
   canEditCosts = false,
+  maxImagesPerVehicle,
 }: VehicleFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -766,6 +769,7 @@ export function VehicleForm({
                   vehicleId={vehicle.id}
                   initialImages={vehicle.images}
                   disabled={isLocked}
+                  maxImagesPerVehicle={maxImagesPerVehicle}
                 />
               </TabsContent>
             )}

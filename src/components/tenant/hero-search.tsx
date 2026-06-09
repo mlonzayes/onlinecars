@@ -208,8 +208,8 @@ export function HeroSearch({
           )}
         </div>
 
-        {/* Search bar — Glass real: container ultra-transparente (bg-white/15)
-            con cada select como "chip" propio (bg-white/30 + border + rounded).
+        {/* Search bar — Glass real: container ultra-transparente (bg-[var(--tenant-surface)]/15)
+            con cada select como "chip" propio (bg-[var(--tenant-surface)]/30 + border + rounded).
             Eso hace que (a) se vea el video por detrás, (b) los bordes
             redondeados de cada elemento se vean, (c) el conjunto resalte
             por el ring blanco + shadow oscuro. */}
@@ -217,14 +217,14 @@ export function HeroSearch({
           <form
             ref={formRef}
             onSubmit={handleSubmit}
-            className="mx-auto mt-10 max-w-4xl rounded-3xl bg-white/15 p-2 shadow-2xl shadow-black/40 ring-1 ring-white/30 backdrop-blur-2xl sm:mt-12"
+            className="mx-auto mt-10 max-w-4xl rounded-3xl bg-[var(--tenant-surface)]/15 p-2 shadow-2xl shadow-black/40 ring-1 ring-white/30 backdrop-blur-2xl sm:mt-12"
           >
             <div className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_auto]">
               {/* Marca */}
               <select
                 value={brand}
                 onChange={(e) => setBrand(e.target.value)}
-                className="h-12 rounded-2xl border border-white/30 bg-white/30 px-4 text-sm font-medium text-slate-900 outline-none backdrop-blur-md transition-colors focus:bg-white/40 focus:ring-2 focus:ring-[var(--tenant-primary)]/40 sm:h-11"
+                className="h-12 rounded-2xl border border-white/30 bg-[var(--tenant-surface)]/30 px-4 text-sm font-medium text-[var(--tenant-fg)] outline-none backdrop-blur-md transition-colors focus:bg-[var(--tenant-surface)]/40 focus:ring-2 focus:ring-[var(--tenant-primary)]/40 sm:h-11"
                 aria-label="Marca"
               >
                 <option value="">Cualquier marca</option>
@@ -239,7 +239,7 @@ export function HeroSearch({
               <select
                 value={condition}
                 onChange={(e) => setCondition(e.target.value)}
-                className="h-12 rounded-2xl border border-white/30 bg-white/30 px-4 text-sm font-medium text-slate-900 outline-none backdrop-blur-md transition-colors focus:bg-white/40 focus:ring-2 focus:ring-[var(--tenant-primary)]/40 sm:h-11"
+                className="h-12 rounded-2xl border border-white/30 bg-[var(--tenant-surface)]/30 px-4 text-sm font-medium text-[var(--tenant-fg)] outline-none backdrop-blur-md transition-colors focus:bg-[var(--tenant-surface)]/40 focus:ring-2 focus:ring-[var(--tenant-primary)]/40 sm:h-11"
                 aria-label="Condición"
               >
                 <option value="">Cualquier condición</option>
@@ -254,7 +254,7 @@ export function HeroSearch({
               <select
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
-                className="h-12 rounded-2xl border border-white/30 bg-white/30 px-4 text-sm font-medium text-slate-900 outline-none backdrop-blur-md transition-colors focus:bg-white/40 focus:ring-2 focus:ring-[var(--tenant-primary)]/40 sm:h-11"
+                className="h-12 rounded-2xl border border-white/30 bg-[var(--tenant-surface)]/30 px-4 text-sm font-medium text-[var(--tenant-fg)] outline-none backdrop-blur-md transition-colors focus:bg-[var(--tenant-surface)]/40 focus:ring-2 focus:ring-[var(--tenant-primary)]/40 sm:h-11"
                 aria-label="Precio máximo"
               >
                 <option value="">Cualquier precio</option>
@@ -279,7 +279,7 @@ export function HeroSearch({
       </div>
 
       {/* Quick-action cards — strip al pie del hero. Visibles SOLO si el dealer
-          activó showQuickActions desde el admin. Glass real: bg-white/10 +
+          activó showQuickActions desde el admin. Glass real: bg-[var(--tenant-surface)]/10 +
           backdrop-blur-xl + border-white/20. Texto blanco para legibilidad
           sobre el video. */}
       {config.showQuickActions && (
@@ -287,9 +287,9 @@ export function HeroSearch({
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
             <Link
               href={`${basePath}/catalogo`}
-              className="group flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 p-4 shadow-xl backdrop-blur-xl transition-all hover:-translate-y-1 hover:bg-white/15 hover:border-white/30"
+              className="group flex items-center gap-3 rounded-2xl border border-white/20 bg-[var(--tenant-surface)]/10 p-4 shadow-xl backdrop-blur-xl transition-all hover:-translate-y-1 hover:bg-[var(--tenant-surface)]/15 hover:border-white/30"
             >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white transition-transform group-hover:scale-110">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--tenant-surface)]/15 text-white transition-transform group-hover:scale-110">
                 <Car className="h-5 w-5" />
               </span>
               <span className="min-w-0">
@@ -300,9 +300,9 @@ export function HeroSearch({
 
             <Link
               href={`${basePath}/cotizar`}
-              className="group flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 p-4 shadow-xl backdrop-blur-xl transition-all hover:-translate-y-1 hover:bg-white/15 hover:border-white/30"
+              className="group flex items-center gap-3 rounded-2xl border border-white/20 bg-[var(--tenant-surface)]/10 p-4 shadow-xl backdrop-blur-xl transition-all hover:-translate-y-1 hover:bg-[var(--tenant-surface)]/15 hover:border-white/30"
             >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white transition-transform group-hover:scale-110">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--tenant-surface)]/15 text-white transition-transform group-hover:scale-110">
                 <Tag className="h-5 w-5" />
               </span>
               <span className="min-w-0">
@@ -313,9 +313,9 @@ export function HeroSearch({
 
             <Link
               href={`${basePath}#contacto`}
-              className="group flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 p-4 shadow-xl backdrop-blur-xl transition-all hover:-translate-y-1 hover:bg-white/15 hover:border-white/30"
+              className="group flex items-center gap-3 rounded-2xl border border-white/20 bg-[var(--tenant-surface)]/10 p-4 shadow-xl backdrop-blur-xl transition-all hover:-translate-y-1 hover:bg-[var(--tenant-surface)]/15 hover:border-white/30"
             >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white transition-transform group-hover:scale-110">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--tenant-surface)]/15 text-white transition-transform group-hover:scale-110">
                 <MessageCircle className="h-5 w-5" />
               </span>
               <span className="min-w-0">

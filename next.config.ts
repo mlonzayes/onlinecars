@@ -77,6 +77,20 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["pdfmake", "pdfkit"],
   images: {
     remotePatterns: buildRemotePatterns(),
+    // Cache TTL alto. Sin esto Next re-pide la imagen al upstream cada vez que
+    // el cache expira (default 60s). Como Contabo S3 sin CDN es lento, eso
+    // mata el sitio: una sola request lenta tira 504. 30 días = una vez que
+    // pasó por acá no se vuelve a tocar el upstream. Cuando el dealer
+    // reemplaza una foto, sube con un key nuevo → URL nueva → re-fetch.
+    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 días
+    // Solo WebP (no AVIF). AVIF consume mucho CPU en serverless y muchos
+    // browsers viejos no lo soportan — termina haciendo doble decode.
+    formats: ["image/webp"],
+    // Set acotado de tamaños generados. Por default Next genera ~10 widths
+    // distintos por imagen — cada uno pega al upstream. Esto es overkill
+    // para nuestro catálogo (cards de 2-3 cols, detail full-bleed).
+    deviceSizes: [640, 828, 1080, 1920],
+    imageSizes: [64, 128, 256, 384],
   },
   async headers() {
     return [

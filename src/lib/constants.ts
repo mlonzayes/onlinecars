@@ -96,7 +96,10 @@ export const PROVINCIAS_ARGENTINA = [
   "Tucumán",
 ] as const;
 
-export const MAX_IMAGES_PER_VEHICLE = 15;
+// Techo absoluto del producto. El gating real por plan vive en plans.ts
+// (maxImagesPerVehicle). Este es un sanity cap para evitar abuso de storage
+// — ningún plan puede pasar de acá ni con Premium/Enterprise.
+export const MAX_IMAGES_PER_VEHICLE = 40;
 export const VEHICLES_PER_PAGE = 12;
 export const CACHE_TTL_VEHICLES = 300; // 5 minutos
 export const CACHE_TTL_DEALERSHIP = 300; // 5 minutos

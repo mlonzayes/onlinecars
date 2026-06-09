@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -90,14 +90,36 @@ const INITIAL_STATE: FormState = {
   tradeInCurrency: "ARS",
 };
 
-export function QuotationSaleForm() {
+interface QuotationSaleFormProps {
+  // Si viene, el form opera en modo EDIT: hace PUT a /api/cotizaciones/{id}
+  // y redirige al detail al guardar. Sin él, modo CREATE: POST + redirect a nuevo detail.
+  quotationId?: string;
+  // Prefill del state. Solo los campos definidos pisan el INITIAL_STATE.
+  initialValues?: Partial<FormState>;
+  // Vehículo asociado a la cotización en edit. Lo inyectamos al combobox para
+  // que aparezca seleccionado aunque su status no sea "available" (caso típico:
+  // editás una cotización vieja cuyo vehículo ya quedó reserved/sold).
+  initialVehicle?: VehicleOption;
+}
+
+export function QuotationSaleForm({
+  quotationId,
+  initialValues,
+  initialVehicle,
+}: QuotationSaleFormProps = {}) {
   const router = useRouter();
-  const [form, setForm] = useState<FormState>(INITIAL_STATE);
-  const [vehicles, setVehicles] = useState<VehicleOption[]>([]);
+  const isEdit = !!quotationId;
+  const [form, setForm] = useState<FormState>({
+    ...INITIAL_STATE,
+    ...(initialValues ?? {}),
+  });
+  const [vehicles, setVehicles] = useState<VehicleOption[]>(
+    initialVehicle ? [initialVehicle] : []
+  );
   const [vehiclesLoading, setVehiclesLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  async function fetchVehicles(search: string) {
+  const fetchVehicles = useCallback(async (search: string) => {
     setVehiclesLoading(true);
     try {
       // limit=5 — el dropdown del combobox prefiere pocos resultados al toque
@@ -108,16 +130,22 @@ export function QuotationSaleForm() {
       const res = await fetch(`/api/vehiculos?${params.toString()}`);
       if (res.ok) {
         const json = await res.json();
-        setVehicles(json.data ?? []);
+        const fetched: VehicleOption[] = json.data ?? [];
+        // En modo edit aseguramos que el vehículo actualmente asociado
+        // siempre quede en la lista (puede no ser "available" hoy).
+        if (initialVehicle && !fetched.some((v) => v.id === initialVehicle.id)) {
+          fetched.unshift(initialVehicle);
+        }
+        setVehicles(fetched);
       }
     } finally {
       setVehiclesLoading(false);
     }
-  }
+  }, [initialVehicle]);
 
   useEffect(() => {
     void fetchVehicles("");
-  }, []);
+  }, [fetchVehicles]);
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -222,21 +250,33 @@ export function QuotationSaleForm() {
       if (form.sellerName.trim()) payload.sellerName = form.sellerName.trim();
       if (tradeInPayload) payload.tradeIn = tradeInPayload;
 
-      const res = await fetch("/api/cotizaciones", {
-        method: "POST",
+      const url = isEdit
+        ? `/api/cotizaciones/${quotationId}`
+        : "/api/cotizaciones";
+      const method = isEdit ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error ?? "Error al crear la cotización");
+        toast.error(
+          data.error ??
+            (isEdit ? "Error al actualizar la cotización" : "Error al crear la cotización")
+        );
         setSubmitting(false);
         return;
       }
 
       const json = await res.json();
-      toast.success(`Cotización ${json.data.code} creada`);
+      toast.success(
+        isEdit
+          ? `Cotización ${json.data.code} actualizada`
+          : `Cotización ${json.data.code} creada`
+      );
       router.push(`/dashboard/cotizaciones/${json.data.id}`);
       router.refresh();
     } catch {
@@ -570,16 +610,24 @@ export function QuotationSaleForm() {
           {submitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creando...
+              {isEdit ? "Guardando..." : "Creando..."}
             </>
           ) : (
-            "Crear cotización"
+            isEdit ? "Guardar cambios" : "Crear cotización"
           )}
         </Button>
         <Button
           variant="outline"
           nativeButton={false}
-          render={<Link href="/dashboard/cotizaciones" />}
+          render={
+            <Link
+              href={
+                isEdit
+                  ? `/dashboard/cotizaciones/${quotationId}`
+                  : "/dashboard/cotizaciones"
+              }
+            />
+          }
         >
           Cancelar
         </Button>

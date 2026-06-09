@@ -56,8 +56,8 @@ export function ReviewForm({ slug, dealershipName }: ReviewFormProps) {
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
           <CheckCircle2 className="h-8 w-8 text-green-600" />
         </div>
-        <h3 className="text-xl font-bold text-gray-900">¡Gracias por tu opinión!</h3>
-        <p className="mt-2 text-gray-500">
+        <h3 className="text-xl font-bold text-[var(--tenant-fg)]">¡Gracias por tu opinión!</h3>
+        <p className="mt-2 text-[var(--tenant-fg-muted)]">
           Hemos recibido tu testimonio. Será revisado por el equipo de {dealershipName} antes de publicarse.
         </p>
         <button
@@ -89,7 +89,7 @@ export function ReviewForm({ slug, dealershipName }: ReviewFormProps) {
 
       {/* Estrellas */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-[var(--tenant-fg)] mb-2">
           ¿Cómo calificarías tu experiencia?
         </label>
         <div className="flex items-center gap-1">
@@ -119,7 +119,7 @@ export function ReviewForm({ slug, dealershipName }: ReviewFormProps) {
 
       {/* Nombre */}
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="name" className="block text-sm font-medium text-[var(--tenant-fg)]">
           Tu nombre
         </label>
         <input
@@ -128,13 +128,13 @@ export function ReviewForm({ slug, dealershipName }: ReviewFormProps) {
           id="name"
           required
           placeholder="Ej: Juan Pérez"
-          className="mt-2 block w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 shadow-sm outline-none transition-all focus:border-[var(--tenant-primary)] focus:ring-2 focus:ring-[var(--tenant-primary)]/20"
+          className="mt-2 block w-full rounded-xl border border-[var(--tenant-border-strong)] px-4 py-3 text-[var(--tenant-fg)] shadow-sm outline-none transition-all focus:border-[var(--tenant-primary)] focus:ring-2 focus:ring-[var(--tenant-primary)]/20"
         />
       </div>
 
       {/* Mensaje */}
       <div>
-        <label htmlFor="content" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="content" className="block text-sm font-medium text-[var(--tenant-fg)]">
           Contanos tu experiencia
         </label>
         <textarea
@@ -143,7 +143,7 @@ export function ReviewForm({ slug, dealershipName }: ReviewFormProps) {
           rows={4}
           required
           placeholder="Excelente atención, muy transparentes y el auto estaba impecable..."
-          className="mt-2 block w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 shadow-sm outline-none transition-all focus:border-[var(--tenant-primary)] focus:ring-2 focus:ring-[var(--tenant-primary)]/20"
+          className="mt-2 block w-full rounded-xl border border-[var(--tenant-border-strong)] px-4 py-3 text-[var(--tenant-fg)] shadow-sm outline-none transition-all focus:border-[var(--tenant-primary)] focus:ring-2 focus:ring-[var(--tenant-primary)]/20"
         />
       </div>
 

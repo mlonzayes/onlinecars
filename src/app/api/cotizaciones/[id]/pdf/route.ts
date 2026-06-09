@@ -32,7 +32,9 @@ export const GET = withLogger<QuotationParams>(
     const { id } = params;
     const quotation = await prisma.quotation.findFirst({
       where: { id, dealershipId: dealership.id },
-      include: { vehicle: true },
+      // images se necesita para el strip premium/enterprise que reemplaza
+      // el logo del dealer por la foto principal del vehículo.
+      include: { vehicle: { include: { images: true } } },
     });
 
     if (!quotation) {
@@ -50,7 +52,10 @@ export const GET = withLogger<QuotationParams>(
 
     const { searchParams } = new URL(request.url);
     const disposition = searchParams.get("download") === "1" ? "attachment" : "inline";
-    const filename = `${quotation.code}.pdf`;
+    // Prefijo "cotizacion-" para que cuando el dealer guarde el archivo de su
+    // máquina sepa qué es sin abrirlo. El title de la pestaña del browser
+    // toma el title del PDF (info.title del docDefinition), no este filename.
+    const filename = `cotizacion-${quotation.code}.pdf`;
 
     logger.info(requestId, "quotations.pdf.ok", {
       dealershipId: dealership.id,

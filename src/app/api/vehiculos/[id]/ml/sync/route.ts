@@ -12,6 +12,7 @@ import { logger } from "@/lib/logger";
 import { getCurrentDealership } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getItem } from "@/lib/mercadolibre/client";
+import { getPlanLimits } from "@/lib/plans";
 
 type Params = { id: string };
 
@@ -20,6 +21,19 @@ export const POST = withLogger<Params>(async (_request, ctx) => {
   const dealership = await getCurrentDealership();
   if (!dealership) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  }
+
+  // Plan gating — defense in depth. El sync consulta a ML; sin plan no hay
+  // razón de uso legítimo. Disconnect (DELETE) sí queda abierto.
+  if (!getPlanLimits(dealership).allowMLIntegration) {
+    logger.warn(requestId, "ml.sync.plan_gated", {
+      dealershipId: dealership.id,
+      plan: dealership.plan,
+    });
+    return NextResponse.json(
+      { error: "Mercado Libre está disponible a partir del plan Media." },
+      { status: 403 }
+    );
   }
 
   const vehicleId = ctx.params.id;

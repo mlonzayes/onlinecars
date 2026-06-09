@@ -16,7 +16,7 @@ export function VehicleGallery({ images, title }: VehicleGalleryProps) {
 
   if (images.length === 0) {
     return (
-      <div className="flex aspect-[16/10] w-full items-center justify-center rounded-2xl bg-gray-100">
+      <div className="flex aspect-[16/10] w-full items-center justify-center rounded-2xl bg-[var(--tenant-surface-hover)]">
         <Car className="h-20 w-20 text-gray-300" />
       </div>
     );
@@ -36,7 +36,7 @@ export function VehicleGallery({ images, title }: VehicleGalleryProps) {
   return (
     <div className="space-y-3">
       {/* Main Image — click para abrir lightbox */}
-      <div className="group relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-gray-100">
+      <div className="group relative aspect-[16/10] w-full overflow-hidden rounded-2xl bg-[var(--tenant-surface-hover)]">
         <Dialog>
           <DialogTrigger
             className="block h-full w-full cursor-zoom-in"
@@ -106,7 +106,7 @@ export function VehicleGallery({ images, title }: VehicleGalleryProps) {
                 e.stopPropagation();
                 goPrev();
               }}
-              className="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-gray-700 opacity-0 shadow-lg backdrop-blur-sm transition-all hover:bg-white group-hover:opacity-100"
+              className="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--tenant-surface)]/90 text-[var(--tenant-fg)] opacity-0 shadow-lg backdrop-blur-sm transition-all hover:bg-[var(--tenant-surface)] group-hover:opacity-100"
               aria-label="Imagen anterior"
             >
               <ChevronLeft className="h-5 w-5" />
@@ -117,7 +117,7 @@ export function VehicleGallery({ images, title }: VehicleGalleryProps) {
                 e.stopPropagation();
                 goNext();
               }}
-              className="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-gray-700 opacity-0 shadow-lg backdrop-blur-sm transition-all hover:bg-white group-hover:opacity-100"
+              className="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--tenant-surface)]/90 text-[var(--tenant-fg)] opacity-0 shadow-lg backdrop-blur-sm transition-all hover:bg-[var(--tenant-surface)] group-hover:opacity-100"
               aria-label="Siguiente imagen"
             >
               <ChevronRight className="h-5 w-5" />

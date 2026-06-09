@@ -83,11 +83,25 @@ const INITIAL_STATE: FormState = {
   notes: "",
 };
 
-export function QuotationPurchaseForm({ leadId }: { leadId?: string } = {}) {
+interface QuotationPurchaseFormProps {
+  // Si viene, modo EDIT: PUT a /api/cotizaciones/{id} + redirect al detail.
+  quotationId?: string;
+  // Lead pre-asignado (uso típico: "Cotizar" desde un Lead). Ignorado si initialValues trae uno.
+  leadId?: string;
+  initialValues?: Partial<FormState>;
+}
+
+export function QuotationPurchaseForm({
+  quotationId,
+  leadId,
+  initialValues,
+}: QuotationPurchaseFormProps = {}) {
   const router = useRouter();
+  const isEdit = !!quotationId;
   const [form, setForm] = useState<FormState>({
     ...INITIAL_STATE,
     leadId: leadId ?? "",
+    ...(initialValues ?? {}),
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -161,21 +175,33 @@ export function QuotationPurchaseForm({ leadId }: { leadId?: string } = {}) {
 
       if (form.leadId.trim()) payload.leadId = form.leadId.trim();
 
-      const res = await fetch("/api/cotizaciones", {
-        method: "POST",
+      const url = isEdit
+        ? `/api/cotizaciones/${quotationId}`
+        : "/api/cotizaciones";
+      const method = isEdit ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error ?? "Error al crear la cotización");
+        toast.error(
+          data.error ??
+            (isEdit ? "Error al actualizar la cotización" : "Error al crear la cotización")
+        );
         setSubmitting(false);
         return;
       }
 
       const json = await res.json();
-      toast.success(`Cotización ${json.data.code} creada`);
+      toast.success(
+        isEdit
+          ? `Cotización ${json.data.code} actualizada`
+          : `Cotización ${json.data.code} creada`
+      );
       router.push(`/dashboard/cotizaciones/${json.data.id}`);
       router.refresh();
     } catch {
@@ -502,16 +528,24 @@ export function QuotationPurchaseForm({ leadId }: { leadId?: string } = {}) {
           {submitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creando...
+              {isEdit ? "Guardando..." : "Creando..."}
             </>
           ) : (
-            "Crear cotización"
+            isEdit ? "Guardar cambios" : "Crear cotización"
           )}
         </Button>
         <Button
           variant="outline"
           nativeButton={false}
-          render={<Link href="/dashboard/cotizaciones" />}
+          render={
+            <Link
+              href={
+                isEdit
+                  ? `/dashboard/cotizaciones/${quotationId}`
+                  : "/dashboard/cotizaciones"
+              }
+            />
+          }
         >
           Cancelar
         </Button>

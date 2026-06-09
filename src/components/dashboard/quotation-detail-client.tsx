@@ -11,6 +11,7 @@ import {
   ExternalLink,
   FileText,
   Loader2,
+  Pencil,
   Trash2,
   X,
 } from "lucide-react";
@@ -142,6 +143,9 @@ export function QuotationDetailClient({
   );
 
   const isPending = quotation.status === "pending";
+  // Mismo criterio que el endpoint DELETE: pending y rejected son borrables.
+  // accepted/expired NO se borran (queda histórico de operaciones cerradas).
+  const isDeletable = quotation.status === "pending" || quotation.status === "rejected";
   const isExpired = quotation.effectiveStatus === "expired";
   const canChangeStatus = isPending && !isExpired;
 
@@ -390,6 +394,22 @@ export function QuotationDetailClient({
               )}
 
               {isPending && (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  nativeButton={false}
+                  render={
+                    <Link
+                      href={`/dashboard/cotizaciones/${quotation.id}/editar`}
+                    />
+                  }
+                >
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Editar cotización
+                </Button>
+              )}
+
+              {isDeletable && (
                 <Button
                   variant="outline"
                   className="w-full justify-start text-red-600 hover:text-red-600"

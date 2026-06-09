@@ -189,11 +189,19 @@ function buildDealershipStrip(data: QuotationPDFData): Content {
     });
   }
 
-  // Si el dealer tiene logo, lo mostramos a la izquierda y los datos a la
-  // derecha. Sin logo, los datos ocupan todo el ancho. Dos returns en lugar
-  // de un spread porque el tipo `Content` de pdfmake es union y no spreads
-  // limpio con extras de TableCell (border/fillColor/margin).
-  if (data.dealerLogo) {
+  // Orden de preferencia para el visual del lado izquierdo del strip:
+  //   1) vehicleImage — solo en planes premium/enterprise (resuelto en render.ts).
+  //      Es la foto principal del auto, más vendedora que el logo repetido.
+  //   2) dealerLogo — fallback estándar para media (y para premium sin fotos).
+  //   3) sin imagen — datos del dealer ocupan todo el ancho.
+  // Dos returns en lugar de un spread porque el tipo `Content` de pdfmake es
+  // union y no spreads limpio con extras de TableCell (border/fillColor/margin).
+  const sideImage = data.vehicleImage ?? data.dealerLogo;
+  if (sideImage) {
+    // Foto del auto: usamos un thumbnail más grande (caja vs logo chico).
+    const isVehiclePhoto = data.vehicleImage !== null;
+    const imageFit: [number, number] = isVehiclePhoto ? [110, 70] : [70, 50];
+    const imageColWidth = isVehiclePhoto ? 120 : 75;
     return {
       table: {
         widths: ["*"],
@@ -202,9 +210,9 @@ function buildDealershipStrip(data: QuotationPDFData): Content {
             {
               columns: [
                 {
-                  image: data.dealerLogo.dataUri,
-                  fit: [70, 50],
-                  width: 75,
+                  image: sideImage.dataUri,
+                  fit: imageFit,
+                  width: imageColWidth,
                 },
                 { stack: dataStack, width: "*" },
               ],
@@ -345,12 +353,21 @@ function buildTradeInSection(
 
 function buildSaleTotalsBox(data: QuotationPDFData): Content {
   const sale = data.sale!;
+  // Solo agregamos el sufijo de moneda cuando es DISTINTA de la moneda de la
+  // cotización — único caso donde el dato es necesario (típico: venta ARS,
+  // usado tasado en USD). Si no aclaramos, las cifras se asumen en la moneda
+  // del documento (mostrada en el header) y todos los importes quedan
+  // alineados a la misma columna derecha.
   const rows: Array<[string, string]> = [];
 
   if (sale.tradeIn) {
+    const tradeInIsDifferentCurrency = sale.tradeIn.currency !== data.currency;
+    const tradeInAmount = formatMoney(sale.tradeIn.value, sale.tradeIn.currency);
     rows.push([
       `Entrega ${sale.tradeIn.brand} ${sale.tradeIn.model} ${sale.tradeIn.year}`,
-      `${formatMoney(sale.tradeIn.value, sale.tradeIn.currency)} ${sale.tradeIn.currency}`,
+      tradeInIsDifferentCurrency
+        ? `${tradeInAmount} ${sale.tradeIn.currency}`
+        : tradeInAmount,
     ]);
   }
   if (sale.downPayment !== null && sale.downPayment > 0) {
@@ -384,11 +401,13 @@ function buildSaleTotalsBox(data: QuotationPDFData): Content {
 
   // Total sin color del theme — queda en color de texto default. La idea es
   // que el PDF se vea sobrio independientemente del branding del dealer.
+  // Sin sufijo de moneda para alinear con el resto del bloque; el documento
+  // ya indica la moneda en el header del bloque (formato del precio).
   body.push({
     columns: [
       { text: "Total", style: "grandLabel" },
       {
-        text: `${formatMoney(sale.totalPrice, data.currency)} ${data.currency}`,
+        text: formatMoney(sale.totalPrice, data.currency),
         style: "grandValue",
         alignment: "right",
       },

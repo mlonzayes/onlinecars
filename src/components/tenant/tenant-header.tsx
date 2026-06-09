@@ -65,7 +65,9 @@ export function TenantHeader({ name, logo, basePath }: TenantHeaderProps) {
     // pointer-events-none en el wrapper deja pasar clicks al video; el inner
     // pill recupera pointer-events-auto.
     <header className="fixed left-0 right-0 top-0 z-50 pointer-events-none">
-      <div className="mx-auto mt-3 flex h-16 max-w-7xl items-center justify-between gap-6 rounded-full border border-white/30 bg-white/80 px-4 shadow-lg backdrop-blur-xl pointer-events-auto sm:mx-4 sm:mt-4 sm:px-6 lg:mx-auto lg:px-8">
+      {/* bg-[var(--tenant-surface)]/80 con backdrop-blur funciona en ambos tonos:
+          light queda "white frosted", dark queda "deep frosted". */}
+      <div className="mx-auto mt-3 flex h-16 max-w-7xl items-center justify-between gap-6 rounded-full border border-[var(--tenant-border)]/30 bg-[var(--tenant-surface)]/80 px-4 shadow-lg backdrop-blur-xl pointer-events-auto sm:mx-4 sm:mt-4 sm:px-6 lg:mx-auto lg:px-8">
         {/* Logo */}
         <Link
           href={basePath}
@@ -83,7 +85,7 @@ export function TenantHeader({ name, logo, basePath }: TenantHeaderProps) {
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--tenant-primary)] text-white shadow-sm">
                 <Car className="h-5 w-5" />
               </div>
-              <span className="text-base font-semibold tracking-tight text-slate-900 sm:text-lg">
+              <span className="text-base font-semibold tracking-tight text-[var(--tenant-fg)] sm:text-lg">
                 {name}
               </span>
             </>
@@ -91,7 +93,7 @@ export function TenantHeader({ name, logo, basePath }: TenantHeaderProps) {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden items-center gap-7 text-sm font-medium text-slate-600 md:flex">
+        <nav className="hidden items-center gap-7 text-sm font-medium text-[var(--tenant-fg-muted)] md:flex">
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -120,7 +122,7 @@ export function TenantHeader({ name, logo, basePath }: TenantHeaderProps) {
         <button
           type="button"
           onClick={() => setMobileOpen((v) => !v)}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 md:hidden"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[var(--tenant-fg)] hover:bg-[var(--tenant-surface-hover)] md:hidden"
           aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
           aria-expanded={mobileOpen}
         >
@@ -130,21 +132,21 @@ export function TenantHeader({ name, logo, basePath }: TenantHeaderProps) {
 
       {/* Mobile Menu Panel — card flotante debajo del pill */}
       {mobileOpen && (
-        <div className="mx-3 mt-2 rounded-2xl border border-white/30 bg-white shadow-xl pointer-events-auto sm:mx-4 md:hidden">
+        <div className="mx-3 mt-2 rounded-2xl border border-[var(--tenant-border)] bg-[var(--tenant-surface)] shadow-xl pointer-events-auto sm:mx-4 md:hidden">
           <nav className="flex flex-col gap-1 px-3 py-3">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "rounded-lg px-3 py-2.5 text-base font-medium text-slate-700 hover:bg-slate-100",
-                  isActive(item.href) && "bg-slate-100 text-[var(--tenant-primary)]"
+                  "rounded-lg px-3 py-2.5 text-base font-medium text-[var(--tenant-fg)] hover:bg-[var(--tenant-surface-hover)]",
+                  isActive(item.href) && "bg-[var(--tenant-surface-hover)] text-[var(--tenant-primary)]"
                 )}
               >
                 {item.label}
               </Link>
             ))}
-            <div className="mt-2 border-t border-gray-100 pt-3">
+            <div className="mt-2 border-t border-[var(--tenant-border)] pt-3">
               <Link
                 href={contactHref}
                 className="flex w-full items-center justify-center rounded-full bg-[var(--tenant-primary)] px-4 py-3 text-base font-semibold text-white shadow-sm"

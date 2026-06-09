@@ -1,11 +1,26 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { Search } from "lucide-react";
-import { getDealershipBySlug, getPublishedVehicles, getAvailableBrands } from "@/lib/tenant";
+import {
+  getDealershipBySlug,
+  getPublishedVehicles,
+  countPublishedVehicles,
+  getAvailableBrands,
+  getTenantBasePath,
+} from "@/lib/tenant";
 import { VehicleCard } from "@/components/tenant/vehicle-card";
-import { VehicleFilters } from "@/components/tenant/vehicle-filters";
+import {
+  VehicleFilters,
+  VehicleFiltersMobileTrigger,
+} from "@/components/tenant/vehicle-filters";
 import { VehicleSort } from "@/components/tenant/vehicle-sort";
+import { CatalogPagination } from "@/components/tenant/catalog-pagination";
 import type { Metadata } from "next";
+
+// Cantidad de vehículos por página del catálogo público. Validado contra
+// 2 cols mobile (6 filas) y 3 cols desktop (4 filas). Ver discusión de UX
+// con el dealer si se cambia este número.
+const VEHICLES_PER_PAGE = 12;
 
 interface TenantCatalogPageProps {
   params: Promise<{ slug: string }>;
@@ -39,33 +54,71 @@ export default async function TenantCatalogPage({ params, searchParams }: Tenant
     sort: sp.sort,
   } as Parameters<typeof getPublishedVehicles>[1];
 
-  const [vehicles, brands] = await Promise.all([
-    getPublishedVehicles(dealership.id, filters),
+  // Página actual desde la URL. Si viene cualquier basura (NaN, negativo)
+  // caemos en página 1 silenciosamente — no queremos romper el catálogo
+  // porque alguien pegue `?page=foo`. Si excede el total, lo clampeamos
+  // después de saber el `totalPages`.
+  const pageParam = Number(sp.page);
+  const requestedPage = Number.isFinite(pageParam) && pageParam > 0 ? Math.floor(pageParam) : 1;
+
+  const [vehicles, totalCount, brands] = await Promise.all([
+    getPublishedVehicles(dealership.id, filters, {
+      page: requestedPage,
+      limit: VEHICLES_PER_PAGE,
+    }),
+    countPublishedVehicles(dealership.id, filters),
     getAvailableBrands(dealership.id),
   ]);
 
-  const basePath = `/tenant/${slug}`;
+  const totalPages = Math.max(1, Math.ceil(totalCount / VEHICLES_PER_PAGE));
+  const currentPage = Math.min(requestedPage, totalPages);
+  const basePath = await getTenantBasePath(slug);
+
+  // searchParams a preservar en los links de paginación. Importante: `page`
+  // NO va, lo escribe el componente de paginación.
+  const preservedQuery: Record<string, string | undefined> = {
+    brand: sp.brand,
+    minPrice: sp.minPrice,
+    maxPrice: sp.maxPrice,
+    condition: sp.condition,
+    bodyType: sp.bodyType,
+    sort: sp.sort,
+  };
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="min-h-screen">
       <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-        <header className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full">
+        <header className="mb-4 flex flex-wrap items-center justify-between gap-3 w-full sm:mb-6">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900 sm:text-2xl">
+            <h1 className="text-lg font-semibold text-[var(--tenant-fg)] sm:text-2xl">
               Catálogo
             </h1>
-            <p className="mt-1 text-sm text-gray-500">
-              {vehicles.length} {vehicles.length === 1 ? "vehículo" : "vehículos"} encontrados
+            <p className="mt-0.5 text-xs text-[var(--tenant-fg-muted)] sm:text-sm">
+              {totalCount} {totalCount === 1 ? "vehículo" : "vehículos"} encontrados
+              {totalPages > 1 && (
+                <span className="ml-1 text-[var(--tenant-fg-subtle)]">
+                  · página {currentPage} de {totalPages}
+                </span>
+              )}
             </p>
           </div>
-          <Suspense fallback={null}>
-            <VehicleSort />
-          </Suspense>
+          <div className="flex items-center gap-2">
+            {/* Trigger del sheet de filtros — sólo en mobile/tablet */}
+            <div className="lg:hidden">
+              <Suspense fallback={null}>
+                <VehicleFiltersMobileTrigger brands={brands} />
+              </Suspense>
+            </div>
+            <Suspense fallback={null}>
+              <VehicleSort />
+            </Suspense>
+          </div>
         </header>
 
         <div className="grid gap-6 lg:grid-cols-4">
-          {/* Filters Sidebar — VehicleFilters ya trae su propia card, no envolverlo. */}
-          <aside className="lg:col-span-1">
+          {/* Filters Sidebar — sólo en desktop. En mobile el trigger del header
+              abre el sheet con los mismos filtros. */}
+          <aside className="hidden lg:col-span-1 lg:block">
             <div className="lg:sticky lg:top-24">
               <Suspense fallback={null}>
                 <VehicleFilters brands={brands} />
@@ -76,21 +129,29 @@ export default async function TenantCatalogPage({ params, searchParams }: Tenant
           {/* Results */}
           <div className="lg:col-span-3">
             {vehicles.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white py-16 text-center">
-                <Search className="mb-3 h-8 w-8 text-gray-400" />
-                <p className="text-sm font-medium text-gray-700">
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--tenant-border-strong)] bg-[var(--tenant-surface)] py-16 text-center">
+                <Search className="mb-3 h-8 w-8 text-[var(--tenant-fg-subtle)]" />
+                <p className="text-sm font-medium text-[var(--tenant-fg)]">
                   No se encontraron vehículos
                 </p>
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-[var(--tenant-fg-muted)]">
                   Probá ajustando los filtros.
                 </p>
               </div>
             ) : (
-              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {vehicles.map((vehicle) => (
-                  <VehicleCard key={vehicle.id} vehicle={vehicle} basePath={basePath} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3">
+                  {vehicles.map((vehicle) => (
+                    <VehicleCard key={vehicle.id} vehicle={vehicle} basePath={basePath} />
+                  ))}
+                </div>
+                <CatalogPagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  basePath={basePath}
+                  preservedQuery={preservedQuery}
+                />
+              </>
             )}
           </div>
         </div>

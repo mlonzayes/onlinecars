@@ -64,8 +64,10 @@ export function OnboardingForm() {
       });
 
       if (res.ok) {
-        // No reseteamos isSubmitting en éxito — el router.push es asíncrono y
-        // bajarlo antes reactiva el botón mientras la página todavía está visible.
+        // refresh() invalida el cache del router (el layout de /dashboard estaba
+        // cacheado con "sin dealership → redirect /onboarding"). Sin esto, el push
+        // lleva al usuario de vuelta al onboarding usando la versión cacheada.
+        router.refresh();
         router.push("/dashboard");
         return;
       }

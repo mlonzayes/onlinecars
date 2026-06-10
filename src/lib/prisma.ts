@@ -53,12 +53,14 @@ function createPrismaClient(): PrismaClient {
 }
 
 // Lazy init: el cliente se crea solo cuando alguien lo usa, no al importar.
+// Se cachea siempre en globalThis para evitar múltiples instancias del adapter
+// por request — sin esto, en producción cada acceso a `prisma.X` creaba un
+// PrismaClient nuevo, rompiendo transacciones (el tx y las operaciones internas
+// quedaban en instancias distintas del adapter).
 function getClient(): PrismaClient {
   if (globalForPrisma.prisma) return globalForPrisma.prisma;
   const client = createPrismaClient();
-  if (process.env.NODE_ENV !== "production") {
-    globalForPrisma.prisma = client;
-  }
+  globalForPrisma.prisma = client;
   return client;
 }
 

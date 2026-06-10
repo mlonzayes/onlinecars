@@ -69,20 +69,21 @@ export const POST = withLogger(async (req, { requestId }) => {
   const trialEndsAt = new Date();
   trialEndsAt.setUTCDate(trialEndsAt.getUTCDate() + TRIAL_DAYS);
 
-  const dealership = await prisma.$transaction(async (tx) => {
-    const d = await tx.dealership.create({
+  const dealershipId = crypto.randomUUID();
+
+  const [dealership] = await prisma.$transaction([
+    prisma.dealership.create({
       data: {
+        id: dealershipId,
         ...parsed.data,
         subscriptionStatus: "trial",
         trialEndsAt,
       },
-    });
-    await tx.dealershipUser.create({
-      data: { clerkUserId: userId, dealershipId: d.id, role: "admin" },
-    });
-
-    return d;
-  });
+    }),
+    prisma.dealershipUser.create({
+      data: { clerkUserId: userId, dealershipId, role: "admin" },
+    }),
+  ]);
 
   logger.info(requestId, "onboarding.created", {
     userId,

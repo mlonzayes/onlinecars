@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { dealershipCreateSchema } from "@/lib/validators/dealership";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
+import { type PlanType } from "@/lib/plans";
 
-// Duración del período de prueba para nuevos dealerships.
-// 15 días desde el momento del onboarding. Si cambiás esto, actualizá también
-// el copy del landing/waitlist que menciona "demo gratuita de N días".
 const TRIAL_DAYS = 15;
+const VALID_PLANS: PlanType[] = ["base", "media", "premium", "enterprise"];
 
 // POST /api/onboarding
 // Body: DealershipCreateInput
@@ -22,6 +21,15 @@ export const POST = withLogger(async (req, { requestId }) => {
     logger.warn(requestId, "onboarding.unauthorized");
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
+
+  // Plan asignado: si el admin seteó publicMetadata.assignedPlan en Clerk,
+  // la cuenta arranca activa con ese plan directo (sin trial).
+  // Caso de uso: activar un plan pago para un cliente que ya cerró contrato.
+  // Si no hay assignedPlan → trial base de TRIAL_DAYS días (default para demos).
+  const clerkUser = await currentUser();
+  const rawPlan = clerkUser?.publicMetadata?.assignedPlan as string | undefined;
+  const assignedPlan: PlanType | null =
+    rawPlan && VALID_PLANS.includes(rawPlan as PlanType) ? (rawPlan as PlanType) : null;
 
   const existing = await prisma.dealershipUser.findFirst({
     where: { clerkUserId: userId },
@@ -64,10 +72,15 @@ export const POST = withLogger(async (req, { requestId }) => {
     );
   }
 
-  // Trial: TRIAL_DAYS desde ahora. Status arranca en "trial".
-  // El cron diario marca como "expired" cuando trialEndsAt < now().
-  const trialEndsAt = new Date();
-  trialEndsAt.setUTCDate(trialEndsAt.getUTCDate() + TRIAL_DAYS);
+  // Si hay plan asignado → cuenta activa inmediata sin período de prueba.
+  // Si no → trial de TRIAL_DAYS días (comportamiento default).
+  const trialEndsAt = assignedPlan
+    ? null
+    : (() => {
+        const d = new Date();
+        d.setUTCDate(d.getUTCDate() + TRIAL_DAYS);
+        return d;
+      })();
 
   const dealershipId = crypto.randomUUID();
 
@@ -76,7 +89,8 @@ export const POST = withLogger(async (req, { requestId }) => {
       data: {
         id: dealershipId,
         ...parsed.data,
-        subscriptionStatus: "trial",
+        plan: assignedPlan ?? "base",
+        subscriptionStatus: assignedPlan ? "active" : "trial",
         trialEndsAt,
       },
     }),
@@ -89,7 +103,9 @@ export const POST = withLogger(async (req, { requestId }) => {
     userId,
     dealershipId: dealership.id,
     slug: dealership.slug,
-    trialEndsAt: trialEndsAt.toISOString(),
+    plan: dealership.plan,
+    subscriptionStatus: dealership.subscriptionStatus,
+    trialEndsAt: trialEndsAt?.toISOString() ?? null,
   });
 
   return NextResponse.json(

@@ -6,8 +6,18 @@ import { prisma } from "@/lib/prisma";
 import { saleStatusSchema } from "@/lib/validators/sale";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
+import { createNotification } from "@/lib/notifications";
 
 type SaleParams = { id: string };
+
+// Labels en español para el texto de la notificación.
+const STATUS_LABELS: Record<string, string> = {
+  draft: "Borrador",
+  reserved: "Reservada",
+  in_progress: "En curso",
+  completed: "Completada",
+  cancelled: "Cancelada",
+};
 
 // Flujo de estados válido:
 // draft → reserved → in_progress → completed
@@ -142,6 +152,20 @@ export const PATCH = withLogger<SaleParams>(async (request, { requestId, params 
     saleId: id,
     from: sale.status,
     to: nextStatus,
+  });
+
+  // Notificación in-app del cambio de estado.
+  const customerName =
+    updated.customer.businessName ||
+    [updated.customer.firstName, updated.customer.lastName].filter(Boolean).join(" ") ||
+    "Cliente";
+  await createNotification({
+    dealershipId: dealership.id,
+    type: "sale",
+    title: `Venta ${STATUS_LABELS[nextStatus] ?? nextStatus}`,
+    body: `${customerName} · ${updated.vehicle.title}`,
+    link: `/dashboard/ventas/${id}`,
+    requestId,
   });
 
   return NextResponse.json({ data: updated });

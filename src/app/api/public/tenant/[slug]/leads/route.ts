@@ -6,6 +6,7 @@ import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { applyRateLimit, getClientIp, publicLeadsLimiter } from "@/lib/rate-limit";
 import { isHoneypotTriggered } from "@/lib/honeypot";
+import { createNotification } from "@/lib/notifications";
 
 type TenantParams = { slug: string };
 
@@ -88,6 +89,16 @@ export const POST = withLogger<TenantParams>(async (request, { requestId, params
     dealershipId: dealership.id,
     leadId: lead.id,
     hasVehicle: lead.vehicleId !== null,
+  });
+
+  // Notificación in-app (fail-open: no rompe la respuesta del lead).
+  await createNotification({
+    dealershipId: dealership.id,
+    type: "lead",
+    title: "Nuevo lead",
+    body: `${lead.name} dejó una consulta`,
+    link: "/dashboard/leads",
+    requestId,
   });
 
   return NextResponse.json({ data: { id: lead.id } }, { status: 201, headers: rl.headers });

@@ -6,6 +6,7 @@ import { logger } from "@/lib/logger";
 import { reviewCreateSchema } from "@/lib/validators/review";
 import { applyRateLimit, getClientIp, publicReviewsLimiter } from "@/lib/rate-limit";
 import { isHoneypotTriggered } from "@/lib/honeypot";
+import { createNotification } from "@/lib/notifications";
 
 type TenantParams = { slug: string };
 
@@ -82,6 +83,16 @@ export const POST = withLogger<TenantParams>(async (request, { requestId, params
     dealershipId: dealership.id,
     reviewId: review.id,
     rating: parsed.data.rating,
+  });
+
+  // Notificación in-app — la reseña entra pending y necesita moderación.
+  await createNotification({
+    dealershipId: dealership.id,
+    type: "review",
+    title: "Nueva reseña",
+    body: `${parsed.data.name} dejó una opinión (${parsed.data.rating}★) · pendiente de moderar`,
+    link: "/dashboard/sitio-web",
+    requestId,
   });
 
   return NextResponse.json({ data: { id: review.id } }, { status: 201, headers: rl.headers });

@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
-import { Manrope } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Providers } from "./providers";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 
-// Manrope: SaaS B2B premium, variable font (un único archivo cubre todos los pesos).
-// Se inyecta como --font-sans (que globals.css ya mapea a font-sans de Tailwind).
-const manrope = Manrope({
+// DM Sans: geométrica humanista, pesos 300-700. Base weight 300 (light) da el
+// aspecto "fino" sin perder legibilidad. Reemplaza Manrope que es demasiado genérica.
+const dmSans = DM_Sans({
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
   variable: "--font-sans",
   display: "swap",
 });
@@ -25,7 +26,7 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="es" className={cn("font-sans", manrope.variable)} suppressHydrationWarning>
+      <html lang="es" className={cn("font-sans font-light", dmSans.variable)} suppressHydrationWarning>
         <body>
           <Providers>{children}</Providers>
         </body>

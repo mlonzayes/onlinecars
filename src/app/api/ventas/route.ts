@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { saleCreateSchema } from "@/lib/validators/sale";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
+import { createNotification } from "@/lib/notifications";
 import { Prisma } from "@prisma/client";
 
 // GET /api/ventas
@@ -189,6 +190,20 @@ export const POST = withLogger(async (request, { requestId }) => {
     saleId: sale.id,
     vehicleId,
     customerId,
+  });
+
+  // Notificación in-app de la venta creada.
+  const customerName =
+    sale.customer.businessName ||
+    [sale.customer.firstName, sale.customer.lastName].filter(Boolean).join(" ") ||
+    "Cliente";
+  await createNotification({
+    dealershipId: dealership.id,
+    type: "sale",
+    title: "Nueva venta",
+    body: `${customerName} · ${sale.vehicle.title}`,
+    link: `/dashboard/ventas/${sale.id}`,
+    requestId,
   });
 
   return NextResponse.json({ data: sale }, { status: 201 });

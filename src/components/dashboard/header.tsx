@@ -5,9 +5,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { UserButton } from "@clerk/nextjs";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "./notification-bell";
 
 // Labels por segmento de URL. Los segmentos no listados acá caen en
 // resolveSegmentLabel() con un fallback razonable (ej: cuids → "Detalle").
@@ -127,7 +127,7 @@ export function DashboardHeader({ dealershipName }: DashboardHeaderProps) {
           <Moon className="absolute size-4 rotate-90 scale-0 transition-transform dark:rotate-0 dark:scale-100" />
         </Button>
 
-        <UserButton />
+        <NotificationBell />
       </div>
     </header>
   );

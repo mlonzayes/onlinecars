@@ -20,7 +20,7 @@ import { z } from "zod";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { applyRateLimit, getClientIp, waitlistLimiter } from "@/lib/rate-limit";
-import { isHoneypotTriggered } from "@/lib/honeypot";
+import { isHoneypotTriggered, HONEYPOT_FIELD } from "@/lib/honeypot";
 import { sendTelegramNotification, escapeTelegramHTML } from "@/lib/telegram";
 
 // Coordinar con src/components/landing/contact-form.tsx — los valores tienen
@@ -74,6 +74,12 @@ export const POST = withLogger(async (req, { requestId }) => {
       { success: true },
       { status: 201, headers: rl.headers }
     );
+  }
+
+  // El honeypot llega en el body pero el schema es .strict() y no lo declara.
+  // Lo sacamos acá (ya lo chequeamos arriba) para que el parse no falle.
+  if (body && typeof body === "object") {
+    delete (body as Record<string, unknown>)[HONEYPOT_FIELD];
   }
 
   const parsed = contactSchema.safeParse(body);

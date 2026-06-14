@@ -73,8 +73,31 @@ model Dealership {
   media             DealershipMedia[]
   quotations        Quotation[]
   quotationCounters QuotationCounter[]
+  notifications     Notification[]
 
   @@map("dealerships")
+}
+
+// Notificaciones in-app del dashboard. Scoped por dealership (multi-tenant).
+// Se generan desde eventos del negocio (nuevo lead, reseña pendiente, venta).
+// La campanita del header las lista por polling y maneja el estado read/unread.
+model Notification {
+  id           String    @id @default(cuid())
+  dealershipId String
+  type         String    // lead | review | sale
+  title        String
+  body         String?
+  // Ruta interna del dashboard para ir al recurso (ej: /dashboard/leads/xxx).
+  link         String?
+  // Null = sin leer. Se setea al marcar como leída.
+  readAt       DateTime?
+  createdAt    DateTime  @default(now())
+
+  dealership Dealership @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
+
+  @@index([dealershipId, createdAt])
+  @@index([dealershipId, readAt])
+  @@map("notifications")
 }
 
 // Secciones del sitio público del concesionario. Cada Dealership tiene N secciones

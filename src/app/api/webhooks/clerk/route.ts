@@ -51,7 +51,7 @@ export async function POST(req: Request) {
   logger.info(requestId, "webhook.clerk.received", { type: event.type, svixId });
 
   if (event.type === "user.created") {
-    const { id, email_addresses, first_name, last_name } = event.data;
+    const { id, email_addresses, first_name, last_name } = event.data as UserCreatedEvent["data"];
     const email = email_addresses?.[0]?.email_address ?? "sin email";
     const name = [first_name, last_name].filter(Boolean).join(" ") || "Sin nombre";
 

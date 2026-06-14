@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
-import { PiSignIn, PiSquaresFour, PiEnvelope } from "react-icons/pi";
+import { PiSignIn, PiGauge, PiEnvelope } from "react-icons/pi";
 import Image from "next/image";
 import { MobileMenu } from "./mobile-menu";
 
@@ -14,10 +14,8 @@ export async function Navbar() {
   }
 
   return (
-    // Navbar sólido (sin backdrop-blur translúcido) — el grisado del bg-white/80
-    // se veía sucio sobre los gradients y glows de la landing.
-    <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white">
-      <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+    <header className="sticky top-0 z-50 w-full bg-transparent px-4 pt-3 pointer-events-none">
+      <nav className="pointer-events-auto relative mx-auto flex h-14 max-w-6xl items-center justify-between rounded-full border border-gray-200/60 bg-white/80 py-2 pl-5 pr-3 shadow-sm backdrop-blur-md">
         <Link href="/" className="flex items-center">
           <span className="text-lg font-extrabold tracking-tight text-gray-900">
             {/* motor<span className="text-blue-600">flow</span> */}
@@ -53,35 +51,36 @@ export async function Navbar() {
           </Link>
         </div>
 
-        <div className="hidden md:flex items-center gap-3">
-          {/* Contacto — siempre visible (desktop + mobile). Scroll al Contacto. */}
-          <a
-            href="#contacto"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-100 px-3 py-1.5 text-sm font-medium text-blue-700 transition hover:bg-blue-200"
-          >
-            <PiEnvelope className="size-3.5" />
-            <span>Contacto</span>
-          </a>
-
+        <div className="hidden md:flex items-center gap-1.5">
+          {/* Login — acción SECUNDARIA: ghost neutro para no competir con la primaria. */}
           {isLoginEnabled && (
             isSignedIn ? (
               <Link
                 href="/dashboard"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
               >
-                <PiSquaresFour className="size-3.5" />
+                <PiGauge className="size-3.5" />
                 <span>Ir al panel</span>
               </Link>
             ) : (
               <Link
                 href="/sign-in"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
+                className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
               >
                 <PiSignIn className="size-3.5" />
                 <span>Iniciar sesión</span>
               </Link>
             )
           )}
+
+          {/* Contacto — acción PRIMARIA: el único botón sólido azul de la barra. */}
+          <a
+            href="#contacto"
+            className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+          >
+            <PiEnvelope className="size-3.5" />
+            <span>Contacto</span>
+          </a>
         </div>
         
         <MobileMenu isLoginEnabled={isLoginEnabled} isSignedIn={isSignedIn} />

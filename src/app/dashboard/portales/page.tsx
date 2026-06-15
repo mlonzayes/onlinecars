@@ -1,6 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
-import { Lock, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { MLIntegrationCard } from "@/components/dashboard/settings/ml-integration-card";
 import { getCurrentDealership } from "@/lib/auth";
 import { getAccountInfo } from "@/lib/mercadolibre/token-store";
@@ -27,16 +28,23 @@ export default async function PortalesPage() {
           </p>
         </div>
 
-        <Card className="relative overflow-hidden border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50">
+        <Card className="relative overflow-hidden border-[#FFE600]/60">
           <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-700">
-                <Lock className="h-5 w-5" />
+              {/* Logo ML — mismo branding que el card de conexión (amarillo #FFE600). */}
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#FFE600] p-1 shadow-sm">
+                <Image
+                  src="/logo/meli.png"
+                  alt="Mercado Libre"
+                  width={40}
+                  height={40}
+                  className="h-full w-full object-contain"
+                />
               </div>
               <div>
                 <CardTitle className="flex items-center gap-2">
                   Mercado Libre
-                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-200 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#FFE600] px-2 py-0.5 text-xs font-semibold text-[#333]">
                     <Sparkles className="h-3 w-3" />
                     Plan Media
                   </span>
@@ -48,24 +56,24 @@ export default async function PortalesPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <ul className="space-y-2 text-sm text-foreground/90">
+            <ul className="space-y-2 text-sm text-muted-foreground">
               <li className="flex items-start gap-2">
-                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-amber-600" />
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FFE600]" />
                 Publicación con 1 click desde el dashboard.
               </li>
               <li className="flex items-start gap-2">
-                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-amber-600" />
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FFE600]" />
                 Sincronización automática del estado (pausar, reactivar, cerrar).
               </li>
               <li className="flex items-start gap-2">
-                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-amber-600" />
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FFE600]" />
                 Leads de Mercado Libre integrados con tu CRM de consultas.
               </li>
             </ul>
             <div className="flex flex-col gap-2 sm:flex-row">
               <Link
                 href="/dashboard/configuracion?section=plan"
-                className="inline-flex items-center justify-center rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-700"
+                className="inline-flex items-center justify-center rounded-lg bg-[#FFE600] px-4 py-2 text-sm font-semibold text-[#333] transition-colors hover:bg-[#f0d800]"
               >
                 Mejorá tu plan
               </Link>

@@ -89,7 +89,8 @@ export const POST = withLogger(async (req, { requestId }) => {
       data: {
         id: dealershipId,
         ...parsed.data,
-        plan: assignedPlan ?? "base",
+        // Sin plan asignado → plan "trial" (10 vehículos, 1 usuario), NO "base".
+        plan: assignedPlan ?? "trial",
         subscriptionStatus: assignedPlan ? "active" : "trial",
         trialEndsAt,
       },

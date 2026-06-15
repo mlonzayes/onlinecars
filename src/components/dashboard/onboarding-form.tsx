@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +14,6 @@ type FormFields = Omit<DealershipCreateInput, "description" | "whatsapp" | "webs
 type FieldErrors = Partial<Record<keyof FormFields, string>>;
 
 export function OnboardingForm() {
-  const router = useRouter();
   const [fields, setFields] = useState<FormFields>({ name: "", slug: "", phone: "", email: "", address: "", city: "", province: "" });
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -64,11 +62,14 @@ export function OnboardingForm() {
       });
 
       if (res.ok) {
-        // refresh() invalida el cache del router (el layout de /dashboard estaba
-        // cacheado con "sin dealership → redirect /onboarding"). Sin esto, el push
-        // lleva al usuario de vuelta al onboarding usando la versión cacheada.
-        router.refresh();
-        router.push("/dashboard");
+        // Navegación DURA (no router.push) a propósito. El layout de /dashboard
+        // gatea por dealership: con router.refresh()+push() hay un race —el push
+        // navega contra el cache del router antes de que el refresh termine, y el
+        // layout todavía ve "sin dealership → redirect /onboarding".
+        // window.location fuerza un render fresco del server: getCurrentDealership
+        // (React cache, per-request) ya encuentra el dealership recién creado.
+        // Dejamos isSubmitting en true: la página se va a recargar entera.
+        window.location.href = "/dashboard";
         return;
       }
 

@@ -1,6 +1,9 @@
 import { Dealership } from "@prisma/client";
 
-export type PlanType = "base" | "media" | "premium" | "enterprise";
+// "trial" es el plan default al crear una cuenta (período de prueba). No es
+// asignable ni vendible — es el techo apretado para demos. Los planes pagos son
+// base | media | premium | enterprise.
+export type PlanType = "trial" | "base" | "media" | "premium" | "enterprise";
 
 export interface PlanLimits {
   maxVehicles: number;
@@ -26,6 +29,15 @@ export interface PlanLimits {
 // no recurso operativo.
 
 export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
+  trial: {
+    maxVehicles: 10, // Techo apretado del período de prueba
+    maxUsers: 1, // Solo el dueño
+    maxImagesPerVehicle: 8,
+    allowBulkActions: false,
+    allowMLIntegration: false,
+    allowWhatsappFab: false,
+    showPoweredBy: true,
+  },
   base: {
     maxVehicles: 30,
     maxUsers: 1, // Solo el dueño

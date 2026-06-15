@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider afterSignOutUrl="/">
       <html lang="es" className={cn("font-sans font-light", dmSans.variable)} suppressHydrationWarning>
         <body>
           <Providers>{children}</Providers>

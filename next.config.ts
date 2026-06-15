@@ -75,6 +75,12 @@ const nextConfig: NextConfig = {
   // No hay conflicto de React aquí (pdfmake no usa React), así que externalizar
   // es seguro.
   serverExternalPackages: ["pdfmake", "pdfkit"],
+  // Los archivos de public/ NO se incluyen en la función serverless por default,
+  // así que fs.readFile(public/logo/...) tira ENOENT en Vercel. Forzamos a Next a
+  // trazar el logo de motorflow dentro del lambda de la ruta del PDF.
+  outputFileTracingIncludes: {
+    "/api/cotizaciones/[id]/pdf": ["./public/logo/motorflow_light.png"],
+  },
   images: {
     remotePatterns: buildRemotePatterns(),
     // Cache TTL alto. Sin esto Next re-pide la imagen al upstream cada vez que

@@ -43,7 +43,7 @@ export async function resolveQuotationLogo(
     }
   }
 
-  return readMotorflowLogo();
+  return readMotorflowLogo(appOrigin);
 }
 
 /**
@@ -106,9 +106,17 @@ export async function resolveVehicleImage(
   return null;
 }
 
-async function readMotorflowLogo(): Promise<QuotationLogo> {
-  const filePath = path.join(process.cwd(), ...MOTORFLOW_LOGO_PATH);
-  const buffer = await fs.readFile(filePath);
+async function readMotorflowLogo(appOrigin: string): Promise<QuotationLogo> {
+  let buffer: Buffer;
+  try {
+    // Path local (dev) o lambda con el asset trazado (ver outputFileTracingIncludes).
+    const filePath = path.join(process.cwd(), ...MOTORFLOW_LOGO_PATH);
+    buffer = await fs.readFile(filePath);
+  } catch {
+    // Fallback serverless: si public/ no está en el FS de la función, lo traemos
+    // por HTTP desde el propio origin (mismo mecanismo que los logos de dealers).
+    buffer = await loadImageBuffer("/logo/motorflow_light.png", appOrigin);
+  }
   return {
     dataUri: `data:image/png;base64,${buffer.toString("base64")}`,
     isMotorflow: true,

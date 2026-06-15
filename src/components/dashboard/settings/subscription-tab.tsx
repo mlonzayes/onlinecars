@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Rocket, Zap, Crown } from "lucide-react";
+import { Check, Rocket, Zap, Crown, Clock } from "lucide-react";
 import type { Dealership } from "@prisma/client";
 
 interface SubscriptionTabProps {
@@ -11,6 +11,12 @@ interface SubscriptionTabProps {
 }
 
 const PLAN_DETAILS = {
+  trial: {
+    name: "Prueba gratis",
+    icon: <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400" />,
+    features: ["Hasta 10 vehículos", "1 usuario (solo dueño)", "Período de prueba"],
+    color: "bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-400",
+  },
   base: {
     name: "Base",
     icon: <Rocket className="h-5 w-5" />,

@@ -1,12 +1,22 @@
+import { SignUp } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 
-/**
- * El sign-up público está deshabilitado a propósito.
- * La forma de dar de alta a un usuario es que se contacte mediante el formulario
- * y el equipo lo dé de alta manualmente.
- *
- * Si alguien navega manualmente a /sign-up, lo mandamos al landing.
- */
-export default function SignUpDisabledPage() {
-  redirect("/");
+export default function SignUpPage() {
+  const isLoginEnabled = process.env.NEXT_PUBLIC_ENABLE_LOGIN === "true";
+
+  // Mismo gate que el sign-in: si login está deshabilitado, no se puede registrar.
+  if (!isLoginEnabled) redirect("/");
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+      <SignUp
+        appearance={{
+          elements: {
+            formButtonPrimary: "bg-blue-600 hover:bg-blue-700 shadow-sm transition-all",
+            card: "shadow-2xl border border-gray-200 rounded-2xl",
+          },
+        }}
+      />
+    </div>
+  );
 }

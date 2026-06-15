@@ -51,6 +51,7 @@ export function SolutionSection() {
                 alt="Panel de inventario de motorflow"
                 width={700}
                 height={480}
+                sizes="(max-width: 1024px) 100vw, 512px"
                 className="w-full"
               />
             </div>

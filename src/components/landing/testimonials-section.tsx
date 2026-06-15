@@ -114,7 +114,7 @@ export function TestimonialsSection() {
               </p>
               <div className="mt-5 border-t border-gray-100 pt-4">
                 <p className="text-sm font-medium text-gray-900">{t.name}</p>
-                <p className="mt-0.5 text-xs font-light text-gray-400">{t.role}</p>
+                <p className="mt-0.5 text-xs font-light text-gray-500">{t.role}</p>
               </div>
             </div>
           ))}

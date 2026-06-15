@@ -80,7 +80,7 @@ export function PricingCards() {
             <div className="mt-4 flex items-baseline gap-1">
               <span className="text-3xl font-semibold text-gray-900">{plan.price}</span>
               {plan.key !== "enterprise" && (
-                <span className="text-sm font-light text-gray-400">/mes</span>
+                <span className="text-sm font-light text-gray-500">/mes</span>
               )}
             </div>
 
@@ -94,7 +94,7 @@ export function PricingCards() {
               {plan.key !== "enterprise" && (
                 <li className="flex items-start gap-2.5">
                   <PiCheck className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
-                  <span className="text-sm font-light italic text-gray-400">
+                  <span className="text-sm font-light italic text-gray-500">
                     Potenciado por motorflow
                   </span>
                 </li>
@@ -113,14 +113,14 @@ export function PricingCards() {
                 {plan.ctaText}
               </button>
               {plan.key !== "enterprise" && (
-                <p className="text-center text-xs font-light text-gray-400">
+                <p className="text-center text-xs font-light text-gray-500">
                   15 días de prueba gratuita
                 </p>
               )}
               <Link
                 href="/precios"
                 target="_blank"
-                className="text-center text-xs font-medium text-gray-400 transition hover:text-gray-900"
+                className="text-center text-xs font-medium text-gray-500 transition hover:text-gray-900"
               >
                 Saber más
               </Link>

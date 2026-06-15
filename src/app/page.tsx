@@ -179,7 +179,7 @@ export default function HomePage() {
             <h2 className="text-2xl font-semibold text-gray-900 sm:text-3xl">
               ¿Listo para dar el salto?
             </h2>
-            <p className="mt-3 text-sm font-light text-gray-500">
+            <p className="mt-3 text-sm font-light text-gray-600">
               Completá el formulario y nos comunicamos para ayudarte a poner tu
               concesionario online.
             </p>

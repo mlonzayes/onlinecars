@@ -24,7 +24,7 @@ export function Footer() {
 
           {/* Producto */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
               Producto
             </h3>
             <ul className="mt-4 flex flex-col gap-2.5 text-sm text-gray-400">
@@ -39,7 +39,7 @@ export function Footer() {
 
           {/* Contacto */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
               Contacto
             </h3>
             <ul className="mt-4 flex flex-col gap-3 text-sm text-gray-400">
@@ -61,7 +61,7 @@ export function Footer() {
                   +54 11 0000-0000
                 </a>
               </li>
-              <li className="text-xs text-gray-500">
+              <li className="text-xs text-gray-400">
                 Lun a Vie · 9 a 18 hs (ART)
               </li>
             </ul>
@@ -69,7 +69,7 @@ export function Footer() {
 
           {/* Empresa */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
               Empresa
             </h3>
             <ul className="mt-4 flex flex-col gap-2.5 text-sm text-gray-400">
@@ -90,7 +90,7 @@ export function Footer() {
         </div>
 
         {/* Línea inferior */}
-        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-gray-800 pt-6 text-xs text-gray-500 sm:flex-row">
+        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-gray-800 pt-6 text-xs text-gray-400 sm:flex-row">
           <span>© {new Date().getFullYear()} motorflow. Todos los derechos reservados.</span>
           <span>
             Un producto de{" "}

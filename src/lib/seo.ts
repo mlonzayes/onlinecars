@@ -7,10 +7,10 @@ export const SITE_URL = (
   process.env.NEXT_PUBLIC_APP_URL ?? "https://motorflowapp.com"
 ).replace(/\/$/, "");
 
-export const SITE_NAME = "motorflow";
+export const SITE_NAME = "MotorFlow";
 
 export const SITE_DESCRIPTION =
-  "motorflow es la plataforma para que tu concesionario de autos tenga su propio sitio web profesional: catálogo de vehículos, gestión de stock, captación de leads y operatoria de venta. Sin comisiones y sin depender de portales.";
+  "MotorFlow es la plataforma para que tu concesionario de autos tenga su propio sitio web profesional: catálogo de vehículos, gestión de stock, captación de leads y operatoria de venta. Sin comisiones y sin depender de portales.";
 
 // Contacto público (coincide con el footer / data del negocio).
 export const SITE_EMAIL = "ventas@motorflowapp.com";

@@ -12,6 +12,8 @@ import { PricingDisclaimer } from "@/components/landing/pricing-disclaimer";
 import { FaqItem } from "@/components/landing/faq-item";
 import { LandingContactForm } from "@/components/landing/contact-form";
 import { Toaster } from "@/components/ui/sonner";
+import { JsonLd } from "@/components/seo/json-ld";
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, SITE_EMAIL } from "@/lib/seo";
 import { getRecentPosts } from "@/data/posts";
 
 const FAQS: { question: string; answer: string }[] = [
@@ -47,11 +49,61 @@ const FAQS: { question: string; answer: string }[] = [
   },
 ];
 
+// Structured data (schema.org) — la leen Google (rich results / FAQ) y los
+// motores de IA para entender qué es motorflow, qué ofrece y a qué precio.
+const ORG_ID = `${SITE_URL}/#organization`;
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": ORG_ID,
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: `${SITE_URL}/logo/motorflow_light.png`,
+      description: SITE_DESCRIPTION,
+      email: SITE_EMAIL,
+      areaServed: { "@type": "Country", name: "Argentina" },
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      inLanguage: "es-AR",
+      publisher: { "@id": ORG_ID },
+    },
+    {
+      "@type": "SoftwareApplication",
+      name: SITE_NAME,
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+      url: SITE_URL,
+      description: SITE_DESCRIPTION,
+      publisher: { "@id": ORG_ID },
+      offers: [
+        { "@type": "Offer", name: "Base", price: "19990", priceCurrency: "ARS" },
+        { "@type": "Offer", name: "Media", price: "49990", priceCurrency: "ARS" },
+        { "@type": "Offer", name: "Premium", price: "99990", priceCurrency: "ARS" },
+      ],
+    },
+    {
+      "@type": "FAQPage",
+      mainEntity: FAQS.map((f) => ({
+        "@type": "Question",
+        name: f.question,
+        acceptedAnswer: { "@type": "Answer", text: f.answer },
+      })),
+    },
+  ],
+};
+
 export default function HomePage() {
   const recentPosts = getRecentPosts(3);
 
   return (
     <div className="flex min-h-screen flex-col bg-blue-50">
+      <JsonLd data={structuredData} />
       <Navbar />
 
       <main className="flex-1">

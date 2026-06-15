@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { type BlogPost, categoryLabel } from "@/data/posts";
 
 interface BlogCardProps {
@@ -21,7 +22,8 @@ export function BlogCard({ post, variant = "default" }: BlogCardProps) {
   const isFeatured = variant === "featured";
 
   return (
-    <article
+    <Link
+      href={`/blog/${post.slug}`}
       className={`group flex h-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-white transition-all hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-100/50 ${
         isFeatured ? "sm:flex-row" : ""
       }`}
@@ -86,6 +88,6 @@ export function BlogCard({ post, variant = "default" }: BlogCardProps) {
           </div>
         </div>
       </div>
-    </article>
+    </Link>
   );
 }

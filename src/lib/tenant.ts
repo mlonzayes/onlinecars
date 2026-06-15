@@ -527,7 +527,25 @@ async function fetchTenantHomeBundleFromDb(
 ): Promise<TenantHomeBundle | null> {
   const dealership = await getDealershipBySlug(slug);
   if (!dealership) return null;
+  return assembleTenantHomeBundle(dealership);
+}
 
+/**
+ * Versión PREVIEW del bundle: arma el home SIN gatear por siteEnabled, para que
+ * el dueño autenticado pueda previsualizar su sitio antes de habilitarlo.
+ * Sin cache (preview siempre fresco, y no contamina el cache público).
+ */
+export async function getTenantHomeBundleForPreview(
+  slug: string
+): Promise<TenantHomeBundle | null> {
+  const dealership = await prisma.dealership.findUnique({ where: { slug } });
+  if (!dealership || !dealership.active) return null;
+  return assembleTenantHomeBundle(dealership);
+}
+
+async function assembleTenantHomeBundle(
+  dealership: Dealership
+): Promise<TenantHomeBundle> {
   const theme = dealership.theme as DealershipTheme | null;
 
   // Lazy seed. El count va fuera de la transacción para evitar timeouts de
@@ -546,7 +564,7 @@ async function fetchTenantHomeBundleFromDb(
     if (seedResult.seeded) {
       logger.info(undefined, "tenant.sections.seeded", {
         dealershipId: dealership.id,
-        slug,
+        slug: dealership.slug,
         migratedHero: seedResult.migratedHero,
       });
     }

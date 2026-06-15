@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { Eye } from "lucide-react";
 import { getCurrentDealership } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
@@ -35,9 +37,19 @@ export default async function SitioWebPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Sitio Web</h1>
-        <p className="text-muted-foreground">Personalizá la apariencia y contenido de tu sitio público.</p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Sitio Web</h1>
+          <p className="text-muted-foreground">Personalizá la apariencia y contenido de tu sitio público.</p>
+        </div>
+        <Link
+          href="/vista-previa"
+          target="_blank"
+          className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-accent"
+        >
+          <Eye className="size-4" />
+          Vista previa
+        </Link>
       </div>
 
       <Card>

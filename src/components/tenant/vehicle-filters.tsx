@@ -286,7 +286,10 @@ export function VehicleFiltersMobileTrigger({ brands }: VehicleFiltersProps) {
           </span>
         )}
       </SheetTrigger>
-      <SheetContent side="right" className="w-full max-w-sm overflow-y-auto p-4">
+      <SheetContent
+        side="right"
+        className="w-full max-w-none overflow-y-auto bg-[var(--tenant-surface)] p-4 text-[var(--tenant-fg)] data-[side=right]:w-full sm:max-w-sm"
+      >
         <SheetHeader className="p-0 pb-3">
           <div className="flex items-center justify-between">
             <SheetTitle className="text-base">Filtros</SheetTitle>

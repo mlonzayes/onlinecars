@@ -10,7 +10,8 @@ import { getDashboardStats, type DashboardStats } from "./dashboard-stats";
 const DASHBOARD_HOME_TTL_SECONDS = 3600;
 
 function dashboardHomeKey(dealershipId: string): string {
-  return `dashboard:home:${dealershipId}`;
+  // v2: se agregó `stats.financials`. El bump invalida entries con el shape viejo.
+  return `dashboard:home:v2:${dealershipId}`;
 }
 
 export interface DashboardHomeData {

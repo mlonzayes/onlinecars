@@ -81,6 +81,22 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Defaults de los tokens del tenant (tema "classic" / claro).
+     El layout del tenant los pisa con los del template elegido dentro de su
+     scope. Estos defaults existen para el contenido PORTALEADO (ej: el Sheet de
+     filtros del catálogo), que se renderiza en <body>, fuera del tenant-scope,
+     y sin esto quedaba con las variables vacías → fondo transparente/roto. */
+  --tenant-bg: #f9fafb;
+  --tenant-surface: #ffffff;
+  --tenant-surface-hover: #f3f4f6;
+  --tenant-fg: #0f172a;
+  --tenant-fg-muted: #64748b;
+  --tenant-fg-subtle: #94a3b8;
+  --tenant-border: #e5e7eb;
+  --tenant-border-strong: #cbd5e1;
+  --tenant-primary: #2563eb;
+  --tenant-primary-dark: #1e40af;
 }
 
 .dark {

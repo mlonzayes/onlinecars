@@ -25,15 +25,19 @@ export function VehicleSort() {
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <label htmlFor="sort-select" className="text-sm font-medium text-[var(--tenant-fg-muted)]">
+    <div className="flex min-w-0 flex-1 items-center gap-2 sm:flex-none">
+      {/* En mobile ocultamos el label para no robarle ancho al select. */}
+      <label
+        htmlFor="sort-select"
+        className="hidden shrink-0 text-sm font-medium text-[var(--tenant-fg-muted)] sm:inline"
+      >
         Ordenar por:
       </label>
       <select
         id="sort-select"
         value={currentSort}
         onChange={handleChange}
-        className="rounded-lg border border-[var(--tenant-border-strong)] bg-[var(--tenant-surface)] text-[var(--tenant-fg)] py-2 pl-3 pr-8 text-sm font-medium focus:border-[var(--tenant-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--tenant-primary)]/20"
+        className="min-w-0 flex-1 rounded-lg border border-[var(--tenant-border-strong)] bg-[var(--tenant-surface)] py-2 pl-3 pr-8 text-sm font-medium text-[var(--tenant-fg)] focus:border-[var(--tenant-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--tenant-primary)]/20 sm:flex-none"
       >
         <option value="recent">Destacados</option>
         <option value="price_asc">Precio: Menor a Mayor</option>

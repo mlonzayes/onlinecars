@@ -168,7 +168,7 @@ export function FeaturedTabs({
 
   return (
     <div ref={scopeRef}>
-      <div className="mb-6 flex items-center justify-between gap-3 sm:mb-8">
+      <div className="mb-4 flex items-center justify-between gap-3">
         {/* Botones prev/next — visibles solo en desktop y si hay items suficientes */}
         {enableCarouselUX ? (
           <div className="hidden items-center gap-2 md:flex">

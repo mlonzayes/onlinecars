@@ -19,6 +19,9 @@ interface SectionProps {
   description?: string;
   // "center" (default para landings) o "left" (para secciones más utilitarias).
   align?: "center" | "left";
+  // Reduce el espacio entre el header (eyebrow/title) y el contenido. Útil para
+  // carruseles, donde el gap grande default deja demasiado aire.
+  compactHeader?: boolean;
   id?: string;
 }
 
@@ -37,6 +40,7 @@ export function Section({
   title,
   description,
   align = "center",
+  compactHeader = false,
   id,
 }: SectionProps) {
   const showHeader = !!(eyebrow || title || description);
@@ -54,7 +58,7 @@ export function Section({
         {showHeader && (
           <header
             className={cn(
-              "mb-10 sm:mb-12",
+              compactHeader ? "mb-5 sm:mb-6" : "mb-10 sm:mb-12",
               align === "center" ? "text-center" : "text-left"
             )}
           >

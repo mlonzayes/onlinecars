@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { Car, MessageSquare, Settings, ShoppingCart, Users } from "lucide-react";
+import { Car, MessageSquare, Settings, ShoppingCart, Users, TrendingUp, Wallet } from "lucide-react";
 import { getCurrentDealership } from "@/lib/auth";
 import { getDashboardHomeData } from "@/lib/dashboard-cache";
+import { formatCurrency } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -10,9 +11,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { SalesByMonthChart } from "@/components/dashboard/charts/sales-by-month-chart";
-import { LeadsBySourceChart } from "@/components/dashboard/charts/leads-by-source-chart";
 import { StockByStatusChart } from "@/components/dashboard/charts/stock-by-status-chart";
-import { ConversionFunnelChart } from "@/components/dashboard/charts/conversion-funnel-chart";
+import { NetProfitByMonthChart } from "@/components/dashboard/charts/net-profit-by-month-chart";
+import { StockByBrandChart } from "@/components/dashboard/charts/stock-by-brand-chart";
+import { StockAgingChart } from "@/components/dashboard/charts/stock-aging-chart";
 
 export default async function DashboardHomePage() {
   const dealership = await getCurrentDealership();
@@ -26,6 +28,11 @@ export default async function DashboardHomePage() {
     customerCount,
     activeSaleCount,
   } = await getDashboardHomeData(dealership.id);
+
+  // Métricas financieras: solo visibles para admins (revelan el costo/margen).
+  const isAdmin = dealership.currentUser.role === "admin";
+  const { grossRevenue, netProfit } = stats.financials;
+  const marginPct = grossRevenue > 0 ? Math.round((netProfit / grossRevenue) * 100) : 0;
 
   const sections = [
     {
@@ -76,13 +83,60 @@ export default async function DashboardHomePage() {
         </p>
       </div>
 
-      {/* Charts: 2x2 en desktop, stack en mobile. */}
+      {/* Resumen financiero — solo admins (datos sensibles de costo/margen). */}
+      {isAdmin && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <TrendingUp className="size-4" />
+                <CardDescription>Ingreso bruto · últimos 6 meses</CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-semibold">{formatCurrency(grossRevenue)}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Wallet className="size-4" />
+                <CardDescription>Ganancia neta · últimos 6 meses</CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-semibold text-emerald-600">
+                {formatCurrency(netProfit)}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Margen</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-semibold">{marginPct}%</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Sobre ventas con costo cargado
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Charts: 2 columnas en desktop, stack en mobile. */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <SalesByMonthChart data={stats.salesByMonth} />
-        <ConversionFunnelChart data={stats.funnel} />
-        <LeadsBySourceChart data={stats.leadsBySource} />
+        {/* Ganancia neta — solo admins (revela margen). */}
+        {isAdmin && <NetProfitByMonthChart data={stats.netProfitByMonth} />}
         <StockByStatusChart data={stats.stockByStatus} />
+        <StockByBrandChart data={stats.stockByBrand} />
       </div>
+
+      {/* Antigüedad del stock — ancho completo, lee mejor extendido. */}
+      <StockAgingChart data={stats.stockAging} />
 
       {/* Cards de navegación rápida. */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -86,7 +86,9 @@ export default async function TenantCatalogPage({ params, searchParams }: Tenant
   };
 
   return (
-    <div className="min-h-screen">
+    // overflow-x-hidden solo en mobile (evita que un overflow horizontal deje ver
+    // el fondo del body). En lg lo dejamos visible para no romper el sticky del aside.
+    <div className="min-h-screen overflow-x-hidden lg:overflow-x-visible">
       <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         <header className="mb-4 flex flex-wrap items-center justify-between gap-3 w-full sm:mb-6">
           <div>
@@ -102,9 +104,9 @@ export default async function TenantCatalogPage({ params, searchParams }: Tenant
               )}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full items-center gap-2 sm:w-auto">
             {/* Trigger del sheet de filtros — sólo en mobile/tablet */}
-            <div className="lg:hidden">
+            <div className="shrink-0 lg:hidden">
               <Suspense fallback={null}>
                 <VehicleFiltersMobileTrigger brands={brands} />
               </Suspense>

@@ -316,7 +316,8 @@ export async function getApprovedReviews(dealershipId: string) {
 const TENANT_HOME_TTL_SECONDS = 1800; // 30 min
 
 function tenantHomeKey(slug: string): string {
-  return `tenant:${slug}:home`;
+  // v2: se agregó `collections` al bundle. El bump invalida el shape viejo.
+  return `tenant:${slug}:home:v2`;
 }
 
 function tenantDealershipKey(slug: string): string {
@@ -389,6 +390,14 @@ export interface TenantHomeBundleMedia {
   order: number;
 }
 
+// Carrusel fijo del home, segmentado por categoría. Se arma desde la lista de
+// publicados ya cargada (sin queries extra) y se auto-oculta si queda vacío.
+export interface TenantHomeCollection {
+  key: string;
+  label: string;
+  vehicles: TenantHomeBundleVehicle[];
+}
+
 export interface TenantHomeBundle {
   dealership: TenantHomeBundleDealership;
   vehicles: TenantHomeBundleVehicle[];
@@ -397,6 +406,7 @@ export interface TenantHomeBundle {
   reviews: TenantHomeBundleReview[];
   sections: TenantHomeBundleSection[];
   mediaBySection: Record<SectionType, TenantHomeBundleMedia[]>;
+  collections: TenantHomeCollection[];
 }
 
 export function resolveSection(row: DealershipSection): TenantHomeBundleSection {
@@ -450,6 +460,66 @@ function groupMediaBySection(
     });
   }
   return result;
+}
+
+type PublishedVehicleRow = Awaited<ReturnType<typeof getPublishedVehicles>>[number];
+
+function serializeVehicle(v: PublishedVehicleRow): TenantHomeBundleVehicle {
+  return {
+    id: v.id,
+    publicSlug: v.publicSlug,
+    title: v.title,
+    brand: v.brand,
+    model: v.model,
+    year: v.year,
+    price: v.price.toString(),
+    currency: v.currency,
+    kilometers: v.kilometers,
+    fuelType: v.fuelType,
+    transmission: v.transmission,
+    bodyType: v.bodyType,
+    condition: v.condition,
+    featured: v.featured,
+    images: v.images.map((img) => ({
+      id: img.id,
+      url: img.url,
+      isPrimary: img.isPrimary,
+      alt: img.alt,
+    })),
+  };
+}
+
+// Carruseles fijos del home. Cada uno filtra la lista de publicados (ya en
+// memoria) y se auto-oculta si queda vacío. Sin queries extra.
+const COLLECTION_CAP = 12;
+
+// Esta colección se renderiza DENTRO del bloque catálogo (entre la doble CTA
+// "vender/comprar" y "por qué elegirnos"). El resto se intercala a nivel page.
+export const CATALOG_CAROUSEL_KEY = "pickups_suv";
+
+function buildCollections(vehicles: PublishedVehicleRow[]): TenantHomeCollection[] {
+  const defs: { key: string; label: string; rows: PublishedVehicleRow[] }[] = [
+    { key: "nuevos", label: "0km", rows: vehicles.filter((v) => v.condition === "new") },
+    { key: "usados", label: "Usados", rows: vehicles.filter((v) => v.condition === "used") },
+    {
+      key: "pickups_suv",
+      label: "Pickups & SUVs",
+      rows: vehicles.filter((v) => v.bodyType === "pickup" || v.bodyType === "suv"),
+    },
+    {
+      key: "oportunidades",
+      label: "Oportunidades",
+      rows: [...vehicles].sort((a, b) => a.price.toNumber() - b.price.toNumber()),
+    },
+  ];
+
+  return defs
+    .map((d) => ({
+      key: d.key,
+      label: d.label,
+      vehicles: d.rows.slice(0, COLLECTION_CAP).map(serializeVehicle),
+    }))
+    .filter((c) => c.vehicles.length > 0);
 }
 
 async function fetchTenantHomeBundleFromDb(
@@ -521,28 +591,7 @@ async function fetchTenantHomeBundleFromDb(
       website: dealership.website,
       theme,
     },
-    vehicles: candidates.map((v) => ({
-      id: v.id,
-      publicSlug: v.publicSlug,
-      title: v.title,
-      brand: v.brand,
-      model: v.model,
-      year: v.year,
-      price: v.price.toString(),
-      currency: v.currency,
-      kilometers: v.kilometers,
-      fuelType: v.fuelType,
-      transmission: v.transmission,
-      bodyType: v.bodyType,
-      condition: v.condition,
-      featured: v.featured,
-      images: v.images.map((img) => ({
-        id: img.id,
-        url: img.url,
-        isPrimary: img.isPrimary,
-        alt: img.alt,
-      })),
-    })),
+    vehicles: candidates.map(serializeVehicle),
     stockBrands,
     displayBrands,
     reviews: reviews.map((r) => ({
@@ -554,6 +603,7 @@ async function fetchTenantHomeBundleFromDb(
     })),
     sections: sectionRows.map(resolveSection),
     mediaBySection: groupMediaBySection(mediaRows),
+    collections: buildCollections(vehicles),
   };
 }
 

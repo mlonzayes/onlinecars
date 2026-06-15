@@ -5,6 +5,7 @@ import { dealershipCreateSchema } from "@/lib/validators/dealership";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { type PlanType } from "@/lib/plans";
+import { recordTermsAcceptance } from "@/lib/legal";
 
 const TRIAL_DAYS = 15;
 const VALID_PLANS: PlanType[] = ["base", "media", "premium", "enterprise"];
@@ -43,6 +44,16 @@ export const POST = withLogger(async (req, { requestId }) => {
   }
 
   const body = await req.json();
+
+  // Aceptación de T&C obligatoria para crear la cuenta.
+  if (body?.acceptTerms !== true) {
+    logger.warn(requestId, "onboarding.terms_not_accepted", { userId });
+    return NextResponse.json(
+      { error: "Tenés que aceptar los Términos y Condiciones para continuar." },
+      { status: 400 }
+    );
+  }
+
   const parsed = dealershipCreateSchema.safeParse(body);
   if (!parsed.success) {
     logger.warn(requestId, "onboarding.invalid_input", {
@@ -99,6 +110,9 @@ export const POST = withLogger(async (req, { requestId }) => {
       data: { clerkUserId: userId, dealershipId, role: "admin" },
     }),
   ]);
+
+  // Registrar la aceptación de los T&C (versión vigente) del admin.
+  await recordTermsAcceptance(userId, dealership.id);
 
   logger.info(requestId, "onboarding.created", {
     userId,

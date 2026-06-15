@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/shared/navbar";
 import { PricingTable } from "@/components/landing/pricing-table";
+import { PricingDisclaimer } from "@/components/landing/pricing-disclaimer";
 import { Footer } from "@/components/shared/footer";
 
 export const metadata = {
@@ -20,6 +21,9 @@ export default function PreciosPage() {
             </p>
           </div>
           <PricingTable />
+          <div className="mt-8">
+            <PricingDisclaimer />
+          </div>
         </div>
       </main>
       <Footer />

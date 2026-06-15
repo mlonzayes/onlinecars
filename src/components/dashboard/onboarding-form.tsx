@@ -18,6 +18,8 @@ export function OnboardingForm() {
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [serverError, setServerError] = useState<string | null>(null);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [termsError, setTermsError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -38,6 +40,7 @@ export function OnboardingForm() {
     e.preventDefault();
     setServerError(null);
     setFieldErrors({});
+    setTermsError(false);
 
     const parsed = dealershipCreateSchema.safeParse(fields);
     if (!parsed.success) {
@@ -53,12 +56,17 @@ export function OnboardingForm() {
       return;
     }
 
+    if (!acceptedTerms) {
+      setTermsError(true);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const res = await fetch("/api/onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsed.data),
+        body: JSON.stringify({ ...parsed.data, acceptTerms: true }),
       });
 
       if (res.ok) {
@@ -163,6 +171,35 @@ export function OnboardingForm() {
               </Select>
               {fieldErrors.province && <p className="text-sm text-destructive">{fieldErrors.province}</p>}
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="flex items-start gap-2.5 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => {
+                  setAcceptedTerms(e.target.checked);
+                  if (e.target.checked) setTermsError(false);
+                }}
+                className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer"
+              />
+              <span>
+                Acepto los{" "}
+                <a href="/terminos" target="_blank" className="text-blue-600 underline underline-offset-2">
+                  Términos y Condiciones
+                </a>{" "}
+                y la{" "}
+                <a href="/privacidad" target="_blank" className="text-blue-600 underline underline-offset-2">
+                  Política de Privacidad
+                </a>.
+              </span>
+            </label>
+            {termsError && (
+              <p className="text-sm text-destructive">
+                Tenés que aceptar los Términos y Condiciones para continuar.
+              </p>
+            )}
           </div>
 
           {serverError && <p className="text-sm text-destructive">{serverError}</p>}

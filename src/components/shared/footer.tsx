@@ -83,8 +83,8 @@ export function Footer() {
                   MW Studio Digital
                 </a>
               </li>
-              <li><a href="#" className="transition hover:text-white">Términos</a></li>
-              <li><a href="#" className="transition hover:text-white">Privacidad</a></li>
+              <li><Link href="/terminos" className="transition hover:text-white">Términos</Link></li>
+              <li><Link href="/privacidad" className="transition hover:text-white">Privacidad</Link></li>
             </ul>
           </div>
         </div>

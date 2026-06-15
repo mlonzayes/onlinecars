@@ -78,6 +78,24 @@ model Dealership {
   @@map("dealerships")
 }
 
+// Registro histórico de aceptaciones de Términos y Condiciones / Privacidad.
+// Una fila por cada vez que un usuario acepta una versión. NO tiene FK al
+// Dealership a propósito: es un registro legal que debe sobrevivir a la baja
+// del concesionario. Para saber si un usuario aceptó la versión vigente, se
+// busca la fila con (clerkUserId, version actual).
+model TermsAcceptance {
+  id           String   @id @default(cuid())
+  clerkUserId  String
+  // Contexto opcional (denormalizado, sin FK) — el dealership desde el que aceptó.
+  dealershipId String?
+  version      String   // versión aceptada (ver CURRENT_LEGAL_VERSION en src/lib/legal.ts)
+  acceptedAt   DateTime @default(now())
+
+  @@index([clerkUserId, version])
+  @@index([clerkUserId, acceptedAt])
+  @@map("terms_acceptances")
+}
+
 // Notificaciones in-app del dashboard. Scoped por dealership (multi-tenant).
 // Se generan desde eventos del negocio (nuevo lead, reseña pendiente, venta).
 // La campanita del header las lista por polling y maneja el estado read/unread.

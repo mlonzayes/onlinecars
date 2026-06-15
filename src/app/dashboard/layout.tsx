@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getCurrentDealership } from "@/lib/auth";
+import { hasAcceptedCurrentTerms } from "@/lib/legal";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { DashboardHeader } from "@/components/dashboard/header";
@@ -22,6 +23,10 @@ export default async function DashboardLayout({
 
   const dealership = await getCurrentDealership();
   if (!dealership) redirect("/onboarding");
+
+  // Gate de T&C: si el usuario no aceptó la versión legal vigente (cuenta vieja
+  // o documentos actualizados), lo mandamos a re-aceptar antes de entrar.
+  if (!(await hasAcceptedCurrentTerms(userId))) redirect("/aceptar-terminos");
 
   // Gate de acceso: trial vencido o cuenta suspendida bloquean el dashboard.
   // El cron diario ya marca como "expired" los trials vencidos, pero hacemos

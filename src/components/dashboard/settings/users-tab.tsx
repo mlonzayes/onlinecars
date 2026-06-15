@@ -171,7 +171,6 @@ export function UsersTab({
               <div key={user.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
                 <div>
                   <p className="font-medium">{user.email || "Usuario sin email público"}</p>
-                  <p className="text-xs text-muted-foreground">ID: {user.id}</p>
                 </div>
                 <Badge variant={user.role === "admin" ? "default" : "secondary"}>
                   {user.role}

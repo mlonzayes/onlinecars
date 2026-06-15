@@ -8,6 +8,7 @@ import { MidCtaSection } from "@/components/landing/mid-cta-section";
 import { TestimonialsSection } from "@/components/landing/testimonials-section";
 import { BlogSection } from "@/components/landing/blog-section";
 import { PricingCards } from "@/components/landing/pricing-cards";
+import { PricingDisclaimer } from "@/components/landing/pricing-disclaimer";
 import { FaqItem } from "@/components/landing/faq-item";
 import { LandingContactForm } from "@/components/landing/contact-form";
 import { Toaster } from "@/components/ui/sonner";
@@ -92,9 +93,9 @@ export default function HomePage() {
             <div className="mt-12">
               <PricingCards />
             </div>
-            <p className="mt-6 text-center text-xs text-gray-400">
-              Precios en pesos argentinos · IVA no incluido
-            </p>
+            <div className="mt-6">
+              <PricingDisclaimer />
+            </div>
           </div>
         </section>
 

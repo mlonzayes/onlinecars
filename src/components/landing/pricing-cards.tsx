@@ -53,7 +53,7 @@ export function PricingCards() {
     <div className="w-full">
       <div className="mb-10 text-center">
         <span className="inline-block rounded-full bg-blue-50 px-4 py-1.5 text-xs font-medium text-blue-600">
-          Precios de promoción por los primeros 6 meses
+          50% OFF los primeros 6 meses
         </span>
       </div>
 

@@ -5,9 +5,7 @@ import { MLIntegrationCard } from "@/components/dashboard/settings/ml-integratio
 import { getCurrentDealership } from "@/lib/auth";
 import { getAccountInfo } from "@/lib/mercadolibre/token-store";
 import { getPlanLimits } from "@/lib/plans";
-import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import type { MLAccountStatus } from "@/components/dashboard/settings/ml-integration-card";
 
 export default async function PortalesPage() {
@@ -67,13 +65,13 @@ export default async function PortalesPage() {
             <div className="flex flex-col gap-2 sm:flex-row">
               <Link
                 href="/dashboard/configuracion?section=plan"
-                className={cn(buttonVariants(), "bg-amber-600 text-white hover:bg-amber-700")}
+                className="inline-flex items-center justify-center rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-700"
               >
                 Mejorá tu plan
               </Link>
               <Link
                 href="/dashboard"
-                className={buttonVariants({ variant: "outline" })}
+                className="inline-flex items-center justify-center rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
               >
                 Volver al dashboard
               </Link>

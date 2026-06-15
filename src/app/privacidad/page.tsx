@@ -29,11 +29,13 @@ export default function PrivacidadPage() {
         Plataforma es:
       </p>
       <ul>
-        <li><strong>Titular:</strong> [NOMBRE COMPLETO]</li>
-        <li><strong>CUIT:</strong> [CUIT]</li>
-        <li><strong>Domicilio:</strong> [DOMICILIO]</li>
-        <li><strong>Contacto:</strong> <a href="mailto:soporte@motorflowapp.com">soporte@motorflowapp.com</a></li>
+        <li><strong>Titular:</strong> Mateo Lonzayes Perales</li>
+        <li><strong>Correo de contacto:</strong> <a href="mailto:soporte@motorflowapp.com">soporte@motorflowapp.com</a></li>
       </ul>
+      <p>
+        Cualquier solicitud vinculada a tus datos personales puede canalizarse a través del
+        correo de contacto indicado.
+      </p>
 
       <h2>2. Doble rol: responsable y encargado</h2>
       <p>

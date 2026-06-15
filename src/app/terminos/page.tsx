@@ -13,10 +13,10 @@ export default function TerminosPage() {
       <p>
         Estos Términos y Condiciones (los &quot;Términos&quot;) regulan el acceso y uso de{" "}
         <strong>motorflow</strong> (la &quot;Plataforma&quot;), un servicio de software como
-        servicio (SaaS) operado por <strong>[NOMBRE COMPLETO]</strong>, CUIT{" "}
-        <strong>[CUIT]</strong>, con domicilio en <strong>[DOMICILIO]</strong> (el
-        &quot;Prestador&quot;). Al registrarte o utilizar la Plataforma, aceptás estos
-        Términos en su totalidad.
+        servicio (SaaS) operado por <strong>Mateo Lonzayes Perales</strong> (el
+        &quot;Prestador&quot;). Podés contactarte con el Prestador en{" "}
+        <a href="mailto:soporte@motorflowapp.com">soporte@motorflowapp.com</a>. Al
+        registrarte o utilizar la Plataforma, aceptás estos Términos en su totalidad.
       </p>
 
       <h2>1. Descripción del servicio</h2>
@@ -127,7 +127,7 @@ export default function TerminosPage() {
       <p>
         Estos Términos se rigen por las leyes de la República Argentina. Ante cualquier
         controversia, las partes se someten a la jurisdicción de los tribunales ordinarios
-        de <strong>[CIUDAD, PROVINCIA]</strong>, sin perjuicio de los fueros que por ley
+        de <strong>Quilmes, Provincia de Buenos Aires</strong>, sin perjuicio de los fueros que por ley
         correspondan a los consumidores.
       </p>
 

@@ -1,6 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Car, MapPin, Phone, Mail, MessageCircle } from "lucide-react";
+import { Car, MapPin, Phone, Mail } from "lucide-react";
+import { WhatsAppIcon } from "./social-icons";
+import { SocialBar } from "./social-bar";
+import type { SocialLinks } from "@/types";
 
 interface TenantFooterProps {
   // Solo los campos que el footer realmente usa — evitamos arrastrar el objeto Prisma
@@ -14,6 +17,7 @@ interface TenantFooterProps {
   address: string | null;
   city: string | null;
   province: string | null;
+  socialLinks: SocialLinks | null;
   basePath: string;
   // Si true, muestra el badge "Potenciado por motorflow". Controlado por plan
   // del dealership (Base lo tiene, Media+ lo esconde — gancho de upgrade).
@@ -30,6 +34,7 @@ export function TenantFooter({
   address,
   city,
   province,
+  socialLinks,
   basePath,
   showPoweredBy,
 }: TenantFooterProps) {
@@ -73,6 +78,8 @@ export function TenantFooter({
                 <span>{locationParts.join(", ")}</span>
               </div>
             )}
+            {/* Barra de redes sociales — se auto-oculta si no hay ninguna cargada. */}
+            <SocialBar socialLinks={socialLinks} className="pt-1" />
           </div>
 
           {/* Col 2 — Quick Links */}
@@ -160,7 +167,7 @@ export function TenantFooter({
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-emerald-600"
                   >
-                    <MessageCircle className="h-4 w-4 shrink-0" />
+                    <WhatsAppIcon className="h-4 w-4 shrink-0" />
                     WhatsApp
                   </a>
                 </li>

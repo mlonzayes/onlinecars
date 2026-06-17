@@ -247,3 +247,50 @@ export const DEALERSHIP_PLANS = ["base", "media", "premium", "enterprise"] as co
 export type DealershipPlan = (typeof DEALERSHIP_PLANS)[number];
 
 export const DEFAULT_QUOTATION_VALIDITY_DAYS = 15;
+
+// --- Redes sociales del tenant ---
+// Las keys son los identificadores internos (coinciden con SocialLinks en
+// src/types). WhatsApp NO está acá — se renderiza desde el campo `whatsapp`
+// del Dealership. El orden define cómo se muestran los íconos en el sitio.
+export const SOCIAL_NETWORKS = [
+  "instagram",
+  "facebook",
+  "tiktok",
+  "x",
+  "threads",
+] as const;
+export type SocialNetwork = (typeof SOCIAL_NETWORKS)[number];
+
+// Label + prefijo base de cada red. El prefijo se usa para reconstruir la URL
+// cuando el dealer carga solo el usuario/handle (ej: "miconcesionaria" →
+// https://instagram.com/miconcesionaria). Si ya pega una URL completa, se respeta.
+export const SOCIAL_NETWORK_META: Record<
+  SocialNetwork,
+  { label: string; baseUrl: string; placeholder: string }
+> = {
+  instagram: {
+    label: "Instagram",
+    baseUrl: "https://instagram.com/",
+    placeholder: "usuario o link de tu perfil",
+  },
+  facebook: {
+    label: "Facebook",
+    baseUrl: "https://facebook.com/",
+    placeholder: "usuario o link de tu página",
+  },
+  tiktok: {
+    label: "TikTok",
+    baseUrl: "https://tiktok.com/@",
+    placeholder: "usuario o link de tu perfil",
+  },
+  x: {
+    label: "X",
+    baseUrl: "https://x.com/",
+    placeholder: "usuario o link de tu perfil",
+  },
+  threads: {
+    label: "Threads",
+    baseUrl: "https://threads.net/@",
+    placeholder: "usuario o link de tu perfil",
+  },
+};

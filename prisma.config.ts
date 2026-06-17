@@ -9,6 +9,14 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"] || process.env["NEXT_PUBLIC_DATABASE_URL"],
+    // Las migraciones usan conexión DIRECTA (sin el pooler de Neon): los advisory
+    // locks de Postgres son a nivel sesión y se rompen a través de pgbouncer en
+    // modo transacción → P1002. DIRECT_URL = misma URL pero con el host SIN
+    // "-pooler". El runtime de la app sigue usando DATABASE_URL (pooled) vía el
+    // adapter en src/lib/prisma.ts. Fallback a DATABASE_URL si no hay DIRECT_URL.
+    url:
+      process.env["DIRECT_URL"] ||
+      process.env["DATABASE_URL"] ||
+      process.env["NEXT_PUBLIC_DATABASE_URL"],
   },
 });

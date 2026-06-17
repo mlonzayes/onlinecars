@@ -1,4 +1,17 @@
 import { z } from "zod";
+import { normalizeSocialLinks } from "@/lib/social";
+
+// Input crudo de las redes: el dealer carga handle o URL. La normalización a URL
+// absoluta (y el descarte de vacíos) se hace en el transform → guardamos limpio.
+const socialLinksInputSchema = z
+  .object({
+    instagram: z.string().max(200).optional(),
+    facebook: z.string().max(200).optional(),
+    tiktok: z.string().max(200).optional(),
+    x: z.string().max(200).optional(),
+    threads: z.string().max(200).optional(),
+  })
+  .transform((val) => normalizeSocialLinks(val));
 
 export const dealershipCreateSchema = z.object({
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres").max(200),
@@ -42,6 +55,20 @@ export const dealershipUpdateSchema = dealershipCreateSchema.partial().omit({ sl
   // a "classic" si llega cualquier otro string — el validador acá es solo el
   // primer filtro.
   templateId: z.enum(["classic", "dark"]).optional(),
+  // Ubicación del mapa. Las coords las resuelve el buscador de geocoding del
+  // dashboard — el validador solo chequea rangos. mapLabel vacío → null.
+  // La visibilidad del mapa NO vive acá: la maneja el config de la sección Contacto.
+  latitude: z.number().min(-90).max(90).nullable().optional(),
+  longitude: z.number().min(-180).max(180).nullable().optional(),
+  mapLabel: z
+    .string()
+    .max(300)
+    .nullable()
+    .optional()
+    .or(z.literal("").transform(() => null)),
+  // Redes sociales. El transform normaliza a URLs y descarta vacíos (devuelve
+  // null si no quedó ninguna). nullable permite limpiarlas todas.
+  socialLinks: socialLinksInputSchema.nullable().optional(),
 });
 
 export type DealershipCreateInput = z.infer<typeof dealershipCreateSchema>;

@@ -3,7 +3,7 @@ import { prisma } from "./prisma";
 import type { Dealership, DealershipMedia, DealershipSection } from "@prisma/client";
 import { redis } from "./redis";
 import { logger } from "./logger";
-import type { DealershipTheme } from "@/types";
+import type { DealershipTheme, SocialLinks } from "@/types";
 import { SECTION_TYPES, type MediaPurpose, type SectionType } from "./constants";
 import { DEFAULT_SECTION_COPY, DEFAULT_SECTION_CONFIG } from "./tenant-defaults";
 import type { SectionConfigByType } from "./sections/config-types";
@@ -386,6 +386,13 @@ export interface TenantHomeBundleDealership {
   province: string | null;
   website: string | null;
   theme: DealershipTheme | null;
+  // Ubicación geo para el mapa del sitio. Las coords vienen resueltas del
+  // dashboard. La visibilidad la decide el config.showMap de la sección Contacto.
+  latitude: number | null;
+  longitude: number | null;
+  mapLabel: string | null;
+  // Links a redes sociales (URLs ya normalizadas). null = sin redes cargadas.
+  socialLinks: SocialLinks | null;
 }
 
 export interface TenantHomeBundleSection {
@@ -625,6 +632,10 @@ async function assembleTenantHomeBundle(
       province: dealership.province,
       website: dealership.website,
       theme,
+      latitude: dealership.latitude,
+      longitude: dealership.longitude,
+      mapLabel: dealership.mapLabel,
+      socialLinks: (dealership.socialLinks as SocialLinks | null) ?? null,
     },
     vehicles: candidates.map(serializeVehicle),
     stockBrands,

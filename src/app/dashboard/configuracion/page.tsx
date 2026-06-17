@@ -4,6 +4,9 @@ import { ContactForm } from "@/components/dashboard/settings/contact-form";
 import { UsersTab } from "@/components/dashboard/settings/users-tab";
 import { SubscriptionTab } from "@/components/dashboard/settings/subscription-tab";
 import { WhatsappFabCard } from "@/components/dashboard/settings/whatsapp-fab-card";
+import { LocationPicker } from "@/components/dashboard/settings/location-picker";
+import { SocialLinksForm } from "@/components/dashboard/settings/social-links-form";
+import type { SocialLinks } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { prisma } from "@/lib/prisma";
 import { getPlanLimits } from "@/lib/plans";
@@ -60,6 +63,11 @@ export default async function ConfiguracionPage() {
             allowWhatsappFab={limits.allowWhatsappFab}
             currentPlan={dealership.plan}
           />
+          <LocationPicker
+            latitude={dealership.latitude}
+            longitude={dealership.longitude}
+          />
+          <SocialLinksForm socialLinks={(dealership.socialLinks as SocialLinks | null) ?? null} />
         </TabsContent>
         
         <TabsContent value="usuarios" className="mt-0">

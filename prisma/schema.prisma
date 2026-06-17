@@ -28,6 +28,18 @@ model Dealership {
   address     String?
   city        String?
   province    String?
+  // Ubicación geo del concesionario para el mapa del sitio público. Las coords
+  // se resuelven en el dashboard vía un buscador con geocoding (OSM/Photon) — el
+  // dealer NUNCA carga lat/lng a mano. mapLabel guarda la dirección formateada que
+  // eligió (caption del mapa). La VISIBILIDAD del mapa la controla el toggle
+  // `showMap` del config de la sección Contacto (no un flag a nivel dealership).
+  latitude    Float?
+  longitude   Float?
+  mapLabel    String?
+  // Links a redes sociales del concesionario, renderizados como barra de íconos
+  // en el sitio público (footer + contacto). Shape: ver SocialLinks en src/types.
+  // WhatsApp NO va acá — reusa el campo `whatsapp` de arriba.
+  socialLinks Json?
   website     String?  @unique // Dominio personalizado
   theme       Json?    // Configuración de colores/branding
   active      Boolean  @default(true)

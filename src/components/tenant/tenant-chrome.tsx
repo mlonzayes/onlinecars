@@ -4,7 +4,7 @@ import { TenantHeader } from "./tenant-header";
 import { TenantFooter } from "./tenant-footer";
 import { WhatsAppFab } from "./whatsapp-fab";
 import type { Dealership } from "@prisma/client";
-import type { DealershipTheme } from "@/types";
+import type { DealershipTheme, SocialLinks } from "@/types";
 
 interface TenantChromeProps {
   dealership: Dealership;
@@ -49,6 +49,7 @@ export function TenantChrome({ dealership, basePath, children }: TenantChromePro
         address={dealership.address}
         city={dealership.city}
         province={dealership.province}
+        socialLinks={(dealership.socialLinks as SocialLinks | null) ?? null}
         basePath={basePath}
         showPoweredBy={getPlanLimits(dealership).showPoweredBy}
       />

@@ -325,9 +325,8 @@ export function SectionConfigControls<T extends SectionType>({
         <SwitchRow
           id="contact-show-map"
           label="Mostrar mapa"
+          helperText="Cargá tu dirección en Configuración para que el mapa tenga una ubicación."
           checked={c.showMap}
-          disabled
-          disabledHint="Próximamente"
           onChange={(next) =>
             update("showMap" as keyof SectionConfigByType[T], next as SectionConfigByType[T][keyof SectionConfigByType[T]])
           }

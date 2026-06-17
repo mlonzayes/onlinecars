@@ -113,10 +113,19 @@ export const PUT = withLogger(async (request, { requestId }) => {
     }
   }
 
+  // Gotcha Prisma: una columna Json? NO acepta `null` literal en update — hay que
+  // pasar Prisma.DbNull para escribir SQL NULL. Solo aplica si el cliente mandó
+  // socialLinks explícitamente en null (limpió todas las redes). Se arma acá, al
+  // final, para que herede el delete de `website` de arriba.
+  const prismaData: Record<string, unknown> = { ...updateData };
+  if (updateData.socialLinks === null) {
+    prismaData.socialLinks = Prisma.DbNull;
+  }
+
   try {
     const updated = await prisma.dealership.update({
       where: { id: dealership.id },
-      data: updateData,
+      data: prismaData,
     });
 
     // Invalidamos con el slug NUEVO y el viejo

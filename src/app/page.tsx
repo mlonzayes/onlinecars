@@ -7,6 +7,7 @@ import { BenefitsSection } from "@/components/landing/benefits-section";
 import { MidCtaSection } from "@/components/landing/mid-cta-section";
 import { TestimonialsSection } from "@/components/landing/testimonials-section";
 import { BlogSection } from "@/components/landing/blog-section";
+import { ProductShowcase } from "@/components/landing/product-showcase";
 import { PricingCards } from "@/components/landing/pricing-cards";
 import { PricingDisclaimer } from "@/components/landing/pricing-disclaimer";
 import { FaqItem } from "@/components/landing/faq-item";
@@ -102,7 +103,7 @@ export default function HomePage() {
   const recentPosts = getRecentPosts(3);
 
   return (
-    <div className="flex min-h-screen flex-col bg-blue-50">
+    <div className="flex min-h-screen flex-col bg-blue-100">
       <JsonLd data={structuredData} />
       <Navbar />
 
@@ -115,6 +116,9 @@ export default function HomePage() {
 
         {/* 3. Solución */}
         <SolutionSection />
+
+        {/* 3b. Showcase del producto (screenshots reales) */}
+        <ProductShowcase />
 
         {/* 4. Beneficios */}
         <BenefitsSection />

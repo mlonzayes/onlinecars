@@ -17,9 +17,11 @@ import {
   getDealershipBySlug,
   getPublishedVehicleBySlug,
   getTenantBasePath,
+  getTenantPublicUrl,
 } from "@/lib/tenant";
 import { VehicleGallery } from "@/components/tenant/vehicle-gallery";
 import { TenantContactForm } from "@/components/tenant/contact-form";
+import { JsonLd } from "@/components/seo/json-ld";
 
 interface VehicleDetailPageProps {
   params: Promise<{ slug: string; publicSlug: string }>;
@@ -90,6 +92,54 @@ export default async function VehicleDetailPage({ params }: VehicleDetailPagePro
 
   const basePath = await getTenantBasePath(slug);
 
+  // Structured data Car + Offer: precio, año, km, condición. Es lo que hace que
+  // Google/IA puedan listar y entender este vehículo en particular.
+  const publicUrl = getTenantPublicUrl(dealership);
+  const vehicleUrl = `${publicUrl}/vehiculo/${vehicle.publicSlug}`;
+  const carLd = {
+    "@context": "https://schema.org",
+    "@type": "Car",
+    name: vehicle.title,
+    url: vehicleUrl,
+    brand: { "@type": "Brand", name: vehicle.brand },
+    model: vehicle.model,
+    vehicleModelDate: String(vehicle.year),
+    itemCondition:
+      vehicle.condition === "new"
+        ? "https://schema.org/NewCondition"
+        : "https://schema.org/UsedCondition",
+    ...(vehicle.images.length > 0 ? { image: vehicle.images.map((i) => i.url) } : {}),
+    ...(vehicle.description ? { description: vehicle.description } : {}),
+    ...(vehicle.color ? { color: vehicle.color } : {}),
+    ...(vehicle.kilometers != null
+      ? {
+          mileageFromOdometer: {
+            "@type": "QuantitativeValue",
+            value: vehicle.kilometers,
+            unitCode: "KMT",
+          },
+        }
+      : {}),
+    ...(vehicle.fuelType
+      ? { fuelType: FUEL_LABELS[vehicle.fuelType] ?? vehicle.fuelType }
+      : {}),
+    ...(vehicle.transmission
+      ? {
+          vehicleTransmission:
+            TRANSMISSION_LABELS[vehicle.transmission] ?? vehicle.transmission,
+        }
+      : {}),
+    ...(vehicle.vin ? { vehicleIdentificationNumber: vehicle.vin } : {}),
+    offers: {
+      "@type": "Offer",
+      price: vehicle.price.toString(),
+      priceCurrency: vehicle.currency,
+      availability: "https://schema.org/InStock",
+      url: vehicleUrl,
+      seller: { "@type": "AutoDealer", name: dealership.name },
+    },
+  };
+
   const whatsappMessage = encodeURIComponent(
     `Hola! Me interesa el ${vehicle.title} (${formatPrice(vehicle.price, vehicle.currency)}). ¿Está disponible?`
   );
@@ -121,6 +171,8 @@ export default async function VehicleDetailPage({ params }: VehicleDetailPagePro
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
+      <JsonLd data={carLd} />
+
       {/* Back */}
       <Link
         href={basePath}

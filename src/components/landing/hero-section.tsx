@@ -14,25 +14,29 @@ const CHECKS = [
 // pinta al instante. Las animaciones de scroll quedan para debajo del fold.
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-white px-4 pb-0 pt-24 sm:pt-32">
+    <section className="relative isolate -mt-[68px] overflow-hidden bg-white px-4 pb-0 pt-40 sm:pt-44">
       {/* Capa decorativa: gradiente base + glows azules suaves (animados, sutil).
           aria-hidden + pointer-events-none: es puramente visual. */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-blue-50 via-white to-white" />
-        <div className="hero-glow absolute -left-24 -top-24 h-80 w-80 rounded-full bg-blue-300/30 blur-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-200 via-blue-50 to-white" />
+        <div className="hero-glow absolute -left-24 -top-24 h-96 w-96 rounded-full bg-blue-500/45 blur-3xl" />
         <div
-          className="hero-glow absolute -right-20 -top-10 h-[26rem] w-[26rem] rounded-full bg-sky-200/40 blur-3xl"
-          style={{ animationDelay: "-7s" }}
+          className="hero-glow-alt absolute -right-24 -top-12 h-[30rem] w-[30rem] rounded-full bg-sky-400/55 blur-3xl"
+          style={{ animationDelay: "-6s" }}
         />
         <div
-          className="hero-glow absolute left-1/3 top-44 h-72 w-[34rem] -translate-x-1/2 rounded-full bg-cyan-100/50 blur-3xl"
-          style={{ animationDelay: "-13s" }}
+          className="hero-glow absolute left-1/3 top-40 h-80 w-[36rem] -translate-x-1/2 rounded-full bg-cyan-300/55 blur-3xl"
+          style={{ animationDelay: "-11s" }}
+        />
+        <div
+          className="hero-glow-alt absolute -bottom-16 left-10 h-72 w-72 rounded-full bg-blue-400/40 blur-3xl"
+          style={{ animationDelay: "-3s" }}
         />
       </div>
 
       <div className="relative mx-auto max-w-2xl text-center">
-        <h1 className="text-4xl font-semibold leading-tight tracking-tight text-gray-900 sm:text-5xl lg:text-[3.25rem]">
-          Vendé más autos desde tu{" "}
+        <h1 className="text-5xl font-semibold leading-[1.05] tracking-tight text-gray-900 sm:text-[3.5rem] lg:text-[4rem]">
+          Vendé más vehículos desde tu{" "}
           <span className="text-blue-600">propio sitio.</span>
         </h1>
 
@@ -69,7 +73,7 @@ export function HeroSection() {
       </div>
 
       {/* Product screenshot (elemento LCP) */}
-      <div className="mx-auto mt-16 max-w-5xl">
+      <div className="mx-auto mt-24 max-w-5xl sm:mt-32">
         <div className="overflow-hidden rounded-t-2xl border border-b-0 border-gray-200/80 shadow-2xl shadow-blue-100/60">
           {/* Browser chrome */}
           <div className="flex items-center gap-3 border-b border-gray-200 bg-white/90 px-4 py-3 backdrop-blur-sm">
@@ -80,17 +84,18 @@ export function HeroSection() {
             </div>
             <div className="flex flex-1 justify-center">
               <span className="flex max-w-[220px] flex-1 items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-3 py-1 text-center text-[10px] text-gray-600">
-                motorflowapp.com/mi-concesionario
+                app.motorflowapp.com/dashboard
               </span>
             </div>
           </div>
           <Image
-            src="/mockups/website_mockup_1778627472208.png"
-            alt="Sitio público del concesionario en motorflow"
-            width={1200}
-            height={700}
+            src="/mockups/inventory.png"
+            alt="Panel de gestión de motorflow"
+            width={1347}
+            height={595}
             sizes="(max-width: 1024px) 100vw, 1024px"
-            className="w-full"
+            quality={90}
+            className="hero-shot w-full"
             priority
           />
         </div>

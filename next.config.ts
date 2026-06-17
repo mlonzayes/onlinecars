@@ -89,6 +89,9 @@ const nextConfig: NextConfig = {
     // pasó por acá no se vuelve a tocar el upstream. Cuando el dealer
     // reemplaza una foto, sube con un key nuevo → URL nueva → re-fetch.
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 días
+    // Calidades permitidas (Next 15.5 las exige declaradas). 90 para los
+    // screenshots de UI, que con el 75 default quedan con el texto borroso.
+    qualities: [75, 90],
     // Solo WebP (no AVIF). AVIF consume mucho CPU en serverless y muchos
     // browsers viejos no lo soportan — termina haciendo doble decode.
     formats: ["image/webp"],

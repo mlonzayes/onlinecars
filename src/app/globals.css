@@ -160,12 +160,46 @@
     transform: translate3d(0, 0, 0) scale(1);
   }
   50% {
-    transform: translate3d(0, -24px, 0) scale(1.08);
+    transform: translate3d(28px, -36px, 0) scale(1.15);
+  }
+}
+
+@keyframes heroFloatAlt {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.08);
+  }
+  50% {
+    transform: translate3d(-32px, 28px, 0) scale(0.92);
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .hero-glow {
-    animation: heroFloat 20s ease-in-out infinite;
+    animation: heroFloat 15s ease-in-out infinite;
+  }
+  .hero-glow-alt {
+    animation: heroFloatAlt 18s ease-in-out infinite;
+  }
+}
+
+/* Hero shot: arranca grisado y se prende a color a medida que scrolleás.
+   Solo desktop (lg+). Scroll-driven CSS, sin JS → no afecta el LCP (la imagen
+   pinta igual, solo desaturada). @supports: si el navegador no soporta
+   scroll-timeline, se ve a color normal — nunca queda gris "trabada". */
+@keyframes heroShotReveal {
+  to {
+    filter: grayscale(0) brightness(1);
+  }
+}
+
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    .hero-shot {
+      filter: grayscale(0.85) brightness(0.97);
+      animation: heroShotReveal linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 260px;
+    }
   }
 }

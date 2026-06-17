@@ -14,8 +14,23 @@ const CHECKS = [
 // pinta al instante. Las animaciones de scroll quedan para debajo del fold.
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-blue-50 via-white to-white px-4 pb-0 pt-24 sm:pt-32">
-      <div className="mx-auto max-w-2xl text-center">
+    <section className="relative overflow-hidden bg-white px-4 pb-0 pt-24 sm:pt-32">
+      {/* Capa decorativa: gradiente base + glows azules suaves (animados, sutil).
+          aria-hidden + pointer-events-none: es puramente visual. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-50 via-white to-white" />
+        <div className="hero-glow absolute -left-24 -top-24 h-80 w-80 rounded-full bg-blue-300/30 blur-3xl" />
+        <div
+          className="hero-glow absolute -right-20 -top-10 h-[26rem] w-[26rem] rounded-full bg-sky-200/40 blur-3xl"
+          style={{ animationDelay: "-7s" }}
+        />
+        <div
+          className="hero-glow absolute left-1/3 top-44 h-72 w-[34rem] -translate-x-1/2 rounded-full bg-cyan-100/50 blur-3xl"
+          style={{ animationDelay: "-13s" }}
+        />
+      </div>
+
+      <div className="relative mx-auto max-w-2xl text-center">
         <h1 className="text-4xl font-semibold leading-tight tracking-tight text-gray-900 sm:text-5xl lg:text-[3.25rem]">
           Vendé más autos desde tu{" "}
           <span className="text-blue-600">propio sitio.</span>

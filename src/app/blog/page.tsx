@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/shared/navbar";
+import { Footer } from "@/components/shared/footer";
 import { BlogCard } from "@/components/landing/blog-card";
 import { getAllPosts } from "@/data/posts";
 
@@ -14,10 +15,10 @@ export default function BlogIndexPage() {
   const [featured, ...rest] = posts;
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-gray-50">
       <Navbar />
 
-      <main className="flex-1 bg-gray-50 px-4 py-10 sm:py-14">
+      <main className="flex-1 px-4 pb-14 pt-28">
         <div className="mx-auto max-w-5xl">
           {/* Header */}
           <header className="text-center">
@@ -62,6 +63,8 @@ export default function BlogIndexPage() {
           )}
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 }

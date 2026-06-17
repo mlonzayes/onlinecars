@@ -151,3 +151,21 @@
 .tenant-scope {
   font-family: var(--font-tenant), system-ui, -apple-system, sans-serif;
 }
+
+/* Glows decorativos del hero de la landing. Animan solo el transform (barato,
+   GPU) y solo si el usuario no pidió menos movimiento. */
+@keyframes heroFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, -24px, 0) scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-glow {
+    animation: heroFloat 20s ease-in-out infinite;
+  }
+}

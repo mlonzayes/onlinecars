@@ -23,6 +23,23 @@ import { seedDefaultSections } from "./sections/seed";
  * producción los clicks resultaban en `subdomain.../tenant/{slug}/...` que el
  * middleware re-reescribía a `/tenant/{slug}/tenant/{slug}/...` → 404.
  */
+/**
+ * URL pública ABSOLUTA del sitio del tenant (para canonical, sitemap, JSON-LD).
+ * Si el dealer cargó un dominio custom (`website`), lo usa; si no, el subdominio
+ * `{slug}.{appDomain}`. Esto deja el SEO listo para cuando enchufe su dominio.
+ */
+export function getTenantPublicUrl(dealership: {
+  slug: string;
+  website?: string | null;
+}): string {
+  if (dealership.website) {
+    const host = dealership.website.replace(/^https?:\/\//, "").replace(/\/$/, "");
+    return `https://${host}`;
+  }
+  const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "motorflowapp.com";
+  return `https://${dealership.slug}.${appDomain}`;
+}
+
 export async function getTenantBasePath(slug: string): Promise<string> {
   const headersList = await headers();
   const host = headersList.get("host") ?? "";

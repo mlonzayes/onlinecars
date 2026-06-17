@@ -27,8 +27,12 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   if (hostname.endsWith(`.${appDomain}`)) {
     const subdomain = hostname.slice(0, -1 * (appDomain.length + 1));
     if (subdomain && subdomain !== "app" && subdomain !== "www") {
+      // IMPORTANTE: incluir url.search en el rewrite. Sin él, el query string
+      // (?sort=...&brand=...&page=...) se PIERDE porque el path absoluto del
+      // primer arg de new URL descarta el search del base req.url. Resultado:
+      // los filtros/orden del catálogo no funcionaban en los subdominios.
       return NextResponse.rewrite(
-        new URL(`/tenant/${subdomain}${url.pathname}`, req.url)
+        new URL(`/tenant/${subdomain}${url.pathname}${url.search}`, req.url)
       );
     }
   }

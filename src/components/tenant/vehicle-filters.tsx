@@ -288,27 +288,41 @@ export function VehicleFiltersMobileTrigger({ brands }: VehicleFiltersProps) {
       </SheetTrigger>
       <SheetContent
         side="right"
-        className="w-full max-w-none overflow-y-auto bg-[var(--tenant-surface)] p-4 text-[var(--tenant-fg)] data-[side=right]:w-full sm:max-w-sm"
+        className="flex w-full max-w-none flex-col bg-[var(--tenant-surface)] p-0 text-[var(--tenant-fg)] data-[side=right]:w-full sm:max-w-sm"
       >
-        <SheetHeader className="p-0 pb-3">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="text-base">Filtros</SheetTitle>
-            {f.activeCount > 0 && (
-              <button
-                type="button"
-                onClick={() => {
-                  f.clear();
-                  setOpen(false);
-                }}
-                className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-[var(--tenant-fg-muted)] transition-colors hover:bg-[var(--tenant-surface-hover)] hover:text-[var(--tenant-fg)]"
-              >
-                <X className="h-3 w-3" />
-                Limpiar
-              </button>
-            )}
-          </div>
+        <SheetHeader className="p-4 pb-3">
+          <SheetTitle className="text-base">Filtros</SheetTitle>
         </SheetHeader>
-        <FiltersPanel brands={brands} variant="sheet" />
+
+        {/* Panel scrolleable — ocupa el alto disponible entre header y footer. */}
+        <div className="flex-1 overflow-y-auto px-4">
+          <FiltersPanel brands={brands} variant="sheet" />
+        </div>
+
+        {/* Footer fijo al fondo: acá vive "Limpiar" (lejos de la cruz de cerrar)
+            + el botón principal para volver a los resultados. */}
+        <div className="flex items-center gap-3 border-t border-[var(--tenant-border)] bg-[var(--tenant-surface)] p-4">
+          {f.activeCount > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                f.clear();
+                setOpen(false);
+              }}
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[var(--tenant-border-strong)] px-4 py-2.5 text-sm font-medium text-[var(--tenant-fg)] transition-colors hover:bg-[var(--tenant-surface-hover)]"
+            >
+              <X className="h-4 w-4" />
+              Limpiar
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="inline-flex flex-1 items-center justify-center rounded-lg bg-[var(--tenant-primary)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:opacity-90"
+          >
+            Ver resultados
+          </button>
+        </div>
       </SheetContent>
     </Sheet>
   );

@@ -14,8 +14,10 @@ interface AccountRowActionsProps {
   subscriptionStatus: string;
 }
 
+// bg-background/text-foreground explícitos para que el dropdown nativo sea
+// legible en dark mode (sin esto el browser usa fondo blanco).
 const SELECT_CLASS =
-  "h-8 rounded-md border bg-transparent px-2 text-xs capitalize outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50";
+  "h-8 rounded-md border bg-background px-2 text-xs capitalize text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50";
 
 export function AccountRowActions({
   id,
@@ -75,7 +77,7 @@ export function AccountRowActions({
         aria-label="Plan"
       >
         {DEALERSHIP_PLANS.map((p) => (
-          <option key={p} value={p}>
+          <option key={p} value={p} className="bg-background text-foreground">
             {p}
           </option>
         ))}

@@ -44,8 +44,11 @@ interface VehicleExpensesProps {
   usdRate: number | null;
 }
 
+// bg-background/text-foreground explícitos: sin esto, el dropdown nativo del
+// browser usa fondo blanco y el texto queda ilegible en dark mode.
 const SELECT_CLASS =
-  "h-9 w-full rounded-md border bg-transparent px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "h-9 w-full rounded-md border bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring";
+const OPTION_CLASS = "bg-background text-foreground";
 
 export function VehicleExpenses({
   vehicleId,
@@ -151,7 +154,9 @@ export function VehicleExpenses({
               <Label htmlFor="exp-cat" className="text-xs">Categoría</Label>
               <select id="exp-cat" className={SELECT_CLASS} value={category} onChange={(e) => setCategory(e.target.value)}>
                 {VEHICLE_EXPENSE_CATEGORIES.map((c) => (
-                  <option key={c} value={c}>{VEHICLE_EXPENSE_CATEGORY_LABELS[c]}</option>
+                  <option key={c} value={c} className={OPTION_CLASS}>
+                    {VEHICLE_EXPENSE_CATEGORY_LABELS[c]}
+                  </option>
                 ))}
               </select>
             </div>
@@ -162,7 +167,11 @@ export function VehicleExpenses({
             <div className="flex flex-col gap-1">
               <Label htmlFor="exp-cur" className="text-xs">Moneda</Label>
               <select id="exp-cur" className={cn(SELECT_CLASS, "w-20")} value={expCurrency} onChange={(e) => setExpCurrency(e.target.value)}>
-                {CURRENCIES.map((c) => (<option key={c} value={c}>{c}</option>))}
+                {CURRENCIES.map((c) => (
+                  <option key={c} value={c} className={OPTION_CLASS}>
+                    {c}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="flex flex-col gap-1">

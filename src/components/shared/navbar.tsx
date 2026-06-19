@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
-import { PiSignIn, PiGauge, PiEnvelope } from "react-icons/pi";
+import { PiUserPlus, PiGauge, PiEnvelope } from "react-icons/pi";
 import Image from "next/image";
 import { MobileMenu } from "./mobile-menu";
 
@@ -64,11 +64,11 @@ export async function Navbar() {
               </Link>
             ) : (
               <Link
-                href="/sign-in"
+                href="/sign-up"
                 className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
               >
-                <PiSignIn className="size-3.5" />
-                <span>Iniciar sesión</span>
+                <PiUserPlus className="size-3.5" />
+                <span>Registrarse</span>
               </Link>
             )
           )}

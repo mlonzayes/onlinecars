@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
 import gsap from "gsap";
-import { PiList, PiX, PiEnvelope, PiGauge, PiSignIn } from "react-icons/pi";
+import { PiList, PiX, PiEnvelope, PiGauge, PiUserPlus } from "react-icons/pi";
 
 interface MobileMenuProps {
   isLoginEnabled: boolean;
@@ -125,12 +125,12 @@ export function MobileMenu({ isLoginEnabled, isSignedIn }: MobileMenuProps) {
                     </Link>
                   ) : (
                     <Link
-                      href="/sign-in"
+                      href="/sign-up"
                       onClick={() => setIsOpen(false)}
                       className="inline-flex items-center justify-center gap-2 rounded-full border border-gray-300 px-6 py-3.5 text-sm font-medium text-gray-900 transition hover:border-gray-900"
                     >
-                      <PiSignIn className="size-4" />
-                      <span>Iniciar sesión</span>
+                      <PiUserPlus className="size-4" />
+                      <span>Registrarse</span>
                     </Link>
                   ))}
 

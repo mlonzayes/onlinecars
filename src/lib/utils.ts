@@ -17,6 +17,15 @@ export function formatCurrency(amount: number | string, currency: string = "ARS"
   }).format(num);
 }
 
+// Días transcurridos desde una fecha hasta hoy. Usado para el "aging" del stock
+// (cuántos días lleva un vehículo en el inventario). Devuelve 0 si la fecha es futura.
+export function getDaysInStock(from: Date | string): number {
+  const start = typeof from === "string" ? new Date(from) : from;
+  const ms = Date.now() - start.getTime();
+  if (Number.isNaN(ms) || ms < 0) return 0;
+  return Math.floor(ms / (1000 * 60 * 60 * 24));
+}
+
 export function slugify(text: string): string {
   return text
     .toLowerCase()

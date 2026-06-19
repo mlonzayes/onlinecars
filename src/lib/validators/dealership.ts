@@ -43,6 +43,9 @@ export const dealershipUpdateSchema = dealershipCreateSchema.partial().omit({ sl
   logo: z.string().url("URL de logo inválida").nullable().optional().or(z.literal("")),
   // Permiso para que roles no-admin vean costPrice de los vehículos.
   showCostsToNonAdmins: z.boolean().optional(),
+  // Plus en pesos sobre la cotización oficial. Se gatea admin-only en el handler
+  // (igual que showCostsToNonAdmins). Cap razonable para evitar valores absurdos.
+  usdSpread: z.number().min(0, "No puede ser negativo").max(1_000_000).optional(),
   // Configuración del FAB de WhatsApp. El gating por plan se enforza
   // server-side en el handler — el validator solo valida el shape.
   whatsappFabEnabled: z.boolean().optional(),

@@ -26,8 +26,9 @@ const ICON_BY_TYPE: Record<string, React.ComponentType<{ className?: string }>> 
   sale: ShoppingCart,
 };
 
-// Cada 30s — balance entre frescura y carga. Es polling, no realtime.
-const POLL_MS = 30_000;
+// Cada 60s. Solo se pollea el contador (liviano, vía Redis) y SOLO con la
+// pestaña visible (ver Page Visibility abajo). Los items se traen al abrir.
+const POLL_MS = 60_000;
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -43,7 +44,20 @@ export function NotificationBell() {
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [unread, setUnread] = useState(0);
 
-  const fetchNotifications = useCallback(async () => {
+  // Polling liviano: solo el contador, desde Redis. No trae la lista completa.
+  const fetchUnread = useCallback(async () => {
+    try {
+      const res = await fetch("/api/notifications/unread-count", { cache: "no-store" });
+      if (!res.ok) return;
+      const json = await res.json();
+      setUnread(json.data?.unread ?? 0);
+    } catch {
+      // Silencioso: es polling, reintenta en el próximo tick.
+    }
+  }, []);
+
+  // Fetch pesado: la lista de items. Solo al abrir la campanita.
+  const fetchItems = useCallback(async () => {
     try {
       const res = await fetch("/api/notifications", { cache: "no-store" });
       if (!res.ok) return;
@@ -51,15 +65,38 @@ export function NotificationBell() {
       setItems(json.data ?? []);
       setUnread(json.meta?.unread ?? 0);
     } catch {
-      // Silencioso: es polling, reintenta en el próximo tick.
+      // Silencioso
     }
   }, []);
 
   useEffect(() => {
-    fetchNotifications();
-    const id = setInterval(fetchNotifications, POLL_MS);
-    return () => clearInterval(id);
-  }, [fetchNotifications]);
+    // Solo polleamos con la pestaña visible: una tab en segundo plano no le pega
+    // a la base por nada. Al volver al foco refrescamos de inmediato.
+    let id: ReturnType<typeof setInterval> | null = null;
+
+    function start() {
+      if (id !== null) return;
+      fetchUnread();
+      id = setInterval(fetchUnread, POLL_MS);
+    }
+    function stop() {
+      if (id !== null) {
+        clearInterval(id);
+        id = null;
+      }
+    }
+    function onVisibilityChange() {
+      if (document.visibilityState === "visible") start();
+      else stop();
+    }
+
+    if (document.visibilityState === "visible") start();
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [fetchUnread]);
 
   async function markAllRead() {
     // Optimista: limpiamos en UI y confirmamos contra el server.
@@ -70,14 +107,14 @@ export function NotificationBell() {
     try {
       await fetch("/api/notifications", { method: "PATCH" });
     } catch {
-      fetchNotifications();
+      fetchItems();
     }
   }
 
   const hasUnread = unread > 0;
 
   return (
-    <DropdownMenu onOpenChange={(open) => open && fetchNotifications()}>
+    <DropdownMenu onOpenChange={(open) => open && fetchItems()}>
       <DropdownMenuTrigger
         aria-label="Notificaciones"
         className="relative inline-flex size-8 items-center justify-center rounded-md text-sm outline-none hover:bg-accent"

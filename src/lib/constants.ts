@@ -101,6 +101,11 @@ export const PROVINCIAS_ARGENTINA = [
 // — ningún plan puede pasar de acá ni con Premium/Enterprise.
 export const MAX_IMAGES_PER_VEHICLE = 40;
 export const VEHICLES_PER_PAGE = 12;
+
+// Umbrales de "aging" del stock (días en inventario) para alertar autos clavados
+// en el listado del dashboard. watch = empieza a demorar, stale = revisar precio.
+export const STOCK_AGING_WATCH_DAYS = 60;
+export const STOCK_AGING_STALE_DAYS = 90;
 export const CACHE_TTL_VEHICLES = 300; // 5 minutos
 export const CACHE_TTL_DEALERSHIP = 300; // 5 minutos
 
@@ -108,6 +113,28 @@ export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as 
 export type AllowedImageType = (typeof ALLOWED_IMAGE_TYPES)[number];
 
 export const MAX_IMAGE_SIZE_BYTES = 8 * 1024 * 1024; // 8MB
+
+// --- Vehicle expenses (gastos de reacondicionamiento) ---
+export const VEHICLE_EXPENSE_CATEGORIES = [
+  "pulido",
+  "mecanica",
+  "transferencia",
+  "gestoria",
+  "flete",
+  "repuestos",
+  "otros",
+] as const;
+export type VehicleExpenseCategory = (typeof VEHICLE_EXPENSE_CATEGORIES)[number];
+
+export const VEHICLE_EXPENSE_CATEGORY_LABELS: Record<VehicleExpenseCategory, string> = {
+  pulido: "Pulido / detailing",
+  mecanica: "Mecánica",
+  transferencia: "Transferencia",
+  gestoria: "Gestoría",
+  flete: "Flete / logística",
+  repuestos: "Repuestos",
+  otros: "Otros",
+};
 
 // --- Customers ---
 export const CUSTOMER_TYPES = ["individual", "company"] as const;

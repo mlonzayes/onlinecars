@@ -4,8 +4,10 @@ import { notFound, redirect } from "next/navigation";
 import { VehicleForm } from "@/components/dashboard/vehicle-form";
 import { findBlockingSale } from "@/lib/sale-guards";
 import { MLVehiclePanel } from "@/components/dashboard/ml-vehicle-panel";
+import { VehicleExpenses } from "@/components/dashboard/vehicle-expenses";
 import { canSeeCosts, canEditCosts } from "@/lib/permissions";
 import { getPlanLimits } from "@/lib/plans";
+import { applySpread, getCurrentUsdRate } from "@/lib/exchange-rate";
 
 export default async function EditarVehiculoPage({
   params,
@@ -45,6 +47,26 @@ export default async function EditarVehiculoPage({
     costCurrency: visibleCosts ? vehicle.costCurrency : null,
   };
 
+  // Gastos + cotización solo para quien puede ver costos (el panel los expone).
+  const [expenses, usdBase] = visibleCosts
+    ? await Promise.all([
+        prisma.vehicleExpense.findMany({
+          where: { vehicleId: id, dealershipId: dealership.id },
+          orderBy: { date: "desc" },
+        }),
+        getCurrentUsdRate(),
+      ])
+    : [[], null];
+  const usdRate = usdBase ? applySpread(usdBase, dealership.usdSpread).effective : null;
+  const serializedExpenses = expenses.map((e) => ({
+    id: e.id,
+    category: e.category,
+    description: e.description,
+    amount: e.amount.toString(),
+    currency: e.currency,
+    date: e.date.toISOString(),
+  }));
+
   // Serializar listing de ML (las fechas no son plain)
   const serializedListing = mlListing
     ? {
@@ -64,6 +86,18 @@ export default async function EditarVehiculoPage({
         canEditCosts={canEditCosts(dealership.currentUser)}
         maxImagesPerVehicle={getPlanLimits(dealership).maxImagesPerVehicle}
       />
+      {visibleCosts && (
+        <VehicleExpenses
+          vehicleId={id}
+          expenses={serializedExpenses}
+          canEdit={canEditCosts(dealership.currentUser)}
+          price={Number(vehicle.price)}
+          currency={vehicle.currency}
+          costPrice={vehicle.costPrice ? Number(vehicle.costPrice) : null}
+          costCurrency={vehicle.costCurrency}
+          usdRate={usdRate}
+        />
+      )}
       <MLVehiclePanel
         vehicleId={id}
         initialListing={serializedListing as Parameters<typeof MLVehiclePanel>[0]["initialListing"]}

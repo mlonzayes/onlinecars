@@ -69,11 +69,13 @@ export const PUT = withLogger(async (request, { requestId }) => {
     );
   }
 
-  // Solo admins pueden cambiar el toggle de visibilidad de costos.
-  // Si lo mandó un user no-admin, descartamos el campo en silencio.
+  // Solo admins pueden cambiar config sensible de precios (visibilidad de costos
+  // y el spread de la cotización). Si lo mandó un user no-admin, descartamos
+  // esos campos en silencio.
   const updateData = { ...parsed.data };
   if (dealership.currentUser.role !== "admin") {
     delete updateData.showCostsToNonAdmins;
+    delete updateData.usdSpread;
   }
 
   // FAB de WhatsApp: si el plan no lo permite, FORZAMOS enabled=false aunque

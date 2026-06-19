@@ -23,10 +23,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatCurrency } from "@/lib/utils";
+import { computeVehicleMargin } from "@/lib/margin";
 import type { VehicleImage } from "@prisma/client";
 import type { PlanLimits } from "@/lib/plans";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { VehicleAgingBadge } from "@/components/dashboard/vehicle-aging-badge";
 
 // Versión serializada: price como string, fechas como string
 export interface SerializedVehicleRow {
@@ -38,6 +40,10 @@ export interface SerializedVehicleRow {
   year: number;
   price: string;
   currency: string;
+  // Solo presentes si el usuario puede ver costos (gateado en el server).
+  costPrice: string | null;
+  costCurrency: string | null;
+  expenses: { amount: number; currency: string }[];
   kilometers: number | null;
   fuelType: string | null;
   transmission: string | null;
@@ -58,6 +64,10 @@ export interface SerializedVehicleRow {
 interface VehicleTableProps {
   vehicles: SerializedVehicleRow[];
   limits: PlanLimits;
+  // Cotización efectiva del dealer (ARS por USD) para convertir costos en USD. null si no hay.
+  usdRate: number | null;
+  // Si el usuario puede ver costos/margen (admin o dealer lo habilitó).
+  canViewCosts: boolean;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -80,7 +90,7 @@ const STATUS_BULK_LABEL: Record<string, string> = {
   sold: "Vendido",
 };
 
-export function VehicleTable({ vehicles, limits }: VehicleTableProps) {
+export function VehicleTable({ vehicles, limits, usdRate, canViewCosts }: VehicleTableProps) {
   const router = useRouter();
   const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -335,6 +345,16 @@ export function VehicleTable({ vehicles, limits }: VehicleTableProps) {
           {vehicles.map((vehicle) => {
             const primaryImage = vehicle.images[0];
             const isPublished = vehicle.publishedAt !== null;
+            const margin = canViewCosts
+              ? computeVehicleMargin({
+                  price: Number(vehicle.price),
+                  currency: vehicle.currency,
+                  costPrice: vehicle.costPrice !== null ? Number(vehicle.costPrice) : null,
+                  costCurrency: vehicle.costCurrency,
+                  usdToArsRate: usdRate,
+                  expenses: vehicle.expenses,
+                })
+              : null;
 
             return (
               <TableRow key={vehicle.id} className={selectedIds.has(vehicle.id) ? "bg-muted/50" : ""}>
@@ -385,6 +405,14 @@ export function VehicleTable({ vehicles, limits }: VehicleTableProps) {
                       </>
                     )}
                   </p>
+                  {/* Días en stock — alerta de inventario clavado (no aplica a vendidos) */}
+                  {vehicle.status !== "sold" && (
+                    <VehicleAgingBadge
+                      since={vehicle.createdAt}
+                      status={vehicle.status}
+                      className="mt-1 text-xs"
+                    />
+                  )}
                 </TableCell>
 
                 {/* Condición */}
@@ -401,9 +429,21 @@ export function VehicleTable({ vehicles, limits }: VehicleTableProps) {
                   </Badge>
                 </TableCell>
 
-                {/* Precio */}
+                {/* Precio + margen (margen solo si puede ver costos y hay dato) */}
                 <TableCell className="font-medium">
                   {formatCurrency(vehicle.price, vehicle.currency)}
+                  {margin && (
+                    <p
+                      className={cn(
+                        "text-xs font-normal",
+                        margin.amount >= 0 ? "text-emerald-600" : "text-red-600",
+                      )}
+                      title="Margen estimado (precio − costo)"
+                    >
+                      {margin.amount >= 0 ? "+" : ""}
+                      {formatCurrency(margin.amount, margin.currency)} ({Math.round(margin.pct)}%)
+                    </p>
+                  )}
                 </TableCell>
 
                 {/* Estado */}

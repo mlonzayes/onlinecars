@@ -8,6 +8,8 @@ import { useTheme } from "next-themes";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "./notification-bell";
+import { formatCurrency } from "@/lib/utils";
+import type { EffectiveUsdRate } from "@/lib/exchange-rate";
 
 // Labels por segmento de URL. Los segmentos no listados acá caen en
 // resolveSegmentLabel() con un fallback razonable (ej: cuids → "Detalle").
@@ -68,9 +70,18 @@ function buildBreadcrumbs(pathname: string): Crumb[] {
 
 interface DashboardHeaderProps {
   dealershipName: string;
+  // Cotización de trabajo del dealer (oficial + spread). null si no hay dato.
+  usdRate: EffectiveUsdRate | null;
 }
 
-export function DashboardHeader({ dealershipName }: DashboardHeaderProps) {
+// Formatea "2026-06-18" a "18/06" para el tooltip del chip.
+function formatRateDate(iso: string | null): string | null {
+  if (!iso) return null;
+  const [, m, d] = iso.split("-");
+  return m && d ? `${d}/${m}` : null;
+}
+
+export function DashboardHeader({ dealershipName, usdRate }: DashboardHeaderProps) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
 
@@ -79,6 +90,14 @@ export function DashboardHeader({ dealershipName }: DashboardHeaderProps) {
   function toggleTheme() {
     setTheme(theme === "dark" ? "light" : "dark");
   }
+
+  // Tooltip: aclara que es tu cotización (con spread) y muestra la oficial pura.
+  const rateTitle = usdRate
+    ? `Tu cotización del dólar (oficial ${formatCurrency(usdRate.base, "ARS")}` +
+      (usdRate.spread > 0 ? ` + ${formatCurrency(usdRate.spread, "ARS")}` : "") +
+      ")" +
+      (formatRateDate(usdRate.date) ? ` · ${formatRateDate(usdRate.date)}` : "")
+    : undefined;
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
@@ -116,6 +135,19 @@ export function DashboardHeader({ dealershipName }: DashboardHeaderProps) {
 
       {/* Acciones del header */}
       <div className="flex items-center gap-2">
+        {/* Cotización del día (tu cotización = oficial + spread) */}
+        {usdRate && (
+          <div
+            title={rateTitle}
+            className="hidden h-8 items-center gap-1.5 rounded-md border bg-muted/40 px-2.5 text-xs sm:flex"
+          >
+            <span className="font-semibold text-emerald-600">USD</span>
+            <span className="font-medium tabular-nums">
+              {formatCurrency(usdRate.effective, "ARS")}
+            </span>
+          </div>
+        )}
+
         <Button
           variant="ghost"
           size="icon"

@@ -27,13 +27,24 @@ export interface ConversionFunnelData {
 
 // Resumen financiero de las ventas completadas (últimos 6 meses). Datos
 // sensibles — el dashboard solo los muestra a admins.
+//
+// IMPORTANTE: el margen y la ganancia neta se calculan SOLO sobre las ventas que
+// tienen el costo (costPrice) cargado. Las ventas sin costo NO se asumen con
+// costo 0 (eso daba un margen 100% falso) — quedan fuera del cálculo y se
+// reportan aparte para que el dashboard no mienta.
 export interface FinancialSummary {
-  /** Σ salePrice de ventas completadas. */
+  /** Σ salePrice de TODAS las ventas completadas (lo facturado, real). */
   grossRevenue: number;
-  /** Σ costPrice de los vehículos vendidos (los que tienen costo cargado). */
+  /** Σ costPrice de las ventas con costo cargado. */
   totalCost: number;
-  /** grossRevenue - totalCost. */
+  /** revenueWithCost - totalCost (solo ventas con costo cargado). */
   netProfit: number;
+  /** Σ salePrice de las ventas con costo cargado (denominador del margen). */
+  revenueWithCost: number;
+  /** Cantidad total de ventas completadas en el período. */
+  salesCount: number;
+  /** Cuántas de esas ventas tienen el costo cargado. */
+  salesWithCost: number;
 }
 
 // Ganancia neta por mes (sensible — admin only).
@@ -101,7 +112,9 @@ export async function getDashboardStats(dealershipId: string): Promise<Dashboard
       select: {
         salePrice: true,
         createdAt: true,
-        vehicle: { select: { costPrice: true } },
+        vehicle: {
+          select: { costPrice: true, expenses: { select: { amount: true } } },
+        },
       },
     }),
     prisma.lead.groupBy({
@@ -160,17 +173,33 @@ export async function getDashboardStats(dealershipId: string): Promise<Dashboard
   // dealer mezcla ARS y USD, los totales no son exactos — pendiente FX.
   let grossRevenue = 0;
   let totalCost = 0;
+  let revenueWithCost = 0;
+  let salesWithCost = 0;
   for (const s of salesRaw) {
     const price = s.salePrice.toNumber();
-    const cost = s.vehicle?.costPrice ? s.vehicle.costPrice.toNumber() : 0;
     grossRevenue += price;
-    totalCost += cost;
 
     const key = monthKey(s.createdAt);
     const slot = monthMap.get(key);
     if (slot) slot.total += price;
-    const netSlot = netMap.get(key);
-    if (netSlot) netSlot.net += price - cost;
+
+    // Margen/neta SOLO sobre ventas con costo cargado. Si costPrice es null la
+    // venta no entra al cálculo (NO se asume costo 0 — eso inflaba el margen).
+    // El costo total incluye los gastos de reacondicionamiento del vehículo.
+    // Nota: se suman sin convertir moneda, igual que el resto del dashboard (FX pendiente).
+    const costDecimal = s.vehicle?.costPrice ?? null;
+    if (costDecimal !== null) {
+      const expensesSum = (s.vehicle?.expenses ?? []).reduce(
+        (sum, e) => sum + e.amount.toNumber(),
+        0,
+      );
+      const cost = costDecimal.toNumber() + expensesSum;
+      totalCost += cost;
+      revenueWithCost += price;
+      salesWithCost += 1;
+      const netSlot = netMap.get(key);
+      if (netSlot) netSlot.net += price - cost;
+    }
   }
 
   // Stock por marca: top 6 + "Otras" agrupando el resto.
@@ -211,7 +240,10 @@ export async function getDashboardStats(dealershipId: string): Promise<Dashboard
     financials: {
       grossRevenue,
       totalCost,
-      netProfit: grossRevenue - totalCost,
+      netProfit: revenueWithCost - totalCost,
+      revenueWithCost,
+      salesCount: salesRaw.length,
+      salesWithCost,
     },
     netProfitByMonth: netMonths,
     stockByBrand,

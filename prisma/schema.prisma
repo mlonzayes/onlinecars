@@ -68,6 +68,13 @@ model Dealership {
   // Si true, users con role distinto de admin pueden ver el costo de compra
   // de los vehículos. Default false — sólo admins ven costos.
   showCostsToNonAdmins Boolean @default(false)
+  // Plus en PESOS que el dealer suma a la cotización oficial del BCRA para
+  // obtener SU cotización de trabajo (venta). La base es global (ver ExchangeRate);
+  // este spread es por tenant y editable. El valor efectivo = base + usdSpread se
+  // calcula al usarlo, NUNCA se persiste sumado. Default 0 (usa la oficial pura).
+  // Float (no Decimal): es un parámetro de config, no un monto contable, y así
+  // el Dealership queda 100% serializable hacia Client Components.
+  usdSpread            Float   @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -86,6 +93,7 @@ model Dealership {
   quotations        Quotation[]
   quotationCounters QuotationCounter[]
   notifications     Notification[]
+  vehicleExpenses   VehicleExpense[]
 
   @@map("dealerships")
 }
@@ -245,6 +253,7 @@ model Vehicle {
   sales        Sale[]
   mlListing    MercadoLibreListing?
   quotations   Quotation[]
+  expenses     VehicleExpense[]
 
   @@unique([dealershipId, publicSlug])
   @@index([dealershipId, status])
@@ -265,6 +274,28 @@ model VehicleImage {
 
   @@index([vehicleId])
   @@map("vehicle_images")
+}
+
+// Gasto de reacondicionamiento de un vehículo (pulido, mecánica, transferencia,
+// gestoría, flete, etc.). Se restan del margen real: precio - costo - Σ gastos.
+// dealershipId denormalizado para queries rápidas por tenant (como SaleDocument).
+model VehicleExpense {
+  id           String   @id @default(cuid())
+  dealershipId String
+  vehicleId    String
+  category     String   // ver VEHICLE_EXPENSE_CATEGORIES en src/lib/constants.ts
+  description  String?
+  amount       Decimal  @db.Decimal(12, 2)
+  currency     String   @default("ARS") // ARS | USD
+  date         DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  vehicle    Vehicle    @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  dealership Dealership @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId])
+  @@index([dealershipId])
+  @@map("vehicle_expenses")
 }
 
 model Lead {
@@ -320,6 +351,23 @@ model WaitlistEntry {
 
   @@index([status])
   @@map("waitlist_entries")
+}
+
+// Cotización oficial USD/ARS publicada por el BCRA. Tabla GLOBAL (sin
+// dealershipId): el dato es objetivo e igual para toda la plataforma. Una fila
+// por día hábil. El cron diario hace upsert por (currency, date). El "plus" de
+// cada concesionario vive en Dealership.usdSpread y se suma al usar, no acá.
+model ExchangeRate {
+  id        String   @id @default(cuid())
+  currency  String   @default("USD") // moneda extranjera; ARS es la base implícita
+  rate      Decimal  @db.Decimal(12, 4) // tipoCotizacion de referencia del BCRA
+  source    String   @default("bcra")
+  date      DateTime @db.Date // día del dato publicado por el BCRA
+  fetchedAt DateTime @default(now())
+
+  @@unique([currency, date])
+  @@index([currency, date])
+  @@map("exchange_rates")
 }
 
 // Cliente del concesionario (entidad distinta de Lead).

@@ -12,6 +12,7 @@ import { getCurrentDealership } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
+import { getUnreadCount, resetUnreadCount } from "@/lib/notifications";
 
 const MAX_ITEMS = 20;
 
@@ -32,9 +33,8 @@ export const GET = withLogger(async (_request, { requestId }) => {
       orderBy: { createdAt: "desc" },
       take: MAX_ITEMS,
     }),
-    prisma.notification.count({
-      where: { dealershipId: dealership.id, readAt: null },
-    }),
+    // El count sale de Redis (cache-aside); evita un count extra a Postgres.
+    getUnreadCount(dealership.id),
   ]);
 
   logger.info(requestId, "notifications.list.ok", {
@@ -61,6 +61,9 @@ export const PATCH = withLogger(async (_request, { requestId }) => {
     where: { dealershipId: dealership.id, readAt: null },
     data: { readAt: new Date() },
   });
+
+  // Dejamos el contador cacheado en 0 (sin recalcular desde Postgres).
+  await resetUnreadCount(dealership.id);
 
   logger.info(requestId, "notifications.mark_all_read.ok", {
     dealershipId: dealership.id,

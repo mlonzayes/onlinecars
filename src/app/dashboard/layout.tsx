@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getCurrentDealership } from "@/lib/auth";
 import { hasAcceptedCurrentTerms } from "@/lib/legal";
+import { applySpread, getCurrentUsdRate } from "@/lib/exchange-rate";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { DashboardHeader } from "@/components/dashboard/header";
@@ -50,11 +51,17 @@ export default async function DashboardLayout({
     redirect(`/cuenta-pausada?reason=${reason}`);
   }
 
+  // Cotización de trabajo del dealer (oficial BCRA + su spread) para el header.
+  const baseRate = await getCurrentUsdRate();
+  const usdRate = baseRate
+    ? applySpread(baseRate, Number(dealership.usdSpread))
+    : null;
+
   return (
     <SidebarProvider>
       <DashboardSidebar dealership={dealership} />
       <main className="flex flex-1 flex-col">
-        <DashboardHeader dealershipName={dealership.name} />
+        <DashboardHeader dealershipName={dealership.name} usdRate={usdRate} />
         <div className="flex-1 p-6">{children}</div>
         <DashboardFooter />
       </main>

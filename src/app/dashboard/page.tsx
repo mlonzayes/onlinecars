@@ -31,8 +31,19 @@ export default async function DashboardHomePage() {
 
   // Métricas financieras: solo visibles para admins (revelan el costo/margen).
   const isAdmin = dealership.currentUser.role === "admin";
-  const { grossRevenue, netProfit } = stats.financials;
-  const marginPct = grossRevenue > 0 ? Math.round((netProfit / grossRevenue) * 100) : 0;
+  const { grossRevenue, netProfit, revenueWithCost, salesCount, salesWithCost } =
+    stats.financials;
+  // Margen y neta solo tienen sentido sobre ventas con costo cargado.
+  const hasCostData = salesWithCost > 0;
+  const marginPct =
+    hasCostData && revenueWithCost > 0
+      ? Math.round((netProfit / revenueWithCost) * 100)
+      : null;
+  const marginNote = !hasCostData
+    ? "Cargá el costo de tus ventas para verlo"
+    : salesWithCost < salesCount
+      ? `Sobre ${salesWithCost} de ${salesCount} ventas con costo cargado`
+      : `Sobre ${salesCount} ${salesCount === 1 ? "venta" : "ventas"}`;
 
   const sections = [
     {
@@ -107,8 +118,13 @@ export default async function DashboardHomePage() {
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-semibold text-emerald-600">
-                {formatCurrency(netProfit)}
+                {hasCostData ? formatCurrency(netProfit) : "—"}
               </p>
+              {!hasCostData && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Sin costos cargados
+                </p>
+              )}
             </CardContent>
           </Card>
 
@@ -117,10 +133,10 @@ export default async function DashboardHomePage() {
               <CardDescription>Margen</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold">{marginPct}%</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Sobre ventas con costo cargado
+              <p className="text-2xl font-semibold">
+                {marginPct !== null ? `${marginPct}%` : "—"}
               </p>
+              <p className="mt-1 text-xs text-muted-foreground">{marginNote}</p>
             </CardContent>
           </Card>
         </div>

@@ -6,6 +6,8 @@ import { SubscriptionTab } from "@/components/dashboard/settings/subscription-ta
 import { WhatsappFabCard } from "@/components/dashboard/settings/whatsapp-fab-card";
 import { LocationPicker } from "@/components/dashboard/settings/location-picker";
 import { SocialLinksForm } from "@/components/dashboard/settings/social-links-form";
+import { ExchangeRateCard } from "@/components/dashboard/settings/exchange-rate-card";
+import { getCurrentUsdRate } from "@/lib/exchange-rate";
 import type { SocialLinks } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { prisma } from "@/lib/prisma";
@@ -28,6 +30,9 @@ export default async function ConfiguracionPage() {
   ]);
 
   const limits = getPlanLimits(dealership);
+
+  // Cotización oficial vigente (tabla → fallback BCRA en vivo) para la card.
+  const usdRate = await getCurrentUsdRate();
 
   // Obtener los emails de Clerk para mostrarlos
   const clerkUserIds = dealershipUsers.map(u => u.clerkUserId);
@@ -56,6 +61,12 @@ export default async function ConfiguracionPage() {
         
         <TabsContent value="general" className="mt-0 space-y-6">
           <ContactForm dealership={dealership} />
+          <ExchangeRateCard
+            usdSpread={Number(dealership.usdSpread)}
+            officialRate={usdRate?.rate ?? null}
+            rateDate={usdRate?.date ?? null}
+            isAdmin={dealership.currentUser.role === "admin"}
+          />
           <WhatsappFabCard
             enabled={dealership.whatsappFabEnabled}
             message={dealership.whatsappMessage}

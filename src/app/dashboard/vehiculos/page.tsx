@@ -10,6 +10,8 @@ import type { SerializedVehicleRow } from "@/components/dashboard/vehicle-table"
 import { TableSearch } from "@/components/dashboard/table-search";
 import { Pagination } from "@/components/dashboard/pagination";
 import { getPlanLimits } from "@/lib/plans";
+import { applySpread, getCurrentUsdRate } from "@/lib/exchange-rate";
+import { canSeeCosts } from "@/lib/permissions";
 import type { Prisma } from "@prisma/client";
 
 const PAGE_SIZE = 20;
@@ -55,12 +57,15 @@ export default async function VehiculosPage({ searchParams }: VehiculosPageProps
 
   // Stats absolutos del dealership (independientes del search/page) en paralelo
   // con la query paginada del listado.
-  const [total, vehicles, totalAll, totalPublished, totalReserved, totalSold] =
+  const [total, vehicles, totalAll, totalPublished, totalReserved, totalSold, baseRate] =
     await Promise.all([
       prisma.vehicle.count({ where }),
       prisma.vehicle.findMany({
         where,
-        include: { images: { where: { isPrimary: true }, take: 1 } },
+        include: {
+          images: { where: { isPrimary: true }, take: 1 },
+          expenses: { select: { amount: true, currency: true } },
+        },
         skip,
         take: PAGE_SIZE,
         orderBy: { createdAt: "desc" },
@@ -75,14 +80,27 @@ export default async function VehiculosPage({ searchParams }: VehiculosPageProps
       prisma.vehicle.count({
         where: { dealershipId: dealership.id, status: "sold" },
       }),
+      getCurrentUsdRate(),
     ]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  // Costo y margen son datos sensibles: solo admins, o no-admins si el dealer lo
+  // habilitó. Si no puede ver costos, el costPrice NO viaja al cliente (ni en props).
+  const canViewCosts = canSeeCosts(dealership.currentUser, dealership);
+  // Cotización efectiva del dealer (oficial + spread) para convertir costos en USD.
+  const usdRate = baseRate ? applySpread(baseRate, dealership.usdSpread).effective : null;
 
   // Serializar Decimal a string para poder pasar al Client Component.
   const serialized: SerializedVehicleRow[] = vehicles.map((v) => ({
     ...v,
     price: v.price.toString(),
+    costPrice: canViewCosts && v.costPrice ? v.costPrice.toString() : null,
+    costCurrency: canViewCosts ? v.costCurrency : null,
+    // Gastos solo si puede ver costos (no se filtran al client si no).
+    expenses: canViewCosts
+      ? v.expenses.map((e) => ({ amount: Number(e.amount), currency: e.currency }))
+      : [],
     createdAt: v.createdAt.toISOString(),
     updatedAt: v.updatedAt.toISOString(),
     publishedAt: v.publishedAt?.toISOString() ?? null,
@@ -136,7 +154,12 @@ export default async function VehiculosPage({ searchParams }: VehiculosPageProps
           </p>
         </div>
       ) : (
-        <VehicleTable vehicles={serialized} limits={getPlanLimits(dealership)} />
+        <VehicleTable
+          vehicles={serialized}
+          limits={getPlanLimits(dealership)}
+          usdRate={usdRate}
+          canViewCosts={canViewCosts}
+        />
       )}
 
       {total > 0 && (

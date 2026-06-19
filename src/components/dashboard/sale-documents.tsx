@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { FileText, ImageIcon, Loader2, Trash2, ExternalLink } from "lucide-react";
+import { FileText, ImageIcon, Loader2, Trash2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -181,26 +181,26 @@ export function SaleDocuments({ saleId, initialDocuments }: SaleDocumentsProps) 
     }
   }
 
-  async function handleOpen(docId: string) {
-    // Pre-abrir la pestaña dentro del handler del click — si la abrimos
-    // después del await, el browser la bloquea como popup no solicitado.
-    const target = window.open("", "_blank", "noopener,noreferrer");
-
+  async function handleDownload(docId: string, fileName: string) {
     try {
       const res = await fetch(`/api/ventas/${saleId}/documentos/${docId}/url`);
       if (!res.ok) {
-        target?.close();
-        toast.error("No se pudo abrir el documento.");
+        toast.error("No se pudo descargar el documento.");
         return;
       }
       const json = (await res.json()) as { data: { url: string } };
-      if (target) {
-        target.location.href = json.data.url;
-      } else {
-        window.location.href = json.data.url;
-      }
+      // Descarga directa: un <a> temporal sin target. El Content-Disposition
+      // attachment del server fuerza la descarga sin navegar ni dejar about:blank.
+      // El download attribute ayuda en local (mismo origen); cross-origin (S3) el
+      // nombre lo impone el server, pero no estorba.
+      const a = document.createElement("a");
+      a.href = json.data.url;
+      a.download = fileName;
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
     } catch {
-      target?.close();
       toast.error("Error de conexión.");
     }
   }
@@ -402,12 +402,12 @@ export function SaleDocuments({ saleId, initialDocuments }: SaleDocumentsProps) 
                       <div className="flex shrink-0 gap-1">
                         <button
                           type="button"
-                          onClick={() => handleOpen(doc.id)}
+                          onClick={() => handleDownload(doc.id, doc.fileName)}
                           className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
-                          aria-label="Abrir documento"
-                          title="Abrir"
+                          aria-label="Descargar documento"
+                          title="Descargar"
                         >
-                          <ExternalLink className="h-4 w-4" />
+                          <Download className="h-4 w-4" />
                         </button>
                         <button
                           type="button"

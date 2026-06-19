@@ -53,6 +53,17 @@ function readEnv(): S3Env {
     );
   }
 
+  // Red de seguridad: el bucket de documentos (privado) y el de imágenes (público)
+  // DEBEN ser distintos. Si fueran el mismo, los documentos del legajo (DNI,
+  // facturas) terminarían en un bucket público. Fallar acá es preferible a filtrar
+  // datos personales en silencio.
+  if (publicBucket === privateBucket) {
+    throw new Error(
+      "S3_PUBLIC_BUCKET y S3_PRIVATE_BUCKET no pueden ser el mismo bucket: " +
+        "los documentos del legajo quedarían en el bucket público."
+    );
+  }
+
   cachedEnv = {
     endpoint: endpoint!,
     region,
@@ -92,6 +103,14 @@ function getClient(): S3Client {
 function bucketFor(bucket: StorageBucket): string {
   const env = readEnv();
   return bucket === "public" ? env.publicBucket : env.privateBucket;
+}
+
+// Content-Disposition para forzar descarga (no render inline) de un documento.
+// Si hay nombre, lo usa (con fallback RFC 5987 para acentos/no-ASCII).
+function contentDisposition(filename?: string): string {
+  if (!filename) return "attachment";
+  const ascii = filename.replace(/["\\]/g, "_");
+  return `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(filename)}`;
 }
 
 function joinKey(keyPrefix: string, filename: string): string {
@@ -138,11 +157,13 @@ export const s3Storage: StorageProvider = {
     );
   },
 
-  async getDocumentUrl(key, ttlSeconds = DEFAULT_DOCUMENT_TTL_SECONDS) {
+  async getDocumentUrl(key, ttlSeconds = DEFAULT_DOCUMENT_TTL_SECONDS, downloadFilename) {
     const env = readEnv();
     const command = new GetObjectCommand({
       Bucket: env.privateBucket,
       Key: key,
+      // Fuerza descarga en vez de render inline en el browser (evita preview/caché).
+      ResponseContentDisposition: contentDisposition(downloadFilename),
     });
     return getSignedUrl(getClient(), command, { expiresIn: ttlSeconds });
   },

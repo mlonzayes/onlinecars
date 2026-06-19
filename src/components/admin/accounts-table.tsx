@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { AccountRowActions } from "@/components/admin/account-row-actions";
 import type { PlatformAccount } from "@/lib/admin-stats";
 
 interface AccountsTableProps {
@@ -64,6 +65,7 @@ export function AccountsTable({ accounts, emptyLabel }: AccountsTableProps) {
             <TableHead className="text-right">Leads</TableHead>
             <TableHead className="text-right">Clientes</TableHead>
             <TableHead>Contacto</TableHead>
+            <TableHead>Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -119,6 +121,14 @@ export function AccountsTable({ accounts, emptyLabel }: AccountsTableProps) {
                     <span className="text-xs">sin datos</span>
                   )}
                 </div>
+              </TableCell>
+              <TableCell>
+                <AccountRowActions
+                  id={a.id}
+                  name={a.name}
+                  plan={a.plan}
+                  subscriptionStatus={a.subscriptionStatus}
+                />
               </TableCell>
             </TableRow>
           ))}

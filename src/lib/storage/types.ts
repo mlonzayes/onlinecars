@@ -42,5 +42,11 @@ export interface StorageProvider {
   // Devuelve una URL accesible para servir un documento del legajo (privado).
   // En S3 genera una presigned URL con expiración corta. En local devuelve la
   // URL pública directa. ttlSeconds aplica solo a drivers que firman.
-  getDocumentUrl(key: string, ttlSeconds?: number): Promise<string>;
+  // downloadFilename (opcional): fuerza descarga (Content-Disposition attachment)
+  // con ese nombre — evita que el browser renderice el doc inline.
+  getDocumentUrl(
+    key: string,
+    ttlSeconds?: number,
+    downloadFilename?: string,
+  ): Promise<string>;
 }

@@ -36,7 +36,7 @@ export const GET = withLogger<Params>(async (_request, { requestId, params }) =>
       saleId,
       dealershipId: dealership.id,
     },
-    select: { id: true, key: true },
+    select: { id: true, key: true, fileName: true },
   });
 
   if (!document) {
@@ -48,7 +48,7 @@ export const GET = withLogger<Params>(async (_request, { requestId, params }) =>
     return NextResponse.json({ error: "Documento no encontrado" }, { status: 404 });
   }
 
-  const url = await storage.getDocumentUrl(document.key);
+  const url = await storage.getDocumentUrl(document.key, undefined, document.fileName);
 
   logger.info(requestId, "sales.documents.url.signed", {
     dealershipId: dealership.id,

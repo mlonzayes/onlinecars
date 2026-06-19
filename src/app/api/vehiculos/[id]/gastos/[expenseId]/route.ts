@@ -11,6 +11,7 @@ import { prisma } from "@/lib/prisma";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { canEditCosts } from "@/lib/permissions";
+import { invalidateDashboardHomeData } from "@/lib/dashboard-cache";
 
 type RouteParams = { id: string; expenseId: string };
 
@@ -42,6 +43,9 @@ export const DELETE = withLogger<RouteParams>(async (_request, { requestId, para
   if (result.count === 0) {
     return NextResponse.json({ error: "Gasto no encontrado" }, { status: 404 });
   }
+
+  // Recalcular el dashboard: el gasto borrado puede cambiar la ganancia neta.
+  await invalidateDashboardHomeData(dealership.id);
 
   logger.info(requestId, "vehiculos.expenses.deleted", {
     vehicleId: params.id,

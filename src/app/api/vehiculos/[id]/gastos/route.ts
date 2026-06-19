@@ -17,6 +17,7 @@ import { prisma } from "@/lib/prisma";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { canSeeCosts, canEditCosts } from "@/lib/permissions";
+import { invalidateDashboardHomeData } from "@/lib/dashboard-cache";
 import { vehicleExpenseCreateSchema } from "@/lib/validators/vehicle-expense";
 
 type RouteParams = { id: string };
@@ -111,6 +112,10 @@ export const POST = withLogger<RouteParams>(async (request, { requestId, params 
     },
     select: { id: true },
   });
+
+  // El gasto cambia el margen real; si el auto está vendido, también la ganancia
+  // neta del dashboard. Invalidamos el cache para que se refleje al instante.
+  await invalidateDashboardHomeData(dealership.id);
 
   logger.info(requestId, "vehiculos.expenses.created", {
     vehicleId: params.id,

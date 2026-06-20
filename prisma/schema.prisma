@@ -68,6 +68,11 @@ model Dealership {
   // Si true, users con role distinto de admin pueden ver el costo de compra
   // de los vehículos. Default false — sólo admins ven costos.
   showCostsToNonAdmins Boolean @default(false)
+  // Suscripción a la plataforma: hasta qué fecha está paga. La setea el
+  // super-admin al registrar un pago (ver SubscriptionPayment). Moroso = paidUntil
+  // < now. Null = nunca pagó (típico trial). NO confundir con la operatoria del
+  // tenant (módulos pagos/contabilidad son del concesionario, no de la suscripción).
+  paidUntil            DateTime?
   // Plus en PESOS que el dealer suma a la cotización oficial del BCRA para
   // obtener SU cotización de trabajo (venta). La base es global (ver ExchangeRate);
   // este spread es por tenant y editable. El valor efectivo = base + usdSpread se
@@ -94,8 +99,32 @@ model Dealership {
   quotationCounters QuotationCounter[]
   notifications     Notification[]
   vehicleExpenses   VehicleExpense[]
+  subscriptionPayments SubscriptionPayment[]
 
   @@map("dealerships")
+}
+
+// Pago de la SUSCRIPCIÓN a la plataforma (lo que el concesionario le paga al
+// dueño de motorflow por usar el SaaS). Tabla del negocio de la plataforma —
+// NO es la operatoria del tenant. La carga el super-admin manualmente desde /admin.
+// Cada pago extiende Dealership.paidUntil. Monto libre (lo define quien cobra).
+model SubscriptionPayment {
+  id                   String   @id @default(cuid())
+  dealershipId         String
+  amount               Decimal  @db.Decimal(12, 2)
+  currency             String   @default("ARS")
+  method               String?  // texto libre: efectivo | transferencia | MP | etc
+  notes                String?
+  // Fecha hasta la que quedó paga la cuenta DESPUÉS de este pago (snapshot histórico).
+  paidUntil            DateTime
+  paidAt               DateTime @default(now())
+  createdByClerkUserId String   // super-admin que registró el pago
+  createdAt            DateTime @default(now())
+
+  dealership Dealership @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
+
+  @@index([dealershipId, paidAt])
+  @@map("subscription_payments")
 }
 
 // Registro histórico de aceptaciones de Términos y Condiciones / Privacidad.

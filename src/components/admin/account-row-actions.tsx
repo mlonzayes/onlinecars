@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { RegisterPaymentDialog } from "@/components/admin/register-payment-dialog";
 import { DEALERSHIP_PLANS } from "@/lib/constants";
 
 interface AccountRowActionsProps {
@@ -96,6 +97,8 @@ export function AccountRowActions({
       >
         {isSuspended ? "Habilitar" : "Suspender"}
       </button>
+
+      <RegisterPaymentDialog dealershipId={id} dealershipName={name} />
 
       <ConfirmDialog
         open={confirmSuspend}

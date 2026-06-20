@@ -42,6 +42,14 @@ function waLink(whatsapp: string): string {
   return `https://wa.me/${whatsapp.replace(/\D/g, "")}`;
 }
 
+function formatShortDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
 export function AccountsTable({ accounts, emptyLabel }: AccountsTableProps) {
   if (accounts.length === 0) {
     return (
@@ -60,6 +68,7 @@ export function AccountsTable({ accounts, emptyLabel }: AccountsTableProps) {
             <TableHead>Plan</TableHead>
             <TableHead>Estado</TableHead>
             <TableHead className="text-right">Trial</TableHead>
+            <TableHead>Pago</TableHead>
             <TableHead className="text-right">Stock</TableHead>
             <TableHead className="text-right">Ventas</TableHead>
             <TableHead className="text-right">Leads</TableHead>
@@ -88,6 +97,27 @@ export function AccountsTable({ accounts, emptyLabel }: AccountsTableProps) {
                   </Badge>
                 ) : (
                   <span className="text-muted-foreground">—</span>
+                )}
+              </TableCell>
+              <TableCell>
+                {a.overdueDays !== null ? (
+                  <Badge
+                    className="bg-red-100 text-xs text-red-800"
+                    title={a.paidUntil ? `Vencido el ${formatShortDate(a.paidUntil)}` : undefined}
+                  >
+                    Debe {a.overdueDays}d
+                  </Badge>
+                ) : a.paidUntil ? (
+                  <Badge
+                    className="bg-green-100 text-xs text-green-800"
+                    title={`Paga hasta ${formatShortDate(a.paidUntil)}`}
+                  >
+                    Al día
+                  </Badge>
+                ) : (
+                  <span className="text-muted-foreground" title="Nunca registró un pago">
+                    —
+                  </span>
                 )}
               </TableCell>
               <TableCell className="text-right tabular-nums">{a.counts.vehicles}</TableCell>

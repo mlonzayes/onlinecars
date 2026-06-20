@@ -18,6 +18,10 @@ export interface PlatformAccount {
   // Días que faltan para que venza el trial. null si no está en trial / sin fecha.
   // Puede ser negativo si ya venció pero el cron todavía no lo marcó.
   trialDaysLeft: number | null;
+  // Suscripción paga hasta (ISO). null = nunca pagó.
+  paidUntil: string | null;
+  // Días de atraso en el pago (positivo = debe hace N días). null si está al día o nunca pagó.
+  overdueDays: number | null;
   createdAt: string;
   counts: { vehicles: number; leads: number; sales: number; customers: number };
 }
@@ -47,6 +51,7 @@ export async function getPlatformData(): Promise<PlatformData> {
       plan: true,
       subscriptionStatus: true,
       trialEndsAt: true,
+      paidUntil: true,
       createdAt: true,
       _count: { select: { vehicles: true, leads: true, sales: true, customers: true } },
     },
@@ -67,6 +72,11 @@ export async function getPlatformData(): Promise<PlatformData> {
     trialDaysLeft: d.trialEndsAt
       ? Math.ceil((d.trialEndsAt.getTime() - now) / 86_400_000)
       : null,
+    paidUntil: d.paidUntil?.toISOString() ?? null,
+    overdueDays:
+      d.paidUntil && d.paidUntil.getTime() < now
+        ? Math.floor((now - d.paidUntil.getTime()) / 86_400_000)
+        : null,
     createdAt: d.createdAt.toISOString(),
     counts: {
       vehicles: d._count.vehicles,

@@ -14,7 +14,7 @@ import { FaqItem } from "@/components/landing/faq-item";
 import { LandingContactForm } from "@/components/landing/contact-form";
 import { Toaster } from "@/components/ui/sonner";
 import { JsonLd } from "@/components/seo/json-ld";
-import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, SITE_EMAIL } from "@/lib/seo";
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, SITE_EMAIL, SITE_PHONE } from "@/lib/seo";
 import { getRecentPosts } from "@/data/posts";
 
 const FAQS: { question: string; answer: string }[] = [
@@ -64,6 +64,7 @@ const structuredData = {
       logo: `${SITE_URL}/logo/motorflow_light.png`,
       description: SITE_DESCRIPTION,
       email: SITE_EMAIL,
+      telephone: SITE_PHONE,
       areaServed: { "@type": "Country", name: "Argentina" },
     },
     {
@@ -129,10 +130,7 @@ export default function HomePage() {
         {/* 6. Testimonios */}
         <TestimonialsSection />
 
-        {/* 7. Blog */}
-        <BlogSection posts={recentPosts} />
-
-        {/* 8. Pricing */}
+        {/* 7. Pricing */}
         <section id="planes" className="bg-white px-4 py-16 sm:py-20">
           <div className="mx-auto max-w-6xl">
             <div className="text-center">
@@ -154,6 +152,9 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* 8. Blog */}
+        <BlogSection posts={recentPosts} />
 
         {/* 9. FAQ */}
         <section id="faq" className="bg-gray-50 px-4 py-16 sm:py-20">

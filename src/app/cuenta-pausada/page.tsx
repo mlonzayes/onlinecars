@@ -4,13 +4,14 @@ import { Lock, MessageCircle, AlertTriangle } from "lucide-react";
 import { SignOutButton } from "@clerk/nextjs";
 import { getCurrentDealership } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { SITE_WHATSAPP } from "@/lib/seo";
 
 // Pantalla mostrada cuando el dealership tiene trial vencido o cuenta suspendida.
 // El layout del dashboard redirige acá si subscriptionStatus !== "active|trial vigente".
 // El user NO puede acceder a ningún dato del dashboard hasta que el admin
 // re-active la cuenta (cambia subscriptionStatus a "active" desde /admin).
 
-const SUPPORT_WHATSAPP = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP ?? "5491100000000";
+const SUPPORT_WHATSAPP = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP ?? SITE_WHATSAPP;
 
 // Días desde el vencimiento del pago antes de que la cuenta se elimine.
 const GRACE_DAYS = 60;

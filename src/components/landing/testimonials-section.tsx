@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useRef } from "react";
-import gsap from "gsap";
 import { PiQuotes } from "react-icons/pi";
 import { FadeIn } from "./fade-in";
 
@@ -44,39 +40,29 @@ const TESTIMONIALS = [
   },
 ];
 
+// Marquee con CSS animation (no JS). Anda en mobile y desktop sin depender de
+// scrollWidth ni eventos de mouse. El track duplica las cards y se mueve -50%
+// (un set completo) para un loop continuo. Respeta prefers-reduced-motion.
 export function TestimonialsSection() {
-  const trackRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    // Width of one full set of cards (half of total since we duplicate)
-    const halfWidth = track.scrollWidth / 2;
-
-    const tween = gsap.to(track, {
-      x: -halfWidth,
-      duration: 35,
-      ease: "none",
-      repeat: -1,
-    });
-
-    const container = track.parentElement!;
-    const pause = () => tween.pause();
-    const resume = () => tween.resume();
-    container.addEventListener("mouseenter", pause);
-    container.addEventListener("mouseleave", resume);
-
-    return () => {
-      tween.kill();
-      container.removeEventListener("mouseenter", pause);
-      container.removeEventListener("mouseleave", resume);
-    };
-  }, []);
-
   return (
     <section className="overflow-hidden bg-white py-16 sm:py-20">
+      <style>{`
+        @keyframes testimonials-marquee {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+        .testimonials-marquee {
+          animation: testimonials-marquee 40s linear infinite;
+          will-change: transform;
+        }
+        .testimonials-marquee-wrap:hover .testimonials-marquee {
+          animation-play-state: paused;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .testimonials-marquee { animation: none; }
+        }
+      `}</style>
+
       <div className="mx-auto max-w-5xl px-4">
         <FadeIn className="text-center">
           <p className="text-xs font-medium uppercase tracking-widest text-blue-600">
@@ -90,7 +76,7 @@ export function TestimonialsSection() {
 
       {/* Carousel strip */}
       <div
-        className="mt-12 overflow-hidden"
+        className="testimonials-marquee-wrap mt-12 overflow-hidden"
         style={{
           maskImage:
             "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
@@ -98,11 +84,7 @@ export function TestimonialsSection() {
             "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
         }}
       >
-        <div
-          ref={trackRef}
-          className="flex gap-5 px-5"
-          style={{ width: "max-content" }}
-        >
+        <div className="testimonials-marquee flex w-max gap-5 px-2.5">
           {[...TESTIMONIALS, ...TESTIMONIALS].map((t, i) => (
             <div
               key={i}

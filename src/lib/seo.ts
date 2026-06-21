@@ -14,3 +14,9 @@ export const SITE_DESCRIPTION =
 
 // Contacto público (coincide con el footer / data del negocio).
 export const SITE_EMAIL = "ventas@motorflowapp.com";
+
+// Teléfono de contacto. SITE_PHONE en formato internacional (tel: y schema.org),
+// SITE_PHONE_DISPLAY para mostrar, SITE_WHATSAPP solo dígitos para wa.me.
+export const SITE_PHONE = "+5491134672565";
+export const SITE_PHONE_DISPLAY = "+54 9 11 3467-2565";
+export const SITE_WHATSAPP = "5491134672565";

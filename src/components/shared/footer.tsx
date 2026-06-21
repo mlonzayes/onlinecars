@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { PiEnvelope, PiPhone } from "react-icons/pi";
+import { SITE_PHONE, SITE_PHONE_DISPLAY } from "@/lib/seo";
 
 export function Footer() {
   return (
@@ -54,11 +55,11 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="tel:+541100000000"
+                  href={`tel:${SITE_PHONE}`}
                   className="inline-flex items-center gap-2 transition hover:text-white"
                 >
                   <PiPhone className="h-4 w-4 shrink-0" />
-                  +54 11 0000-0000
+                  {SITE_PHONE_DISPLAY}
                 </a>
               </li>
               <li className="text-xs text-gray-400">

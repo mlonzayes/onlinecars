@@ -88,6 +88,9 @@ export default async function InvitePage({
   // Si no está logueado, mostrar botón para registrarse
   const signInUrl = process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL || "/sign-in";
   const signUpUrl = signInUrl.replace("sign-in", "sign-up");
+  // Encodeado: sin esto el segundo "?" de /invite?token=... rompe el query y
+  // Clerk recibe redirect_url=/invite SIN token → el invite se pierde.
+  const inviteRedirect = encodeURIComponent(`/invite?token=${token}`);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
@@ -107,14 +110,14 @@ export default async function InvitePage({
             className="w-full"
             size="lg"
             nativeButton={false}
-            render={<Link href={`${signUpUrl}?redirect_url=/invite?token=${token}`} />}
+            render={<Link href={`${signUpUrl}?redirect_url=${inviteRedirect}`} />}
           >
             Crear cuenta y Aceptar Invitación
           </Button>
           <div className="text-sm text-muted-foreground">
             ¿Ya tenés cuenta?{" "}
             <Link 
-              href={`${signInUrl}?redirect_url=/invite?token=${token}`}
+              href={`${signInUrl}?redirect_url=${inviteRedirect}`}
               className="text-blue-600 hover:underline"
             >
               Iniciá sesión acá

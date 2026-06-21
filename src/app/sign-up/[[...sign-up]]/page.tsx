@@ -11,10 +11,11 @@ export default function SignUpPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <SignUp
         signInUrl="/sign-in"
-        // Tras completar el registro (incluida la verificación de email),
-        // mandamos SIEMPRE al onboarding. Sin esto Clerk caía al default "/"
-        // o re-renderizaba el form de sign-up (el "rebote" que veías con el link).
-        forceRedirectUrl="/onboarding"
+        // Tras el registro vamos al onboarding POR DEFECTO, pero respetando un
+        // redirect_url si vino (ej: invitación a un dealership existente, que NO
+        // debe crear una orga nueva). fallbackRedirectUrl = destino solo cuando no
+        // hay redirect_url; NO usar forceRedirectUrl acá porque pisa la invitación.
+        fallbackRedirectUrl="/onboarding"
         appearance={{
           elements: {
             formButtonPrimary: "bg-blue-600 hover:bg-blue-700 shadow-sm transition-all",

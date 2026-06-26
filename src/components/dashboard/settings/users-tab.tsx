@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Link as LinkIcon, Trash2, Copy, Check, Loader2 } from "lucide-react";
@@ -25,6 +26,7 @@ export function UsersTab({
   showCostsToNonAdmins,
   isAdmin,
 }: UsersTabProps) {
+  const router = useRouter();
   const [costsToggle, setCostsToggle] = useState(showCostsToNonAdmins);
   const [costsLoading, setCostsLoading] = useState(false);
   const [confirmInviteId, setConfirmInviteId] = useState<string | null>(null);
@@ -71,8 +73,9 @@ export function UsersTab({
         throw new Error("Error al generar el link");
       }
       toast.success("Link mágico generado. Copialo y envialo al vendedor.");
-      // Forzar recarga de la página para ver la nueva invitación
-      window.location.reload();
+      // Refrescar los datos del server (nueva invitación) sin remontar los Tabs:
+      // un window.location.reload() reiniciaba la tab activa a "General".
+      router.refresh();
     } catch (_error) {
       toast.error("Ocurrió un error al crear la invitación.");
     } finally {
@@ -86,7 +89,7 @@ export function UsersTab({
     try {
       await fetch(`/api/concesionario/usuarios/invitar/${id}`, { method: "DELETE" });
       toast.success("Invitación cancelada");
-      window.location.reload();
+      router.refresh();
     } catch {
       toast.error("Error al cancelar la invitación");
     } finally {

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { PiEnvelope, PiPhone } from "react-icons/pi";
+import { PiEnvelope, PiPhone, PiInstagramLogo } from "react-icons/pi";
 import { SITE_PHONE, SITE_PHONE_DISPLAY } from "@/lib/seo";
 
 export function Footer() {
@@ -21,6 +21,17 @@ export function Footer() {
               La plataforma para concesionarios que quieren vender online sin
               depender de portales ni comisiones.
             </p>
+            {/* Redes de motorflow (la plataforma) — no confundir con las redes del concesionario */}
+            <a
+              href="https://instagram.com/motorfl0w"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram de motorflow"
+              title="Seguinos en Instagram"
+              className="mt-4 inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-700 text-gray-400 transition hover:border-white hover:text-white"
+            >
+              <PiInstagramLogo className="h-5 w-5" />
+            </a>
           </div>
 
           {/* Producto */}

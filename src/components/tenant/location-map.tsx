@@ -1,5 +1,5 @@
 import { MapPin, Navigation } from "lucide-react";
-import { osmEmbedUrl, googleDirectionsUrl } from "@/lib/maps";
+import { googleMapEmbedUrl, googleDirectionsUrl } from "@/lib/maps";
 
 interface LocationMapProps {
   latitude: number;
@@ -9,12 +9,11 @@ interface LocationMapProps {
   className?: string;
 }
 
-// Mapa de la ubicación del concesionario. Usa el embed oficial de OpenStreetMap
+// Mapa de la ubicación del concesionario. Usa el embed keyless de Google Maps
 // (iframe, sin API key) — las coords vienen ya resueltas desde el dashboard.
-// El link "Cómo llegar" abre Google Maps porque es lo que la gente usa para
-// navegar, aunque el render del mapa sea OSM.
+// El link "Cómo llegar" abre Google Maps con indicaciones de manejo.
 export function LocationMap({ latitude, longitude, label, className }: LocationMapProps) {
-  const embedUrl = osmEmbedUrl(latitude, longitude);
+  const embedUrl = googleMapEmbedUrl(latitude, longitude);
   const directionsUrl = googleDirectionsUrl(latitude, longitude);
 
   return (

@@ -10,6 +10,14 @@ export function osmEmbedUrl(latitude: number, longitude: number, delta = 0.004):
   return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${latitude},${longitude}`;
 }
 
+// URL del embed de Google Maps (iframe, sin API key). Muestra el mapa real de
+// Google con un marcador en el punto y SIN el texto de atribución de OSM.
+// Endpoint keyless clásico de Google: estable y ampliamente usado. zoom: nivel
+// de acercamiento (15 ≈ barrio). hl=es fuerza la UI en español.
+export function googleMapEmbedUrl(latitude: number, longitude: number, zoom = 15): string {
+  return `https://maps.google.com/maps?q=${latitude},${longitude}&z=${zoom}&hl=es&output=embed`;
+}
+
 // Deep-link a Google Maps con el destino para indicaciones de manejo.
 export function googleDirectionsUrl(latitude: number, longitude: number): string {
   return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;

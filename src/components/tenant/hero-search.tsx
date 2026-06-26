@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Car, MessageCircle, Search, Tag } from "lucide-react";
@@ -73,6 +73,11 @@ export function HeroSearch({
   const [brand, setBrand] = useState("");
   const [condition, setCondition] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  // showVideo: se decide en cliente tras montar (false en SSR → el video NO
+  // viaja en el HTML inicial, así mobile nunca lo baja). videoReady: gatilla el
+  // fade-in cuando el video puede reproducirse.
+  const [showVideo, setShowVideo] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
 
   // Animacion de entrada del hero: solo el contenido (titulo + subtitulo + form).
   // El fondo (image/video/gradient) queda intacto para no provocar parpadeos.
@@ -131,6 +136,25 @@ export function HeroSearch({
     [media, heroType, heroUrl]
   );
 
+  // Decide en cliente si montar el video de fondo. NO se monta en mobile, con
+  // ahorro de datos activado, conexión lenta (2g) o reduce-motion: en esos casos
+  // se queda la capa base (poster/degradé) y se ahorran ~3.5 MB por visita.
+  useEffect(() => {
+    if (heroSource.kind !== "video") return;
+    const isDesktop = window.matchMedia("(min-width: 768px)").matches;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const conn = (
+      navigator as Navigator & {
+        connection?: { saveData?: boolean; effectiveType?: string };
+      }
+    ).connection;
+    const saveData = conn?.saveData === true;
+    const slow = conn?.effectiveType ? /2g/.test(conn.effectiveType) : false;
+    if (isDesktop && !reduced && !saveData && !slow) {
+      setShowVideo(true);
+    }
+  }, [heroSource.kind]);
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const params = new URLSearchParams();
@@ -160,17 +184,42 @@ export function HeroSearch({
         />
       )}
       {heroSource.kind === "video" && heroSource.url && (
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          poster={heroSource.posterUrl ?? undefined}
-          className="absolute inset-0 h-full w-full object-cover"
-        >
-          <source src={heroSource.url} type="video/mp4" />
-        </video>
+        <>
+          {/* Capa base SIEMPRE presente: poster (si el dealer subió hero_image)
+              o el degradé de marca. Mata el rectángulo negro mientras carga el
+              video y es lo ÚNICO que se ve en mobile/conexión lenta. */}
+          {heroSource.posterUrl ? (
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url(${heroSource.posterUrl})` }}
+            />
+          ) : (
+            <div
+              className="absolute inset-0 opacity-20"
+              style={{
+                backgroundImage: `radial-gradient(circle at 25% 30%, ${primaryColor} 0%, transparent 55%), radial-gradient(circle at 75% 70%, ${primaryColor} 0%, transparent 55%)`,
+              }}
+            />
+          )}
+          {/* Video: solo se monta en desktop con buena conexión (decidido en
+              cliente). Fade-in al estar listo para no saltar sobre la capa base. */}
+          {showVideo && (
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster={heroSource.posterUrl ?? undefined}
+              onCanPlay={() => setVideoReady(true)}
+              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
+                videoReady ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              <source src={heroSource.url} type="video/mp4" />
+            </video>
+          )}
+        </>
       )}
       {/* Default decorative gradient if no media */}
       {heroSource.kind === "none" && (

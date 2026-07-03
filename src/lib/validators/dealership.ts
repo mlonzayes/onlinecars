@@ -1,5 +1,13 @@
 import { z } from "zod";
 import { normalizeSocialLinks } from "@/lib/social";
+import { COUNTRIES, CURRENCIES, LOCALES } from "@/lib/constants";
+
+// Formato IANA básico (Region/City). No validamos contra la lista completa de
+// timezones — alcanza con el shape; el set válido se ofrece desde la UI.
+const timezoneSchema = z
+  .string()
+  .max(64)
+  .regex(/^[A-Za-z]+\/[A-Za-z0-9_+-]+(?:\/[A-Za-z0-9_+-]+)?$/, "Zona horaria inválida");
 
 // Input crudo de las redes: el dealer carga handle o URL. La normalización a URL
 // absoluta (y el descarte de vacíos) se hace en el transform → guardamos limpio.
@@ -37,6 +45,9 @@ export const dealershipCreateSchema = z.object({
     .optional()
     .nullable()
     .or(z.literal("").transform(() => null)),
+  // País del concesionario. En el onboarding define los defaults de
+  // moneda/locale/timezone (ver COUNTRY_DEFAULTS) que aplica el handler.
+  country: z.enum(COUNTRIES).default("AR"),
 });
 
 export const dealershipUpdateSchema = dealershipCreateSchema.partial().omit({ slug: true }).extend({
@@ -72,6 +83,16 @@ export const dealershipUpdateSchema = dealershipCreateSchema.partial().omit({ sl
   // Redes sociales. El transform normaliza a URLs y descarta vacíos (devuelve
   // null si no quedó ninguna). nullable permite limpiarlas todas.
   socialLinks: socialLinksInputSchema.nullable().optional(),
+  // --- i18n: ajustables desde Configuración tras el onboarding ---
+  // country se redefine acá SIN default: en un update parcial, el default del
+  // create pisaría el país real del tenant a "AR" si no viniera en el payload.
+  country: z.enum(COUNTRIES).optional(),
+  // currency y locale/siteLocale arrancan con el default del país pero el dealer
+  // puede cambiarlos (ej: operar en USD aunque esté en AR).
+  currency: z.enum(CURRENCIES).optional(),
+  locale: z.enum(LOCALES).optional(),
+  siteLocale: z.enum(LOCALES).optional(),
+  timezone: timezoneSchema.optional(),
 });
 
 export type DealershipCreateInput = z.infer<typeof dealershipCreateSchema>;

@@ -6,6 +6,8 @@ import Link from "next/link";
 import Image from "next/image";
 import gsap from "gsap";
 import { PiList, PiX, PiEnvelope, PiGauge, PiUserPlus } from "react-icons/pi";
+import { WhatsAppIcon } from "@/components/tenant/social-icons";
+import { SITE_WHATSAPP_URL } from "@/lib/seo";
 
 interface MobileMenuProps {
   isLoginEnabled: boolean;
@@ -133,6 +135,18 @@ export function MobileMenu({ isLoginEnabled, isSignedIn }: MobileMenuProps) {
                       <span>Registrarse</span>
                     </Link>
                   ))}
+
+                {/* WhatsApp — canal directo de ventas/soporte (verde de marca) */}
+                <a
+                  href={SITE_WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setIsOpen(false)}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-[#20bd5a]"
+                >
+                  <WhatsAppIcon className="size-4" />
+                  <span>WhatsApp</span>
+                </a>
 
                 {/* Contacto — primario (azul sólido) */}
                 <a

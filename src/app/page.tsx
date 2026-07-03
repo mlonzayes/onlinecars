@@ -12,6 +12,7 @@ import { PricingCards } from "@/components/landing/pricing-cards";
 import { PricingDisclaimer } from "@/components/landing/pricing-disclaimer";
 import { FaqItem } from "@/components/landing/faq-item";
 import { LandingContactForm } from "@/components/landing/contact-form";
+import { WhatsAppFab } from "@/components/landing/whatsapp-fab";
 import { Toaster } from "@/components/ui/sonner";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, SITE_EMAIL, SITE_PHONE } from "@/lib/seo";
@@ -196,6 +197,7 @@ export default function HomePage() {
       </main>
 
       <Footer />
+      <WhatsAppFab />
       <Toaster />
     </div>
   );

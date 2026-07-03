@@ -5,7 +5,7 @@ import type { QuotationPaymentMethod } from "@/lib/constants";
 // comerciales y los montos exactos importan (cuotas, anticipos).
 export function formatMoney(
   amount: number | string | { toString(): string },
-  currency: "ARS" | "USD" = "ARS"
+  currency: string = "ARS"
 ): string {
   const num =
     typeof amount === "number"

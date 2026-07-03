@@ -14,7 +14,9 @@ type FormFields = Omit<DealershipCreateInput, "description" | "whatsapp" | "webs
 type FieldErrors = Partial<Record<keyof FormFields, string>>;
 
 export function OnboardingForm() {
-  const [fields, setFields] = useState<FormFields>({ name: "", slug: "", phone: "", email: "", address: "", city: "", province: "" });
+  // country arranca en "AR" como default. TODO (próximo paso): selector de país
+  // en el onboarding + aplicar COUNTRY_DEFAULTS (moneda/locale/timezone) en el handler.
+  const [fields, setFields] = useState<FormFields>({ name: "", slug: "", phone: "", email: "", address: "", city: "", province: "", country: "AR" });
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [serverError, setServerError] = useState<string | null>(null);

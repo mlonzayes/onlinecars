@@ -63,7 +63,11 @@ export type LeadStatus = (typeof LEAD_STATUSES)[number];
 export const LEAD_SOURCES = ["web", "whatsapp", "mercadolibre", "tasacion"] as const;
 export type LeadSource = (typeof LEAD_SOURCES)[number];
 
-export const CURRENCIES = ["ARS", "USD"] as const;
+// Monedas soportadas. ARS/USD son las históricas; el resto se sumaron al
+// habilitar países hispanohablantes (ver COUNTRIES). USD se mantiene como moneda
+// "dura" para precios de vehículos en cualquier país. Ampliar es backward-compatible:
+// los validadores que usan z.enum(CURRENCIES) aceptan más valores, nunca menos.
+export const CURRENCIES = ["ARS", "USD", "MXN", "CLP", "COP", "UYU", "EUR"] as const;
 export type Currency = (typeof CURRENCIES)[number];
 
 export const USER_ROLES = ["admin", "editor", "viewer"] as const;
@@ -320,4 +324,43 @@ export const SOCIAL_NETWORK_META: Record<
     baseUrl: "https://threads.net/@",
     placeholder: "usuario o link de tu perfil",
   },
+};
+
+// --- Internacionalización (i18n) ---
+// Primera fase: mercados hispanohablantes. El `country` del Dealership es el
+// cimiento del que se derivan moneda, locale, timezone y (más adelante) qué set
+// de documentos de identidad y divisiones territoriales se habilita por país.
+export const COUNTRIES = ["AR", "MX", "CL", "CO", "UY", "ES"] as const;
+export type Country = (typeof COUNTRIES)[number];
+
+export const COUNTRY_LABELS: Record<Country, string> = {
+  AR: "Argentina",
+  MX: "México",
+  CL: "Chile",
+  CO: "Colombia",
+  UY: "Uruguay",
+  ES: "España",
+};
+
+// Locales soportados. Por ahora TODOS son español: el idioma no cambia entre
+// estos países, pero el formateo regional (separadores de miles, formato de
+// fecha, símbolo y posición de la moneda) sí difiere. Cuando entren pt/en se
+// suman acá (ej: "pt-BR", "en-US").
+export const LOCALES = ["es-AR", "es-MX", "es-CL", "es-CO", "es-UY", "es-ES"] as const;
+export type Locale = (typeof LOCALES)[number];
+
+// Defaults por país. Se aplican en el onboarding cuando el dealer elige su país;
+// quedan editables después desde Configuración. `siteLocale` arranca igual al
+// `locale` del panel — el dealer puede divergirlos (ej: panel en es, vidriera en
+// en para un mercado turístico) una vez que el i18n de la vidriera esté activo.
+export const COUNTRY_DEFAULTS: Record<
+  Country,
+  { currency: Currency; locale: Locale; timezone: string }
+> = {
+  AR: { currency: "ARS", locale: "es-AR", timezone: "America/Argentina/Buenos_Aires" },
+  MX: { currency: "MXN", locale: "es-MX", timezone: "America/Mexico_City" },
+  CL: { currency: "CLP", locale: "es-CL", timezone: "America/Santiago" },
+  CO: { currency: "COP", locale: "es-CO", timezone: "America/Bogota" },
+  UY: { currency: "UYU", locale: "es-UY", timezone: "America/Montevideo" },
+  ES: { currency: "EUR", locale: "es-ES", timezone: "Europe/Madrid" },
 };

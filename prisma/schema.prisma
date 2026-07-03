@@ -80,6 +80,20 @@ model Dealership {
   // Float (no Decimal): es un parámetro de config, no un monto contable, y así
   // el Dealership queda 100% serializable hacia Client Components.
   usdSpread            Float   @default(0)
+  // --- Internacionalización (i18n) ---
+  // País del tenant (ISO 3166-1 alpha-2). Cimiento del que se derivan los
+  // defaults de moneda/locale/timezone. Valores válidos: COUNTRIES en constants.ts.
+  country              String   @default("AR")
+  // Moneda por defecto del concesionario (ISO 4217). Define en qué moneda se
+  // muestran/operan los precios salvo override por vehículo. Valores: CURRENCIES.
+  currency             String   @default("ARS")
+  // Locale del PANEL de administración (idioma + formato regional del dealer).
+  locale               String   @default("es-AR")
+  // Locale de la VIDRIERA pública (lo que ve el comprador). Puede divergir del
+  // panel. Valores válidos: LOCALES en constants.ts.
+  siteLocale           String   @default("es-AR")
+  // Zona horaria IANA para mostrar fechas en la hora local del tenant.
+  timezone             String   @default("America/Argentina/Buenos_Aires")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

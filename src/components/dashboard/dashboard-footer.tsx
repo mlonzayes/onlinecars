@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { LifeBuoy, Mail, Phone } from "lucide-react";
+import { WhatsAppIcon } from "@/components/tenant/social-icons";
+import { SITE_PHONE, SITE_PHONE_DISPLAY, SITE_WHATSAPP_URL } from "@/lib/seo";
 
 export function DashboardFooter() {
   return (
@@ -16,11 +18,20 @@ export function DashboardFooter() {
               soporte@motorflowapp.com
             </a>
             <a
-              href="tel:+5491100000000"
+              href={`tel:${SITE_PHONE}`}
               className="flex items-center gap-1.5 transition hover:text-foreground"
             >
               <Phone className="size-3.5" />
-              +54 9 11 0000-0000
+              {SITE_PHONE_DISPLAY}
+            </a>
+            <a
+              href={SITE_WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 transition hover:text-[#25D366]"
+            >
+              <WhatsAppIcon className="size-3.5" />
+              WhatsApp
             </a>
           </div>
         </div>

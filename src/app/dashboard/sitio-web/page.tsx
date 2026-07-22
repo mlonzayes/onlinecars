@@ -78,6 +78,8 @@ export default async function SitioWebPage() {
           favicon: dealership.favicon,
           website: dealership.website,
           siteEnabled: dealership.siteEnabled,
+          announcement: dealership.announcement,
+          templateId: dealership.templateId,
         }}
         theme={theme}
       />

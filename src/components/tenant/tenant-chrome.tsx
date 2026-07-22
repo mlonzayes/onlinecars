@@ -2,6 +2,7 @@ import { resolveTemplate } from "@/lib/tenant-templates";
 import { getPlanLimits } from "@/lib/plans";
 import { TenantHeader } from "./tenant-header";
 import { TenantFooter } from "./tenant-footer";
+import { TenantAnnouncementBar } from "./tenant-announcement-bar";
 import { WhatsAppFab } from "./whatsapp-fab";
 import type { Dealership } from "@prisma/client";
 import type { DealershipTheme, SocialLinks } from "@/types";
@@ -23,6 +24,12 @@ export function TenantChrome({ dealership, basePath, children }: TenantChromePro
   const primaryDark = adjustBrightness(primaryColor, -20);
   const template = resolveTemplate(dealership.templateId);
 
+  // La barra de anuncio se muestra solo si el template la soporta Y el dealer
+  // cargó un mensaje. Cuando está, empuja el header y el contenido hacia abajo.
+  const announcement = dealership.announcement?.trim();
+  const showBanner = Boolean(template.hasAnnouncementBar && announcement);
+  const solidHeader = Boolean(template.solidHeader);
+
   return (
     <div
       data-template={template.id}
@@ -36,9 +43,16 @@ export function TenantChrome({ dealership, basePath, children }: TenantChromePro
         } as React.CSSProperties
       }
     >
-      <TenantHeader name={dealership.name} logo={dealership.logo} basePath={basePath} />
-      {/* pt-24 reserva espacio para el navbar flotante en TODAS las páginas. */}
-      <main className="flex-1 pt-24">{children}</main>
+      {showBanner && <TenantAnnouncementBar text={announcement!} />}
+      <TenantHeader
+        name={dealership.name}
+        logo={dealership.logo}
+        basePath={basePath}
+        withBanner={showBanner}
+        solid={solidHeader}
+      />
+      {/* pt-24 reserva espacio para el navbar flotante; +2.5rem si hay barra. */}
+      <main className={showBanner ? "flex-1 pt-[8.5rem]" : "flex-1 pt-24"}>{children}</main>
       <TenantFooter
         name={dealership.name}
         logo={dealership.logo}

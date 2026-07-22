@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Globe, Image as ImageIcon, Palette, Link2, Power, ExternalLink, AppWindow } from "lucide-react";
+import { Globe, Image as ImageIcon, Palette, Link2, Power, ExternalLink, AppWindow, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,8 @@ interface WebsiteSettingsProps {
     favicon: string | null;
     website: string | null;
     siteEnabled: boolean;
+    announcement: string | null;
+    templateId: string;
   };
   theme: DealershipTheme | null;
 }
@@ -33,6 +35,8 @@ export function WebsiteSettings({ dealership, theme }: WebsiteSettingsProps) {
   const [favicon, setFavicon] = useState(dealership.favicon ?? "");
   const [savingFavicon, setSavingFavicon] = useState(false);
   const [deletingFavicon, setDeletingFavicon] = useState(false);
+  const [announcement, setAnnouncement] = useState(dealership.announcement ?? "");
+  const [savingAnnouncement, setSavingAnnouncement] = useState(false);
   // Defensive ?? false: si el dealer fue cacheado en Redis ANTES de la
   // migration de siteEnabled, el campo viene undefined. useState lo trataría
   // como uncontrolled y Base UI tira warning al hacer el primer cambio.
@@ -148,6 +152,26 @@ export function WebsiteSettings({ dealership, theme }: WebsiteSettingsProps) {
       toast.error(err instanceof Error ? err.message : "No se pudo eliminar el ícono");
     } finally {
       setDeletingFavicon(false);
+    }
+  }
+
+  async function handleSaveAnnouncement() {
+    const next = announcement.trim();
+    if (next === (dealership.announcement ?? "")) return; // sin cambios
+    setSavingAnnouncement(true);
+    try {
+      const res = await fetch("/api/concesionario", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ announcement: next }),
+      });
+      if (!res.ok) throw new Error();
+      router.refresh();
+      toast.success("Cartel actualizado", { duration: 2000 });
+    } catch {
+      toast.error("No se pudo guardar el cartel");
+    } finally {
+      setSavingAnnouncement(false);
     }
   }
 
@@ -352,6 +376,35 @@ export function WebsiteSettings({ dealership, theme }: WebsiteSettingsProps) {
               <p className="text-xs text-muted-foreground">Ideal: PNG cuadrado (512x512 px). Máximo 1MB.</p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Cartel de anuncio (template "Impacto") */}
+      <Card className="lg:col-span-2">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Megaphone className="h-5 w-5 text-amber-500" />
+            Cartel de anuncio
+          </CardTitle>
+          <CardDescription>
+            Barra superior destacada del template &ldquo;Impacto&rdquo;.
+            {dealership.templateId !== "impacto"
+              ? " Elegí ese template más abajo para que se muestre."
+              : ""}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Input
+            value={announcement}
+            onChange={(e) => setAnnouncement(e.target.value)}
+            onBlur={handleSaveAnnouncement}
+            maxLength={120}
+            placeholder="Ej: Financiación en 12 cuotas sin interés"
+            disabled={savingAnnouncement}
+          />
+          <p className="text-xs text-muted-foreground">
+            {announcement.length}/120 · Se guarda al salir del campo. Vacío = barra oculta.
+          </p>
         </CardContent>
       </Card>
 

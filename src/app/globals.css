@@ -152,6 +152,15 @@
   font-family: var(--font-tenant), system-ui, -apple-system, sans-serif;
 }
 
+/* Template "impacto": look CUADRADO. Los componentes del tenant tienen los
+   rounded-* hardcodeados (no consumen --tenant-radius), así que aplanamos TODAS
+   las esquinas dentro del scope del template con un selector de atributo — cubre
+   rounded, rounded-full, rounded-2xl, rounded-t-lg, etc. sin tocar 23 archivos.
+   El look boxy es cohesivo: cards, botones, avatares y FAB, todo recto. */
+[data-template="impacto"] [class*="rounded"] {
+  border-radius: 0 !important;
+}
+
 /* Glows decorativos del hero de la landing. Animan solo el transform (barato,
    GPU) y solo si el usuario no pidió menos movimiento. */
 @keyframes heroFloat {

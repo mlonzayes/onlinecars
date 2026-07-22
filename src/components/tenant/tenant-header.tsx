@@ -17,6 +17,12 @@ interface TenantHeaderProps {
   name: string;
   logo: string | null;
   basePath: string;
+  // Si hay barra de anuncio arriba (template "impacto"), el header baja para no
+  // quedar tapado por ella.
+  withBanner?: boolean;
+  // Si true, el header es una barra sólida full-width pegada arriba (no la píldora
+  // flotante). Lo usa el template "impacto" para acompañar el look cuadrado.
+  solid?: boolean;
 }
 
 function buildNavItems(basePath: string, homeHref: string): NavItem[] {
@@ -28,7 +34,7 @@ function buildNavItems(basePath: string, homeHref: string): NavItem[] {
   ];
 }
 
-export function TenantHeader({ name, logo, basePath }: TenantHeaderProps) {
+export function TenantHeader({ name, logo, basePath, withBanner = false, solid = false }: TenantHeaderProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   // En subdominio, basePath="" y la home vive en "/". href="" NO navega, así que
@@ -67,10 +73,23 @@ export function TenantHeader({ name, logo, basePath }: TenantHeaderProps) {
     // del hero corre POR DETRÁS (el hero usa -mt-24 para empezar bajo el nav).
     // pointer-events-none en el wrapper deja pasar clicks al video; el inner
     // pill recupera pointer-events-auto.
-    <header className="fixed left-0 right-0 top-0 z-50 pointer-events-none">
-      {/* bg-[var(--tenant-surface)]/80 con backdrop-blur funciona en ambos tonos:
-          light queda "white frosted", dark queda "deep frosted". */}
-      <div className="mx-auto mt-3 flex h-16 max-w-7xl items-center justify-between gap-6 rounded-full border border-[var(--tenant-border)]/30 bg-[var(--tenant-surface)]/80 px-4 shadow-lg backdrop-blur-xl pointer-events-auto sm:mx-4 sm:mt-4 sm:px-6 lg:mx-auto lg:px-8">
+    <header
+      className={`fixed left-0 right-0 z-50 ${withBanner ? "top-10" : "top-0"} ${
+        solid
+          ? "border-b border-[var(--tenant-border-strong)] bg-[var(--tenant-surface)]"
+          : "pointer-events-none"
+      }`}
+    >
+      {/* Sólido: barra full-width pegada arriba (bg + borde en el <header>), el
+          contenido va centrado adentro. Flotante: píldora translúcida con
+          backdrop-blur (light = "white frosted", dark = "deep frosted"). */}
+      <div
+        className={
+          solid
+            ? "mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6 lg:px-8"
+            : "mx-auto mt-3 flex h-16 max-w-7xl items-center justify-between gap-6 rounded-full border border-[var(--tenant-border)]/30 bg-[var(--tenant-surface)]/80 px-4 shadow-lg backdrop-blur-xl pointer-events-auto sm:mx-4 sm:mt-4 sm:px-6 lg:mx-auto lg:px-8"
+        }
+      >
         {/* Logo */}
         <Link
           href={homeHref}

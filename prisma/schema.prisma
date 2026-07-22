@@ -18,6 +18,9 @@ model Dealership {
   // Ícono del sitio (favicon). Separado del logo: el logo suele ser horizontal y
   // se ve mal a 32x32. Si es null, el tenant layout cae al logo como favicon.
   favicon     String?
+  // Mensaje del cartel superior (announcement bar). Lo muestran los templates que
+  // lo soportan (ej: "impacto"). Si es null/vacío, no se renderiza la barra.
+  announcement String?
   phone       String?
   email       String?
   whatsapp    String?

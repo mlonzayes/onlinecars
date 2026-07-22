@@ -3,8 +3,10 @@ import { Footer } from "@/components/shared/footer";
 import { HeroSection } from "@/components/landing/hero-section";
 import { ProblemSection } from "@/components/landing/problem-section";
 import { SolutionSection } from "@/components/landing/solution-section";
+import { VehicleTypesSection } from "@/components/landing/vehicle-types-section";
 import { ServicesSection } from "@/components/landing/services-section";
 import { BenefitsSection } from "@/components/landing/benefits-section";
+import { DealerWorkflowSection } from "@/components/landing/dealer-workflow-section";
 import { MidCtaSection } from "@/components/landing/mid-cta-section";
 import { TestimonialsSection } from "@/components/landing/testimonials-section";
 import { BlogSection } from "@/components/landing/blog-section";
@@ -120,6 +122,9 @@ export default function HomePage() {
         {/* 3. Solución */}
         <SolutionSection />
 
+        {/* 3a. Tipos de vehículos (renders P10) */}
+        <VehicleTypesSection />
+
         {/* 3b. Showcase del producto (screenshots reales) */}
         <ProductShowcase />
 
@@ -128,6 +133,9 @@ export default function HomePage() {
 
         {/* 4. Beneficios */}
         <BenefitsSection />
+
+        {/* 4b. Banda narrativa con fotos reales (foto → gestión → cierre) */}
+        <DealerWorkflowSection />
 
         {/* 5. Mid CTA */}
         <MidCtaSection />

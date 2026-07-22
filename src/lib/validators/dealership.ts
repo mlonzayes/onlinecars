@@ -32,11 +32,11 @@ export const dealershipCreateSchema = z.object({
   phone: z.string().max(30).optional(),
   email: z.string().email().optional().or(z.literal("")),
   whatsapp: z.string().max(30).optional(),
-  // Dirección requerida en el onboarding (ML pide ubicación a nivel ciudad
-  // para publicar vehículos, y el footer del sitio público la muestra).
-  // El dealership.update sigue tratándolos como optional (via .partial() abajo)
-  // — solo el create/onboarding los exige.
-  address: z.string().min(3, "La dirección es requerida").max(300),
+  // Dirección (calle) OPCIONAL: muchos concesionarios no permiten publicarla en
+  // la web. Si viene vacía, el display público (footer/mapa) la oculta solo.
+  // Ciudad y provincia SIGUEN requeridas: MercadoLibre pide ubicación a nivel
+  // ciudad para publicar vehículos.
+  address: z.string().max(300).optional(),
   city: z.string().min(2, "La ciudad es requerida").max(100),
   province: z.string().min(2, "La provincia es requerida").max(100),
   website: z
@@ -68,7 +68,15 @@ export const dealershipUpdateSchema = dealershipCreateSchema.partial().omit({ sl
   // src/lib/tenant-templates.ts (TENANT_TEMPLATE_IDS). El runtime hace fallback
   // a "classic" si llega cualquier otro string — el validador acá es solo el
   // primer filtro.
-  templateId: z.enum(["classic", "dark"]).optional(),
+  templateId: z.enum(["classic", "dark", "impacto"]).optional(),
+  // Mensaje del cartel superior (announcement bar) del template "impacto".
+  // Vacío → null (oculta la barra). Cap corto: es un cartel de una línea.
+  announcement: z
+    .string()
+    .max(120, "Máximo 120 caracteres")
+    .nullable()
+    .optional()
+    .or(z.literal("").transform(() => null)),
   // Ubicación del mapa. Las coords las resuelve el buscador de geocoding del
   // dashboard — el validador solo chequea rangos. mapLabel vacío → null.
   // La visibilidad del mapa NO vive acá: la maneja el config de la sección Contacto.

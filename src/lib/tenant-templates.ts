@@ -1,4 +1,4 @@
-import { Poppins, Space_Grotesk } from "next/font/google";
+import { Poppins, Space_Grotesk, Unbounded } from "next/font/google";
 
 /**
  * Sistema de plantillas del sitio público del tenant.
@@ -35,6 +35,14 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
 });
 
+// Unbounded: display geométrica, muy llamativa. La usa el template "impacto".
+const unbounded = Unbounded({
+  subsets: ["latin"],
+  weight: ["400", "600", "700", "800"],
+  variable: "--font-tenant",
+  display: "swap",
+});
+
 export interface TenantTemplate {
   id: string;
   name: string;
@@ -46,6 +54,12 @@ export interface TenantTemplate {
   // CSS vars que se aplican a `.tenant-scope` como inline style. Los componentes
   // consumen estos tokens con `bg-[var(--tenant-bg)]`, etc.
   tokens: Record<string, string>;
+  // Si true, el TenantChrome renderiza la barra de anuncio superior (usa el
+  // campo `announcement` del dealership). Solo algunos templates la muestran.
+  hasAnnouncementBar?: boolean;
+  // Si true, el header es una barra sólida full-width pegada arriba (en vez de la
+  // píldora flotante translúcida). Va con el look cuadrado del template "impacto".
+  solidHeader?: boolean;
 }
 
 export const TENANT_TEMPLATES = {
@@ -99,6 +113,35 @@ export const TENANT_TEMPLATES = {
       "--tenant-radius-sm": "0.625rem", // 10px
       // Glow en lugar de drop shadow — sobre dark, drop shadow no se ve
       "--tenant-shadow-card": "0 0 0 1px rgb(255 255 255 / 0.04)",
+    },
+  },
+  impacto: {
+    id: "impacto",
+    name: "Impacto",
+    description:
+      "Look cuadrado y directo con tipografía Unbounded y un cartel de anuncio arriba. Simple, moderno y que resalta.",
+    tone: "light",
+    font: unbounded,
+    hasAnnouncementBar: true,
+    solidHeader: true,
+    tokens: {
+      // Backgrounds — blanco puro, minimalista
+      "--tenant-bg": "#ffffff",
+      "--tenant-surface": "#ffffff",
+      "--tenant-surface-hover": "#f5f5f5", // neutral-100
+      // Foreground — casi negro, alto contraste
+      "--tenant-fg": "#0a0a0a", // neutral-950
+      "--tenant-fg-muted": "#525252", // neutral-600
+      "--tenant-fg-subtle": "#737373", // neutral-500
+      // Borders — marcados, para el look boxy
+      "--tenant-border": "#e5e5e5", // neutral-200
+      "--tenant-border-strong": "#171717", // neutral-900
+      // Radius — CERO: esquinas rectas (el override en globals.css aplana los
+      // rounded-* hardcodeados dentro de [data-template="impacto"]).
+      "--tenant-radius": "0px",
+      "--tenant-radius-sm": "0px",
+      // Sin drop shadow — el look plano se apoya en bordes, no en sombras.
+      "--tenant-shadow-card": "0 0 0 1px rgb(0 0 0 / 0.06)",
     },
   },
 } as const satisfies Record<string, TenantTemplate>;

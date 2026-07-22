@@ -35,6 +35,7 @@ export const POSTS: BlogPost[] = [
     readingMinutes: 6,
     authorInitials: "ML",
     authorName: "Mateo Lonzayes",
+    coverImage: "/premium_images/P7_blog_consultas.png",
     content: [
       {
         heading: "Aparecé cuando te buscan: SEO local",
@@ -69,6 +70,7 @@ export const POSTS: BlogPost[] = [
     readingMinutes: 8,
     authorInitials: "MW",
     authorName: "MW Studio Digital",
+    coverImage: "/premium_images/P8_blog_mercadolibre.png",
     content: [
       {
         heading: "Las comisiones se comen tu margen",
@@ -103,6 +105,7 @@ export const POSTS: BlogPost[] = [
     readingMinutes: 5,
     authorInitials: "ML",
     authorName: "Mateo Lonzayes",
+    coverImage: "/premium_images/P9_blog_fotografia.png",
     content: [
       {
         heading: "La luz lo es casi todo",

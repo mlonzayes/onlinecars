@@ -47,10 +47,10 @@ export function SolutionSection() {
           <FadeIn delay={0.15}>
             <div className="overflow-hidden rounded-2xl border border-gray-200 shadow-xl shadow-gray-100/80">
               <Image
-                src="/mockups/web.png"
-                alt="Sitio público del concesionario en motorflow"
-                width={1344}
-                height={588}
+                src="/premium_images/person_using_phone.png"
+                alt="Un concesionario gestionando su negocio con motorflow desde el celular"
+                width={1600}
+                height={900}
                 sizes="(max-width: 1024px) 100vw, 512px"
                 quality={90}
                 className="w-full"

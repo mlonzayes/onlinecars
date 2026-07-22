@@ -15,6 +15,9 @@ model Dealership {
   slug        String   @unique
   description String?
   logo        String?
+  // Ícono del sitio (favicon). Separado del logo: el logo suele ser horizontal y
+  // se ve mal a 32x32. Si es null, el tenant layout cae al logo como favicon.
+  favicon     String?
   phone       String?
   email       String?
   whatsapp    String?

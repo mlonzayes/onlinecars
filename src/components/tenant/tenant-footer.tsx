@@ -90,7 +90,7 @@ export function TenantFooter({
             <ul className="space-y-2">
               <li>
                 <Link
-                  href={basePath}
+                  href={basePath || "/"}
                   className="text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary)]"
                 >
                   Inicio

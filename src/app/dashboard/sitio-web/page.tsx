@@ -75,6 +75,7 @@ export default async function SitioWebPage() {
         dealership={{
           slug: dealership.slug,
           logo: dealership.logo,
+          favicon: dealership.favicon,
           website: dealership.website,
           siteEnabled: dealership.siteEnabled,
         }}

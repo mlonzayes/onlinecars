@@ -19,9 +19,9 @@ interface TenantHeaderProps {
   basePath: string;
 }
 
-function buildNavItems(basePath: string): NavItem[] {
+function buildNavItems(basePath: string, homeHref: string): NavItem[] {
   return [
-    { label: "Inicio", href: basePath },
+    { label: "Inicio", href: homeHref },
     { label: "Catálogo", href: `${basePath}/catalogo` },
     { label: "Vender", href: `${basePath}/cotizar` },
     { label: "Opiniones", href: `${basePath}#opiniones` },
@@ -31,7 +31,10 @@ function buildNavItems(basePath: string): NavItem[] {
 export function TenantHeader({ name, logo, basePath }: TenantHeaderProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const navItems = buildNavItems(basePath);
+  // En subdominio, basePath="" y la home vive en "/". href="" NO navega, así que
+  // normalizamos: home real = basePath || "/". Corrige el botón "Inicio" y el logo.
+  const homeHref = basePath || "/";
+  const navItems = buildNavItems(basePath, homeHref);
 
   // Cerrar el menu mobile al cambiar de ruta
   useEffect(() => {
@@ -55,7 +58,7 @@ export function TenantHeader({ name, logo, basePath }: TenantHeaderProps) {
   function isActive(href: string): boolean {
     // Para anchors (#opiniones, #contacto) nunca marcamos como active.
     if (href.includes("#")) return false;
-    if (href === basePath) return pathname === basePath;
+    if (href === homeHref) return pathname === homeHref;
     return pathname.startsWith(href);
   }
 
@@ -70,7 +73,7 @@ export function TenantHeader({ name, logo, basePath }: TenantHeaderProps) {
       <div className="mx-auto mt-3 flex h-16 max-w-7xl items-center justify-between gap-6 rounded-full border border-[var(--tenant-border)]/30 bg-[var(--tenant-surface)]/80 px-4 shadow-lg backdrop-blur-xl pointer-events-auto sm:mx-4 sm:mt-4 sm:px-6 lg:mx-auto lg:px-8">
         {/* Logo */}
         <Link
-          href={basePath}
+          href={homeHref}
           className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
         >
           {logo ? (

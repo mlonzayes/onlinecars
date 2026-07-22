@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Globe, Image as ImageIcon, Palette, Link2, Power, ExternalLink } from "lucide-react";
+import { Globe, Image as ImageIcon, Palette, Link2, Power, ExternalLink, AppWindow } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ interface WebsiteSettingsProps {
   dealership: {
     slug: string;
     logo: string | null;
+    favicon: string | null;
     website: string | null;
     siteEnabled: boolean;
   };
@@ -29,6 +30,9 @@ export function WebsiteSettings({ dealership, theme }: WebsiteSettingsProps) {
   const [logo, setLogo] = useState(dealership.logo ?? "");
   const [savingLogo, setSavingLogo] = useState(false);
   const [deletingLogo, setDeletingLogo] = useState(false);
+  const [favicon, setFavicon] = useState(dealership.favicon ?? "");
+  const [savingFavicon, setSavingFavicon] = useState(false);
+  const [deletingFavicon, setDeletingFavicon] = useState(false);
   // Defensive ?? false: si el dealer fue cacheado en Redis ANTES de la
   // migration de siteEnabled, el campo viene undefined. useState lo trataría
   // como uncontrolled y Base UI tira warning al hacer el primer cambio.
@@ -100,6 +104,50 @@ export function WebsiteSettings({ dealership, theme }: WebsiteSettingsProps) {
       toast.error(err instanceof Error ? err.message : "No se pudo eliminar el logo");
     } finally {
       setDeletingLogo(false);
+    }
+  }
+
+  async function handleUploadFavicon(file: File) {
+    if (file.size > 1 * 1024 * 1024) {
+      toast.error("El ícono no puede superar 1MB");
+      return;
+    }
+
+    setSavingFavicon(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/concesionario/favicon", {
+        method: "POST",
+        body: formData,
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Error al subir");
+
+      setFavicon(json.data.url);
+      toast.success("Ícono actualizado", { duration: 2000 });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo guardar el ícono");
+    } finally {
+      setSavingFavicon(false);
+    }
+  }
+
+  async function handleDeleteFavicon() {
+    setDeletingFavicon(true);
+    try {
+      const res = await fetch("/api/concesionario/favicon", {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Error al eliminar");
+      setFavicon("");
+      toast.success("Ícono eliminado", { duration: 2000 });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo eliminar el ícono");
+    } finally {
+      setDeletingFavicon(false);
     }
   }
 
@@ -251,6 +299,57 @@ export function WebsiteSettings({ dealership, theme }: WebsiteSettingsProps) {
                 )}
               </div>
               <p className="text-xs text-muted-foreground">Medida ideal recomendada: 250x60 píxeles (formato horizontal). Máximo 5MB.</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Ícono del sitio (favicon) */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AppWindow className="h-5 w-5 text-cyan-500" />
+            Ícono del sitio
+          </CardTitle>
+          <CardDescription>
+            El ícono que aparece en la pestaña del navegador (favicon). Si no subís uno, se usa tu logo.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-4">
+            {favicon ? (
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-white">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={favicon} alt="Ícono preview" className="h-full w-full object-contain" />
+              </div>
+            ) : (
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-dashed bg-muted">
+                <AppWindow className="h-7 w-7 text-muted-foreground/50" />
+              </div>
+            )}
+            <div className="flex-1 space-y-2">
+              <div className="flex gap-2">
+                <Input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleUploadFavicon(file);
+                  }}
+                  disabled={savingFavicon || deletingFavicon}
+                  className="cursor-pointer"
+                />
+                {favicon && (
+                  <Button
+                    variant="destructive"
+                    onClick={handleDeleteFavicon}
+                    disabled={savingFavicon || deletingFavicon}
+                  >
+                    Eliminar
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">Ideal: PNG cuadrado (512x512 px). Máximo 1MB.</p>
             </div>
           </div>
         </CardContent>

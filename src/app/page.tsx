@@ -3,6 +3,7 @@ import { Footer } from "@/components/shared/footer";
 import { HeroSection } from "@/components/landing/hero-section";
 import { ProblemSection } from "@/components/landing/problem-section";
 import { SolutionSection } from "@/components/landing/solution-section";
+import { ServicesSection } from "@/components/landing/services-section";
 import { BenefitsSection } from "@/components/landing/benefits-section";
 import { MidCtaSection } from "@/components/landing/mid-cta-section";
 import { TestimonialsSection } from "@/components/landing/testimonials-section";
@@ -121,6 +122,9 @@ export default function HomePage() {
 
         {/* 3b. Showcase del producto (screenshots reales) */}
         <ProductShowcase />
+
+        {/* 3c. Servicios + roadmap (ancla #servicios del navbar/menú) */}
+        <ServicesSection />
 
         {/* 4. Beneficios */}
         <BenefitsSection />

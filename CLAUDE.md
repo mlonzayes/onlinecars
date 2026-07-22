@@ -95,13 +95,15 @@ src/
 │   ├── (onboarding)/onboarding/     # Crea Dealership inicial al loguearse
 │   ├── sign-in/[[...sign-in]]/      # Clerk sign-in
 │   ├── tenant/[slug]/               # Sitio público del concesionario (target del rewrite)
-│   │   ├── layout.tsx
-│   │   ├── page.tsx                 # Catálogo público
-│   │   └── vehiculo/[id]/           # Detalle público
+│   │   ├── layout.tsx               # generateMetadata por tenant (title/desc/OG/favicon)
+│   │   ├── page.tsx                 # Home del sitio (secciones configurables) + JsonLd AutoDealer
+│   │   ├── vehiculo/[publicSlug]/   # Detalle público del vehículo + JsonLd Car/Offer
+│   │   ├── sitemap.xml/route.ts     # Sitemap POR tenant (usa getTenantPublicUrl + vehículos)
+│   │   └── robots.txt/route.ts      # Robots POR tenant (indexa si siteEnabled; noindex si no)
 │   └── api/
 │       ├── waitlist/                # POST público para landing
 │       ├── onboarding/              # POST: crear Dealership + DealershipUser
-│       ├── concesionario/           # GET/PUT del dealership actual + /theme
+│       ├── concesionario/           # GET/PUT del dealership actual + /theme + /logo + /favicon (POST/DELETE upload branding)
 │       ├── vehiculos/               # GET, POST + [id] (GET/PUT/DELETE)
 │       │   └── [id]/
 │       │       ├── publish/         # PATCH toggle publicado
@@ -588,7 +590,7 @@ Los PDFs server-side usan `pdfmake` (no react-pdf — fue probado y rompió por 
 
 Ver schema completo en [prisma/schema.prisma](prisma/schema.prisma). Resumen:
 
-- **`Dealership`** — concesionario (tenant). Identificado por `slug` único. Branding (`logo`, `theme: Json`), contacto, `website` (dominio custom). Tabla: `dealerships`.
+- **`Dealership`** — concesionario (tenant). Identificado por `slug` único. Branding (`logo`, `favicon`, `theme: Json`, `socialLinks: Json`), contacto (`phone`, `email`, `whatsapp` + `whatsappFabEnabled`/`whatsappMessage` para el FAB), ubicación (`address`, `city`, `province`, `latitude`, `longitude`, `mapLabel`), `website` (dominio custom, Fase 2), `siteEnabled` (toggle público ON/OFF). El `favicon` es el ícono del sitio, separado del logo — si es null, el tenant layout cae al logo. Tabla: `dealerships`.
 - **`DealershipUser`** — junction Clerk user ↔ Dealership con `role` (`admin | editor | viewer`). Único por `(clerkUserId, dealershipId)`. Tabla: `dealership_users`.
 - **`Vehicle`** — vehículo del catálogo. `price: Decimal(12, 2)`, `currency: ARS | USD`, `condition: new | used`, `status: available | reserved | sold`, `bodyType: suv | sedan | hatchback | coupe | pickup | minivan | convertible`. Identificadores legales opcionales: `vin`, `motorNumber`, `licensePlate`. Flags `featured` y `publishedAt`. Si tiene venta activa (`reserved | in_progress | completed`), el handler bloquea ediciones — ver [src/lib/sale-guards.ts](src/lib/sale-guards.ts). Tabla: `vehicles`.
 - **`VehicleImage`** — imágenes ordenadas con `order` y flag `isPrimary`. Cascade desde Vehicle. Tabla: `vehicle_images`.
@@ -626,6 +628,22 @@ const vehicles = await prisma.vehicle.findMany({ where: { dealershipId } });
 await redis.set(cacheKey, JSON.stringify(vehicles), { ex: 300 });
 return vehicles;
 ```
+
+## SEO — sitio del tenant
+
+Cada concesionario se sirve desde su subdominio (`{slug}.motorflowapp.com`) o, en el futuro, su dominio propio (`website`). Los subdominios **sí rankean** en Google (los trata como sitios propios). La infra de SEO por tenant ya está armada — **no reinventarla, extenderla**:
+
+- **`generateMetadata` por tenant** en [tenant/[slug]/layout.tsx](src/app/tenant/[slug]/layout.tsx) (title/description/OG) y en la ficha de vehículo [vehiculo/[publicSlug]/page.tsx](src/app/tenant/[slug]/vehiculo/[publicSlug]/page.tsx) (título con precio, OG image = primera foto). El favicon sale de `dealership.favicon ?? dealership.logo`.
+- **Sitemap por tenant** — [tenant/[slug]/sitemap.xml/route.ts](src/app/tenant/[slug]/sitemap.xml/route.ts). Lista los vehículos publicados con `getTenantPublicUrl`. Se sirve en `{slug}.../sitemap.xml` (el middleware lo rutea).
+- **Robots por tenant** — [tenant/[slug]/robots.txt/route.ts](src/app/tenant/[slug]/robots.txt/route.ts). Si `siteEnabled` → permite indexar y apunta a su sitemap. Si no → `noindex` total.
+- **Structured data (JSON-LD)** vía [components/seo/json-ld.tsx](src/components/seo/json-ld.tsx): `AutoDealer` (con `PostalAddress`) en la home, `Car` + `Offer` (con precio y `seller: AutoDealer`) en la ficha de vehículo. Esto es lo que genera los **rich results** (precio + foto en Google).
+- **`getTenantPublicUrl(dealership)`** en [lib/tenant.ts](src/lib/tenant.ts) — URL pública ABSOLUTA para canonical/sitemap/JSON-LD. Si el dealer cargó `website` (dominio custom) lo usa; si no, el subdominio. **Usar siempre esta función**, no hardcodear el host.
+
+**Gaps conocidos (pendientes):**
+- **Falta `alternates.canonical`** en la metadata del tenant → riesgo de contenido duplicado entre el subdominio y `motorflowapp.com/tenant/{slug}`. Fix: `alternates: { canonical: getTenantPublicUrl(dealership) }`.
+- **`metadataBase`** (root layout) apunta al dominio principal → en subdominios, las URLs relativas (OG/canonical) resuelven mal. Habría que overridearlo por tenant.
+
+> **Nota SEO marketing (dominio principal):** `sitemap.ts`/`robots.ts` en la raíz de `app/` son SOLO del dominio de marketing (motorflowapp.com). Las constantes viven en [lib/seo.ts](src/lib/seo.ts) (`SITE_URL`, `SITE_PHONE`, `SITE_WHATSAPP`, `SITE_WHATSAPP_URL`) — fuente única del contacto público, usada por navbar/footer/FAB/schema.org.
 
 ## Variables de Entorno
 
@@ -687,6 +705,10 @@ NEXT_PUBLIC_ENABLE_LOGIN=false      # "true" habilita dashboard + protección de
 - Convención de logging con `withLogger` + request_id propagado.
 - **Seguridad**: headers (X-Frame, nosniff, Referrer-Policy, Permissions-Policy, HSTS-prod), rate limiting Upstash en públicos, honeypot anti-bots en forms públicos.
 - Auditoría manual de `dealershipId` en todos los handlers autenticados (sin agujeros encontrados).
+- **SEO por tenant**: `generateMetadata` + `sitemap.xml` + `robots.txt` + JSON-LD (`AutoDealer`/`Car`) por concesionario (ver sección "SEO — sitio del tenant").
+- **Branding del tenant**: subida de logo Y favicon (ícono del sitio) desde `dashboard/sitio-web`, con fallback favicon→logo. Endpoints `/api/concesionario/{logo,favicon}`.
+- **Flow de auth robusto**: guards de sesión en `/sign-in` y `/sign-up` (cortan el loop OAuth con cuenta existente) + redirect unificado al `/dashboard` como único router de estado de cuenta. `loading.tsx` en las rutas de auth para feedback instantáneo.
+- **WhatsApp en la web principal**: FAB flotante + botón en el menú mobile (landing) y en el footer del dashboard, todo desde `SITE_WHATSAPP_URL` de `lib/seo.ts`.
 
 **Pendiente:**
 - Cache Redis del catálogo público (cache-aside con invalidación).

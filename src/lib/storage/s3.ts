@@ -5,7 +5,13 @@ import {
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import type { StorageProvider, StorageBucket, UploadResult } from "./types";
+import type {
+  StorageProvider,
+  StorageBucket,
+  UploadResult,
+  CreateUploadUrlResult,
+  ObjectProbe,
+} from "./types";
 
 // Driver S3-compatible (Cloudflare R2). Maneja DOS buckets:
 //   - S3_PUBLIC_BUCKET: imágenes del catálogo. Servido vía custom domain (S3_PUBLIC_URL).
@@ -14,6 +20,10 @@ import type { StorageProvider, StorageBucket, UploadResult } from "./types";
 // Para R2: region "auto", forcePathStyle true, endpoint = https://<account>.r2.cloudflarestorage.com
 
 const DEFAULT_DOCUMENT_TTL_SECONDS = 300; // 5 min
+
+// Ventana de la firma de subida directa. 10 min cubre 20MB desde una conexión
+// hogareña lenta con margen de sobra.
+const DEFAULT_UPLOAD_TTL_SECONDS = 600;
 
 interface S3Env {
   endpoint: string;
@@ -148,6 +158,67 @@ export const s3Storage: StorageProvider = {
     // url queda con un identificador interno — el front pide la URL firmada
     // a /api/ventas/[id]/documentos/[docId]/url. No se sirve directo nunca.
     return { url: `s3://${env.privateBucket}/${key}`, key };
+  },
+
+  async createUploadUrl({
+    keyPrefix,
+    filename,
+    mimeType,
+    ttlSeconds = DEFAULT_UPLOAD_TTL_SECONDS,
+  }): Promise<CreateUploadUrlResult> {
+    const env = readEnv();
+    const key = joinKey(keyPrefix, filename);
+
+    // Firmamos SOLO con ContentType. Tentador era firmar también ContentLength
+    // para clavar el tamaño exacto, pero eso lo convierte en header firmado y
+    // varios providers S3-compatible (incluido Contabo) se ponen quisquillosos.
+    // El tamaño se verifica después con probeObject, que además chequea el
+    // magic-number — y si algo no cierra, borramos el objeto. El resultado es
+    // equivalente y funciona en cualquier provider.
+    const command = new PutObjectCommand({
+      Bucket: env.publicBucket,
+      Key: key,
+      ContentType: mimeType,
+    });
+
+    const uploadUrl = await getSignedUrl(getClient(), command, {
+      expiresIn: ttlSeconds,
+    });
+
+    return { uploadUrl, key, publicUrl: `${env.publicUrl}/${key}` };
+  },
+
+  async probeObject(key, headBytes): Promise<ObjectProbe | null> {
+    const env = readEnv();
+    try {
+      // Un GET con Range trae los primeros bytes Y el tamaño total en el header
+      // ContentRange ("bytes 0-15/12345678") — una sola llamada para las dos
+      // cosas, sin bajar el archivo entero.
+      const response = await getClient().send(
+        new GetObjectCommand({
+          Bucket: env.publicBucket,
+          Key: key,
+          Range: `bytes=0-${headBytes - 1}`,
+        })
+      );
+
+      if (!response.Body) return null;
+      const head = Buffer.from(await response.Body.transformToByteArray());
+
+      // ContentRange: "bytes 0-15/12345678" → el total va después de la barra.
+      const total = response.ContentRange?.split("/")[1];
+      const sizeBytes =
+        total && total !== "*" ? Number(total) : (response.ContentLength ?? head.length);
+
+      return { sizeBytes, head };
+    } catch {
+      // Objeto inexistente o inaccesible. El caller lo trata como "no llegó".
+      return null;
+    }
+  },
+
+  publicUrlFor(key) {
+    return `${readEnv().publicUrl}/${key}`;
   },
 
   async delete(key, bucket) {

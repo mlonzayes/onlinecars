@@ -2,8 +2,29 @@ import { z } from "zod";
 import {
   MEDIA_PURPOSES,
   SECTION_TYPES,
+  type AllowedTenantImageMimeType,
   type AllowedVideoMimeType,
 } from "../constants";
+
+// Extensión final del archivo según el mime REAL detectado (no el declarado).
+// Vive acá y no en el route handler porque la usan tanto el upload directo como
+// el flujo de presign.
+export function extensionForMime(
+  mime: AllowedTenantImageMimeType | AllowedVideoMimeType
+): string {
+  switch (mime) {
+    case "image/jpeg":
+      return "jpg";
+    case "image/png":
+      return "png";
+    case "image/webp":
+      return "webp";
+    case "video/mp4":
+      return "mp4";
+    case "video/webm":
+      return "webm";
+  }
+}
 
 // Validadores para el endpoint de upload de medios del tenant site builder.
 // La metadata viaja como campos en multipart/form-data junto con el archivo.

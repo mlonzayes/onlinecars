@@ -9,6 +9,7 @@ import {
   mediaUploadMetadataSchema,
   detectVideoMimeType,
   detectImageMimeType,
+  extensionForMime,
 } from "@/lib/validators/media";
 import {
   ALLOWED_TENANT_IMAGE_MIME_TYPES,
@@ -22,25 +23,6 @@ import {
   type MediaPurpose,
 } from "@/lib/constants";
 import { invalidateTenantHomeBundle } from "@/lib/tenant";
-
-// Extensión por mime (incluye imagen + video). Espejado del helper de vehicle-image
-// pero ampliado para los formatos del tenant builder.
-function extensionForMime(
-  mime: AllowedTenantImageMimeType | AllowedVideoMimeType
-): string {
-  switch (mime) {
-    case "image/jpeg":
-      return "jpg";
-    case "image/png":
-      return "png";
-    case "image/webp":
-      return "webp";
-    case "video/mp4":
-      return "mp4";
-    case "video/webm":
-      return "webm";
-  }
-}
 
 function isSingleton(purpose: MediaPurpose): boolean {
   return (SINGLETON_MEDIA_PURPOSES as readonly MediaPurpose[]).includes(purpose);

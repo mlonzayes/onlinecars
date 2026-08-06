@@ -58,6 +58,95 @@ export function MediaUploader({
     return null;
   }
 
+  type UploadedMedia = {
+    id: string;
+    purpose: MediaPurpose;
+    sectionType: SectionType;
+    url: string;
+    mimeType: string;
+    order: number;
+  };
+
+  /**
+   * Camino tradicional: el archivo viaja en el body del POST.
+   * Solo sirve para archivos chicos — en Vercel las funciones serverless cortan
+   * el request body en 4.5MB. Se usa en dev (driver local) y como fallback.
+   */
+  async function uploadThroughServer(file: File): Promise<UploadedMedia> {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("sectionType", sectionType);
+    formData.append("purpose", purpose);
+
+    const res = await fetch("/api/concesionario/media", {
+      method: "POST",
+      body: formData,
+    });
+    if (!res.ok) {
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      throw new Error(data.error ?? "No se pudo subir el archivo");
+    }
+    const json = (await res.json()) as { data: UploadedMedia };
+    return json.data;
+  }
+
+  /**
+   * Subida directa browser → bucket. Tres pasos:
+   *   1. Pedimos una URL firmada al servidor.
+   *   2. PUT del archivo derecho al bucket (esto NO pasa por la función, así que
+   *      el límite de 4.5MB no aplica).
+   *   3. El servidor confirma: lee los bytes reales del bucket, valida tamaño y
+   *      magic-number, y recién ahí crea la fila en DB.
+   */
+  async function uploadDirect(file: File): Promise<UploadedMedia> {
+    const presignRes = await fetch("/api/concesionario/media/presign", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sectionType,
+        purpose,
+        mimeType: file.type,
+        sizeBytes: file.size,
+      }),
+    });
+    if (!presignRes.ok) {
+      const data = (await presignRes.json().catch(() => ({}))) as { error?: string };
+      throw new Error(data.error ?? "No se pudo preparar la subida");
+    }
+
+    const presign = (await presignRes.json()) as {
+      data: { mode: "s3"; uploadUrl: string; key: string } | { mode: "direct" };
+    };
+
+    // Driver local (dev): no hay bucket que firmar, va por el server.
+    if (presign.data.mode === "direct") return uploadThroughServer(file);
+
+    const { uploadUrl, key } = presign.data;
+
+    const putRes = await fetch(uploadUrl, {
+      method: "PUT",
+      // El Content-Type tiene que coincidir con el que se firmó o el bucket
+      // rechaza la firma.
+      headers: { "Content-Type": file.type },
+      body: file,
+    });
+    if (!putRes.ok) {
+      throw new Error("Falló la subida al servidor de archivos");
+    }
+
+    const confirmRes = await fetch("/api/concesionario/media/confirm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sectionType, purpose, key }),
+    });
+    if (!confirmRes.ok) {
+      const data = (await confirmRes.json().catch(() => ({}))) as { error?: string };
+      throw new Error(data.error ?? "No se pudo registrar el archivo");
+    }
+    const json = (await confirmRes.json()) as { data: UploadedMedia };
+    return json.data;
+  }
+
   async function handleFile(file: File) {
     const validationError = validateClientSide(file);
     if (validationError) {
@@ -67,45 +156,24 @@ export function MediaUploader({
 
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("sectionType", sectionType);
-      formData.append("purpose", purpose);
-
-      const res = await fetch("/api/concesionario/media", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as { error?: string };
-        toast.error(data.error ?? "No se pudo subir el archivo");
-        return;
-      }
-
-      const json = (await res.json()) as {
-        data: {
-          id: string;
-          purpose: MediaPurpose;
-          sectionType: SectionType;
-          url: string;
-          mimeType: string;
-          order: number;
-        };
-      };
+      const media = await uploadDirect(file);
       onUploaded({
-        id: json.data.id,
-        purpose: json.data.purpose,
-        sectionType: json.data.sectionType,
-        url: json.data.url,
-        mimeType: json.data.mimeType,
-        order: json.data.order,
+        id: media.id,
+        purpose: media.purpose,
+        sectionType: media.sectionType,
+        url: media.url,
+        mimeType: media.mimeType,
+        order: media.order,
       });
       toast.success(current ? "Archivo reemplazado" : "Archivo subido", {
         duration: 1500,
       });
-    } catch {
-      toast.error("Error al subir el archivo");
+    } catch (error) {
+      // El mensaje real del server llega hasta acá: antes cualquier fallo
+      // mostraba un genérico y no se sabía si era tamaño, formato o red.
+      toast.error(
+        error instanceof Error ? error.message : "Error al subir el archivo"
+      );
     } finally {
       setUploading(false);
     }

@@ -1,6 +1,6 @@
-import { mkdir, writeFile, unlink } from "node:fs/promises";
+import { mkdir, writeFile, unlink, open, stat } from "node:fs/promises";
 import path from "node:path";
-import type { StorageProvider, StorageBucket } from "./types";
+import type { StorageProvider, StorageBucket, ObjectProbe } from "./types";
 
 const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads");
 
@@ -40,6 +40,36 @@ export const localStorage: StorageProvider = {
 
   async uploadDocument({ buffer, keyPrefix, filename }) {
     return writeFileToUploads(buffer, keyPrefix, filename);
+  },
+
+  // El driver local no firma nada: en dev el archivo va por el POST normal, que
+  // funciona sin problema porque el límite de 4.5MB es de Vercel, no de Next.
+  // null le dice al caller "usá el camino tradicional".
+  async createUploadUrl() {
+    return null;
+  },
+
+  async probeObject(key, headBytes): Promise<ObjectProbe | null> {
+    assertSafeKey(key);
+    const filePath = path.join(UPLOADS_DIR, key);
+    try {
+      const { size } = await stat(filePath);
+      const handle = await open(filePath, "r");
+      try {
+        const head = Buffer.alloc(Math.min(headBytes, size));
+        await handle.read(head, 0, head.length, 0);
+        return { sizeBytes: size, head };
+      } finally {
+        await handle.close();
+      }
+    } catch {
+      return null;
+    }
+  },
+
+  publicUrlFor(key) {
+    assertSafeKey(key);
+    return `/uploads/${key}`;
   },
 
   // El driver local guarda todo en un solo árbol — el bucket se ignora.

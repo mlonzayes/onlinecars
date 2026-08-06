@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { getCurrentDealership } from "@/lib/auth";
+import { auditFields, resolveSiteBuilderContext } from "@/lib/admin-context";
 import { prisma } from "@/lib/prisma";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
@@ -19,8 +19,9 @@ export const PUT = withLogger(async (request, { requestId }) => {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const dealership = await getCurrentDealership();
-  if (!dealership) {
+  const ctx = await resolveSiteBuilderContext();
+  const dealership = ctx?.dealership;
+  if (!ctx || !dealership) {
     logger.warn(requestId, "media.order.no_dealership", { userId });
     return NextResponse.json(
       { error: "Concesionario no encontrado" },
@@ -88,6 +89,7 @@ export const PUT = withLogger(async (request, { requestId }) => {
   logger.info(requestId, "media.order.ok", {
     dealershipId: dealership.id,
     count: ids.length,
+    ...auditFields(ctx),
   });
 
   return NextResponse.json({

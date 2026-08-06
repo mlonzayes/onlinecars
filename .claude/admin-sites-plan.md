@@ -76,51 +76,68 @@ un bug.
 
 ---
 
-## Fase 2 — "Editar como" (el motor para diseño custom)
+## Fase 2 — Modo plataforma ✅ HECHO
 
-Objetivo: entrar al site-builder que ya existe pero operando sobre la cuenta de
-un cliente, para armarle la web vos mismo.
+Entrar al site-builder que ya existe pero operando sobre la cuenta de un
+cliente, para armarle la web vos mismo.
 
-**Por qué esto y no una UI paralela en `/admin`:** todo el site-builder cuelga de
-`/api/concesionario/*` (sections, media, theme, logo, favicon) y **todos** esos
-handlers resuelven el tenant con `getCurrentDealership()`. Es una sola puerta.
-Duplicar el builder bajo `/admin` sería duplicar cada handler y cada componente,
-y se desincronizaría en la primera feature nueva.
+**Alcance: solo el sitio web.** No alcanza a vehículos, ventas, clientes ni a los
+legajos (que tienen DNI y facturas de terceros).
 
-**Alcance decidido: solo el sitio web.** El modo no alcanza a vehículos, ventas,
-clientes ni a los legajos (que tienen DNI y facturas de terceros).
+**Archivos:**
 
-**Diseño:**
+| Archivo | Qué hace |
+|---|---|
+| [lib/admin-context.ts](../src/lib/admin-context.ts) | `resolveSiteBuilderContext()`, `getPlatformEditTargetId()`, `auditFields()` |
+| [api/admin/impersonation](../src/app/api/admin/impersonation/route.ts) | POST entrar / DELETE salir |
+| [admin/sitios/[id]/editar](../src/app/admin/sitios/[id]/editar/page.tsx) | El editor, componiendo el builder existente |
+| [platform-edit-banner.tsx](../src/components/admin/platform-edit-banner.tsx) | Banner sticky + salir |
+| [platform-edit-activate.tsx](../src/components/admin/platform-edit-activate.tsx) | Pantalla de activación (entrada directa por URL) |
 
-1. **NO tocar `getCurrentDealership()`.** El multi-tenancy es sagrado; si le
-   metemos impersonación adentro, se filtra a `/dashboard/ventas` y a todo lo
-   demás. En su lugar: `resolveDealershipContext()` en `src/lib/admin-context.ts`
-   que (a) lee la cookie de impersonación, (b) verifica `isSuperAdmin(userId)` en
-   **cada** request, (c) si no aplica, cae a `getCurrentDealership()`.
+**Decisiones no obvias:**
 
-2. **Cambiar a `resolveDealershipContext()` SOLO en la superficie del builder:**
-   - `/api/concesionario/route.ts` (PUT), `/theme`, `/logo`, `/favicon`
-   - `/api/concesionario/sections/*` y `/api/concesionario/media/*`
-   - `/dashboard/sitio-web/page.tsx`
-   
-   El resto del dashboard sigue con `getCurrentDealership()` y nunca ve la
-   impersonación. El blast radius queda acotado por construcción, no por
-   disciplina.
+1. **NO se tocó `getCurrentDealership()`.** Era la opción tentadora — cambiás una
+   función y el motor entero opera sobre otro tenant. Pero esa función es el
+   corazón del multi-tenancy: la usan `/dashboard/ventas`, `/clientes` y los
+   legajos. El override vive en `resolveSiteBuilderContext()`, aplicado SOLO en
+   los 9 handlers del builder. El alcance queda acotado por construcción.
 
-3. **Cookie firmada** (`httpOnly`, `sameSite: lax`, TTL corto ~2h) con solo el
-   `dealershipId`. Se setea/borra con `POST|DELETE /api/admin/impersonation`.
-   La cookie **no** es la autorización: la autorización se re-verifica en cada
-   request con `isSuperAdmin`.
+2. **`usuarios/invitar` quedó afuera a propósito.** Cuelga de
+   `/api/concesionario/*` pero NO es site-builder. Un reemplazo a lo bruto te
+   habilitaba a invitar usuarios a la cuenta del cliente.
 
-4. **Banner persistente** en todo `/dashboard/sitio-web` mientras el modo esté
-   activo, con el nombre del cliente y un botón "Salir". Sin esto, un descuido
-   te hace editarle la web al cliente equivocado.
+3. **El editor NO reusa `/dashboard/sitio-web`.** El layout del dashboard tiene
+   tres gates que expulsan al super-admin: `/onboarding` si no tiene
+   concesionario propio, `/aceptar-terminos` si no firmó T&C, y `/cuenta-pausada`
+   si la cuenta está suspendida — justo el caso donde más querrías entrar.
+   Además el sidebar mostraría el tenant equivocado. Por eso el editor vive en
+   `/admin/sitios/[id]/editar` y COMPONE los mismos componentes del builder. No
+   hay lógica duplicada: solo el armazón de la página.
 
-5. **Auditoría:** cada mutación loggea `actingSuperAdmin: userId` junto al
-   `dealershipId`. El `withLogger` ya propaga el `requestId`.
+4. **La cookie no está firmada, y está bien.** La cookie solo dice "sobre qué
+   cuenta"; la autorización es `isSuperAdmin(userId)` re-verificada en CADA
+   request. Un usuario común que la forje ve su propia cuenta. Lo peor que logra
+   un super-admin manipulándola es apuntar a otro dealership — que es lo que el
+   modo le permite igual. TTL de 2h para que el modo se abandone solo.
 
-6. **Invalidar el cache del tenant** en toda mutación (los handlers de
-   `/api/concesionario/*` ya lo hacen — verificar que ninguno se quede afuera).
+5. **Guard anti-footgun en `/dashboard/sitio-web`.** Con el modo activo esa
+   página leería el sitio PROPIO mientras los componentes del builder guardan en
+   el del cliente: verías tus secciones y escribirías las de otro. Con la cookie
+   puesta, redirige al editor correcto.
+
+6. **`currentUser` sintético.** El super-admin no tiene fila en `DealershipUser`
+   para esa cuenta y no queremos crearla (ensuciaría el conteo de usuarios del
+   plan del cliente). El `id` es un centinela, no un cuid — seguro hoy porque el
+   código solo lee `currentUser.role`. Si algún día se escribe `currentUser.id`
+   en DB, revienta con un FK error: preferible a una fila fantasma.
+
+7. **Whitelist server-side en el PUT.** `PLATFORM_EDITABLE_FIELDS` limita el modo
+   a campos de diseño. La UI no expone `usdSpread` ni `currency`, pero el
+   endpoint es el mismo que usa el dealer. Devuelve 403 en vez de strippear en
+   silencio: si el editor manda un campo nuevo, queremos enterarnos.
+
+8. **Auditoría:** toda mutación del builder loggea `actingSuperAdmin` vía
+   `auditFields(ctx)`. En modo normal devuelve `{}` y no ensucia los logs.
 
 ---
 

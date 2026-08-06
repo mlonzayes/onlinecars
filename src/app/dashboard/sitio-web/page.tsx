@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Eye } from "lucide-react";
 import { getCurrentDealership } from "@/lib/auth";
+import { getPlatformEditTargetId } from "@/lib/admin-context";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +12,13 @@ import { getSectionsPageData } from "./sections-page-data";
 import type { DealershipTheme } from "@/types";
 
 export default async function SitioWebPage() {
+  // Guard anti-footgun: con el modo plataforma activo esta página leería el
+  // sitio PROPIO (getCurrentDealership) mientras los componentes del builder
+  // guardan en el del cliente (que resuelven por cookie). Verías tus secciones
+  // y escribirías las de otro. Mandamos al editor correcto.
+  const platformTargetId = await getPlatformEditTargetId();
+  if (platformTargetId) redirect(`/admin/sitios/${platformTargetId}/editar`);
+
   const dealership = await getCurrentDealership();
   if (!dealership) redirect("/onboarding");
 

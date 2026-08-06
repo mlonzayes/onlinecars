@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { getCurrentDealership } from "@/lib/auth";
+import { auditFields, resolveSiteBuilderContext } from "@/lib/admin-context";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { dealershipUpdateSchema } from "@/lib/validators/dealership";
@@ -18,6 +18,24 @@ import { addDomainToVercel, removeDomainFromVercel } from "@/lib/vercel";
 // (getDealershipByDomain + rewrite). Ver website-settings.tsx para la UI.
 const CUSTOM_DOMAINS_ENABLED = false;
 
+// Campos que el super-admin PUEDE tocar cuando está en modo plataforma (armando
+// el sitio de un cliente). El alcance acordado es DISEÑO DEL SITIO: nada de la
+// operatoria ni de la config comercial del cliente (usdSpread, currency,
+// showCostsToNonAdmins, datos de contacto, etc).
+//
+// Es defensa server-side: la UI del editor no expone esos campos, pero el
+// endpoint es el mismo que usa el dealer y sin esto aceptaría cualquiera del
+// schema. Rechazamos con 403 en vez de strippear en silencio — si el editor
+// algún día manda un campo nuevo, queremos enterarnos, no que falle mudo.
+const PLATFORM_EDITABLE_FIELDS = new Set([
+  "siteEnabled",
+  "templateId",
+  "announcement",
+  "logo",
+  "socialLinks",
+  "showAddress",
+]);
+
 // GET /api/concesionario
 // Retorna los datos del concesionario del usuario autenticado.
 // Response 200: { data: Dealership }
@@ -28,7 +46,8 @@ export const GET = withLogger(async (_request, { requestId }) => {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const dealership = await getCurrentDealership();
+  const ctx = await resolveSiteBuilderContext();
+  const dealership = ctx?.dealership;
   if (!dealership) {
     logger.warn(requestId, "dealership.get.not_found", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
@@ -49,8 +68,9 @@ export const PUT = withLogger(async (request, { requestId }) => {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const dealership = await getCurrentDealership();
-  if (!dealership) {
+  const ctx = await resolveSiteBuilderContext();
+  const dealership = ctx?.dealership;
+  if (!ctx || !dealership) {
     logger.warn(requestId, "dealership.update.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
@@ -67,6 +87,24 @@ export const PUT = withLogger(async (request, { requestId }) => {
       { error: "Datos inválidos", details: parsed.error.flatten() },
       { status: 400 }
     );
+  }
+
+  // Modo plataforma: el super-admin solo puede tocar campos de diseño del sitio.
+  if (ctx.actingAsPlatform) {
+    const forbidden = Object.keys(parsed.data).filter(
+      (k) => !PLATFORM_EDITABLE_FIELDS.has(k)
+    );
+    if (forbidden.length > 0) {
+      logger.warn(requestId, "dealership.update.platform_field_denied", {
+        dealershipId: dealership.id,
+        forbidden,
+        ...auditFields(ctx),
+      });
+      return NextResponse.json(
+        { error: "En modo plataforma solo se pueden editar campos del sitio web" },
+        { status: 403 }
+      );
+    }
   }
 
   // Solo admins pueden cambiar config sensible de precios (visibilidad de costos
@@ -136,7 +174,10 @@ export const PUT = withLogger(async (request, { requestId }) => {
       await invalidateTenantHomeBundle(dealership.slug);
     }
 
-    logger.info(requestId, "dealership.update.ok", { dealershipId: updated.id });
+    logger.info(requestId, "dealership.update.ok", {
+      dealershipId: updated.id,
+      ...auditFields(ctx),
+    });
     return NextResponse.json({ data: updated });
   } catch (error: unknown) {
     // P2002 = unique constraint violation. Si el target incluye "website",

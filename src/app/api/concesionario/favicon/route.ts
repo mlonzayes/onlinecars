@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { getCurrentDealership } from "@/lib/auth";
+import { auditFields, resolveSiteBuilderContext } from "@/lib/admin-context";
 import { prisma } from "@/lib/prisma";
 import { storage } from "@/lib/storage";
 import { withLogger } from "@/lib/api-handler";
@@ -29,8 +29,9 @@ export const POST = withLogger(async (request, { requestId }) => {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const dealership = await getCurrentDealership();
-  if (!dealership) {
+  const ctx = await resolveSiteBuilderContext();
+  const dealership = ctx?.dealership;
+  if (!ctx || !dealership) {
     logger.warn(requestId, "favicon.upload.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
@@ -110,6 +111,7 @@ export const POST = withLogger(async (request, { requestId }) => {
     dealershipId: dealership.id,
     sizeBytes: file.size,
     mimeType: detectedMime,
+    ...auditFields(ctx),
   });
 
   return NextResponse.json({ data: { url } }, { status: 201 });
@@ -122,8 +124,9 @@ export const DELETE = withLogger(async (request, { requestId }) => {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const dealership = await getCurrentDealership();
-  if (!dealership) {
+  const ctx = await resolveSiteBuilderContext();
+  const dealership = ctx?.dealership;
+  if (!ctx || !dealership) {
     logger.warn(requestId, "favicon.delete.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
@@ -162,7 +165,10 @@ export const DELETE = withLogger(async (request, { requestId }) => {
 
   await invalidateTenantHomeBundle(dealership.slug);
 
-  logger.info(requestId, "favicon.delete.ok", { dealershipId: dealership.id });
+  logger.info(requestId, "favicon.delete.ok", {
+    dealershipId: dealership.id,
+    ...auditFields(ctx),
+  });
 
   return NextResponse.json({ success: true });
 });

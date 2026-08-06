@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { getCurrentDealership } from "@/lib/auth";
+import { auditFields, resolveSiteBuilderContext } from "@/lib/admin-context";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -37,8 +37,9 @@ export const PATCH = withLogger(async (request, { requestId }) => {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const dealership = await getCurrentDealership();
-  if (!dealership) {
+  const ctx = await resolveSiteBuilderContext();
+  const dealership = ctx?.dealership;
+  if (!ctx || !dealership) {
     logger.warn(requestId, "dealership.theme.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
@@ -83,6 +84,7 @@ export const PATCH = withLogger(async (request, { requestId }) => {
   logger.info(requestId, "dealership.theme.updated", {
     dealershipId: dealership.id,
     fields: Object.keys(parsed.data),
+    ...auditFields(ctx),
   });
 
   return NextResponse.json({ data: { theme: updated.theme } });

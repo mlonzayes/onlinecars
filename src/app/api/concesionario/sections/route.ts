@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { getCurrentDealership } from "@/lib/auth";
+import { resolveSiteBuilderContext } from "@/lib/admin-context";
 import { prisma } from "@/lib/prisma";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
@@ -24,7 +24,10 @@ export const GET = withLogger(async (_request, { requestId }) => {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const dealership = await getCurrentDealership();
+  // Site-builder: puede resolver a otra cuenta si el super-admin está en modo
+  // plataforma. Ver src/lib/admin-context.ts.
+  const ctx = await resolveSiteBuilderContext();
+  const dealership = ctx?.dealership;
   if (!dealership) {
     logger.warn(requestId, "sections.list.no_dealership", { userId });
     return NextResponse.json(

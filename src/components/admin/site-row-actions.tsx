@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Eye } from "lucide-react";
+import { Eye, Loader2, PencilRuler } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TENANT_TEMPLATES, TENANT_TEMPLATE_IDS } from "@/lib/tenant-templates";
@@ -32,6 +32,7 @@ export function SiteRowActions({
 }: SiteRowActionsProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [entering, setEntering] = useState(false);
   const [confirmPause, setConfirmPause] = useState(false);
 
   async function patch(body: Record<string, unknown>, successMsg: string) {
@@ -63,6 +64,30 @@ export function SiteRowActions({
       { templateId: next },
       `Plantilla "${TENANT_TEMPLATES[next as keyof typeof TENANT_TEMPLATES].name}" aplicada`
     );
+  }
+
+  // Prende el modo plataforma y entra al editor. El POST tiene que resolver
+  // ANTES del push: sin la cookie seteada, el editor renderiza la pantalla de
+  // activación en vez del builder.
+  async function handleEditSite() {
+    setEntering(true);
+    try {
+      const res = await fetch("/api/admin/impersonation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dealershipId: id }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error ?? "No se pudo abrir el editor");
+        setEntering(false);
+        return;
+      }
+      router.push(`/admin/sitios/${id}/editar`);
+    } catch {
+      toast.error("Error de conexión");
+      setEntering(false);
+    }
   }
 
   function handleToggleSite() {
@@ -108,6 +133,22 @@ export function SiteRowActions({
         )}
       >
         {siteEnabled ? "Pausar" : "Activar"}
+      </button>
+
+      {/* Entra al site-builder operando sobre ESTA cuenta. Mismo motor que usa
+          el dealer — ver src/lib/admin-context.ts. */}
+      <button
+        type="button"
+        onClick={handleEditSite}
+        disabled={entering}
+        className="inline-flex h-8 shrink-0 items-center gap-1 rounded-md border border-violet-300 px-2.5 text-xs font-medium text-violet-700 hover:bg-violet-50 disabled:opacity-50"
+      >
+        {entering ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <PencilRuler className="h-3.5 w-3.5" />
+        )}
+        Editar
       </button>
 
       {/* Preview: arma el sitio SIN gatear por siteEnabled, así lo revisás antes

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useTableTransition } from "@/components/dashboard/table-transition";
 
 
 
@@ -24,7 +25,11 @@ export function TableSearch({
 }: TableSearchProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [, localStartTransition] = useTransition();
+  // Compartimos la transición con la tabla cuando hay provider, así buscar
+  // también dispara el loader (no solo filtrar y ordenar).
+  const shared = useTableTransition();
+  const startTransition = shared?.startTransition ?? localStartTransition;
 
   // Inicializamos desde la URL pero NO re-sincronizamos en cambios posteriores
   // de searchParams: cada keystroke disparaba un render extra cuando router.push

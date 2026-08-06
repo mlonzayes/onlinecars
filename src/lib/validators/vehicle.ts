@@ -25,6 +25,8 @@ export const vehicleCreateSchema = z.object({
   condition: z.enum(VEHICLE_CONDITIONS).default("used"),
   status: z.enum(VEHICLE_STATUSES).default("available"),
   featured: z.boolean().default(false),
+  // Stock ilimitado (0km): al vender no se bloquea ni cambia de status.
+  unlimitedStock: z.boolean().default(false),
 });
 
 export const vehicleUpdateSchema = vehicleCreateSchema.partial().extend({

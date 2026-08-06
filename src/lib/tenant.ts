@@ -382,6 +382,8 @@ export interface TenantHomeBundleDealership {
   email: string | null;
   whatsapp: string | null;
   address: string | null;
+  // Si false, la dirección no se muestra en el sitio público (elección del dealer).
+  showAddress: boolean;
   city: string | null;
   province: string | null;
   website: string | null;
@@ -628,6 +630,7 @@ async function assembleTenantHomeBundle(
       email: dealership.email,
       whatsapp: dealership.whatsapp,
       address: dealership.address,
+      showAddress: dealership.showAddress,
       city: dealership.city,
       province: dealership.province,
       website: dealership.website,

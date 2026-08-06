@@ -8,7 +8,7 @@ import { VEHICLE_STATUSES } from "@/lib/constants";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { blockingSaleErrorBody, findBlockingSale } from "@/lib/sale-guards";
-import { invalidateTenantHomeBundle } from "@/lib/tenant";
+import { invalidateVehicleCaches } from "@/lib/cache-tags";
 
 type VehicleParams = { id: string };
 
@@ -71,7 +71,7 @@ export const PATCH = withLogger<VehicleParams>(async (request, { requestId, para
       select: { id: true, status: true },
     });
 
-    await invalidateTenantHomeBundle(dealership.slug);
+    await invalidateVehicleCaches(dealership.slug);
 
     logger.info(requestId, "vehicles.status.updated", {
       dealershipId: dealership.id,

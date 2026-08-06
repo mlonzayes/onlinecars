@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
+import { invalidateSaleCaches } from "@/lib/cache-tags";
 import { auth } from "@clerk/nextjs/server";
 import { getCurrentDealership } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -193,7 +194,8 @@ export const DELETE = withLogger<SaleParams>(async (_request, { requestId, param
     });
   });
 
-  revalidateTag("sales-stats");
+  // Borrar la venta libera el vehículo: también cambian sus stats.
+  await invalidateSaleCaches(dealership.slug);
 
   logger.info(requestId, "sales.delete.ok", {
     dealershipId: dealership.id,

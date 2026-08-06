@@ -26,7 +26,7 @@ import { prisma } from "@/lib/prisma";
 import { vehicleBulkSchema } from "@/lib/validators/vehicle-bulk";
 import { BLOCKING_SALE_STATUSES } from "@/lib/sale-guards";
 import { getPlanLimits } from "@/lib/plans";
-import { invalidateTenantHomeBundle } from "@/lib/tenant";
+import { invalidateVehicleCaches } from "@/lib/cache-tags";
 import { Prisma, type Dealership } from "@prisma/client";
 
 // Mapea constraints conocidas a labels legibles para el user. Cuando aparezca
@@ -154,7 +154,7 @@ async function handleBulkDelete(
         where: { id: { in: deletableIds }, dealershipId },
       });
       deleted = result.count;
-      await invalidateTenantHomeBundle(dealershipSlug);
+      await invalidateVehicleCaches(dealershipSlug);
     } catch (err) {
       // FK violation: hay otra tabla apuntando al vehículo sin Cascade/SetNull.
       // El sale-guard de arriba ya cubre las ventas activas, así que esto solo
@@ -204,7 +204,7 @@ async function handleBulkStatus(
     data: { status: newStatus },
   });
 
-  await invalidateTenantHomeBundle(dealershipSlug);
+  await invalidateVehicleCaches(dealershipSlug);
 
   logger.info(requestId, "vehicles.bulk.status.ok", {
     dealershipId,
@@ -229,7 +229,7 @@ async function handleBulkPublish(
       where: { id: { in: ownedIds }, dealershipId: dealership.id },
       data: { publishedAt: null },
     });
-    await invalidateTenantHomeBundle(dealership.slug);
+    await invalidateVehicleCaches(dealership.slug);
     logger.info(requestId, "vehicles.bulk.publish.ok", {
       dealershipId: dealership.id,
       count: result.count,
@@ -270,7 +270,7 @@ async function handleBulkPublish(
       data: { publishedAt: new Date() },
     });
     published = result.count;
-    await invalidateTenantHomeBundle(dealership.slug);
+    await invalidateVehicleCaches(dealership.slug);
   }
 
   logger.info(requestId, "vehicles.bulk.publish.ok", {
@@ -298,7 +298,7 @@ async function handleBulkFeatured(
     data: { featured: value },
   });
 
-  await invalidateTenantHomeBundle(dealershipSlug);
+  await invalidateVehicleCaches(dealershipSlug);
 
   logger.info(requestId, "vehicles.bulk.featured.ok", {
     dealershipId,

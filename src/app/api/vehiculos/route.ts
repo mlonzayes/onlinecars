@@ -6,7 +6,7 @@ import { vehicleCreateSchema } from "@/lib/validators/vehicle";
 import { NextResponse } from "next/server";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
-import { invalidateTenantHomeBundle } from "@/lib/tenant";
+import { invalidateVehicleCaches } from "@/lib/cache-tags";
 import { canSeeCosts, canEditCosts } from "@/lib/permissions";
 import { generateVehicleSlug } from "@/lib/utils/slug";
 
@@ -179,7 +179,7 @@ export const POST = withLogger(async (request, { requestId }) => {
     );
   }
 
-  await invalidateTenantHomeBundle(dealership.slug);
+  await invalidateVehicleCaches(dealership.slug);
 
   logger.info(requestId, "vehicles.create.ok", {
     dealershipId: dealership.id,

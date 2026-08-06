@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import {
   FUEL_TYPES,
   FUEL_TYPE_LABELS,
@@ -94,6 +95,7 @@ const vehicleFormSchema = z.object({
   ),
   condition: z.enum(VEHICLE_CONDITIONS),
   status: z.enum(VEHICLE_STATUSES),
+  unlimitedStock: z.boolean(),
   price: z.preprocess(
     (v) => (v === "" || v === null || v === undefined ? undefined : Number(v)),
     z.number({ message: "Precio requerido" }).positive("El precio debe ser mayor a 0")
@@ -146,6 +148,7 @@ function buildDefaults(vehicle?: SerializedVehicle): VehicleFormValues {
     year: vehicle?.year ?? (new Date().getFullYear() as VehicleFormValues["year"]),
     condition: (vehicle?.condition as VehicleFormValues["condition"]) ?? "used",
     status: (vehicle?.status as VehicleFormValues["status"]) ?? "available",
+    unlimitedStock: vehicle?.unlimitedStock ?? false,
     price: vehicle?.price ? Number(vehicle.price) : (undefined as unknown as VehicleFormValues["price"]),
     currency: (vehicle?.currency as VehicleFormValues["currency"]) ?? "ARS",
     costPrice: vehicle?.costPrice ? Number(vehicle.costPrice) : undefined,
@@ -271,6 +274,29 @@ function BasicInfoTab({ register, control, errors, disabled, onCatalogSelect }: 
           )}
         />
         <FieldError message={errorMessage(errors, "condition")} />
+      </div>
+      <div className="sm:col-span-8">
+        <Controller
+          control={control}
+          name="unlimitedStock"
+          render={({ field }) => (
+            <div className="flex items-center justify-between gap-3 rounded-lg border bg-muted/30 px-3 py-2.5">
+              <div>
+                <p className="text-sm font-medium">Stock ilimitado</p>
+                <p className="text-xs text-muted-foreground">
+                  Ideal para 0km: al vender, la publicación NO se bloquea ni se marca
+                  como vendida. La podés vender las veces que quieras.
+                </p>
+              </div>
+              <Switch
+                checked={field.value}
+                onCheckedChange={field.onChange}
+                disabled={disabled}
+                aria-label="Stock ilimitado"
+              />
+            </div>
+          )}
+        />
       </div>
       <div className="space-y-1.5 sm:col-span-4">
         <Label htmlFor="status">Estado</Label>
@@ -620,6 +646,7 @@ export function VehicleForm({
       year: data.year,
       condition: data.condition,
       status: data.status,
+      unlimitedStock: data.unlimitedStock,
       price: data.price,
       currency: data.currency,
       kilometers: data.kilometers,

@@ -15,6 +15,8 @@ interface TenantFooterProps {
   email: string | null;
   whatsapp: string | null;
   address: string | null;
+  // Si false, la dirección (calle) no se muestra — el dealer eligió ocultarla.
+  showAddress: boolean;
   city: string | null;
   province: string | null;
   socialLinks: SocialLinks | null;
@@ -32,6 +34,7 @@ export function TenantFooter({
   email,
   whatsapp,
   address,
+  showAddress,
   city,
   province,
   socialLinks,
@@ -40,7 +43,8 @@ export function TenantFooter({
 }: TenantFooterProps) {
   const year = new Date().getFullYear();
   const whatsappUrl = whatsapp ? `https://wa.me/${whatsapp.replace(/\D/g, "")}` : null;
-  const locationParts = [address, city, province].filter(Boolean);
+  // La calle solo si el dealer eligió mostrarla; ciudad/provincia siempre.
+  const locationParts = [showAddress ? address : null, city, province].filter(Boolean);
 
   return (
     <footer className="border-t border-[var(--tenant-border)] bg-[var(--tenant-surface-hover)]">

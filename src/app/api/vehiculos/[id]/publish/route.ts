@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
-import { invalidateTenantHomeBundle } from "@/lib/tenant";
+import { invalidateVehicleCaches } from "@/lib/cache-tags";
 import { canPublishMoreVehicles, getPlanLimits } from "@/lib/plans";
 
 type VehicleParams = { id: string };
@@ -77,7 +77,7 @@ export const PATCH = withLogger<VehicleParams>(async (_request, { requestId, par
       select: { id: true, publishedAt: true },
     });
 
-    await invalidateTenantHomeBundle(dealership.slug);
+    await invalidateVehicleCaches(dealership.slug);
 
     logger.info(requestId, "vehicles.publish.toggled", {
       dealershipId: dealership.id,

@@ -32,11 +32,11 @@ export const dealershipCreateSchema = z.object({
   phone: z.string().max(30).optional(),
   email: z.string().email().optional().or(z.literal("")),
   whatsapp: z.string().max(30).optional(),
-  // Dirección (calle) OPCIONAL: muchos concesionarios no permiten publicarla en
-  // la web. Si viene vacía, el display público (footer/mapa) la oculta solo.
-  // Ciudad y provincia SIGUEN requeridas: MercadoLibre pide ubicación a nivel
-  // ciudad para publicar vehículos.
-  address: z.string().max(300).optional(),
+  // Dirección requerida en el onboarding (ML pide ubicación a nivel ciudad
+  // para publicar vehículos). Su VISIBILIDAD en el sitio público la controla el
+  // toggle `showAddress` (abajo), no la carga: siempre se carga, el dealer elige
+  // si mostrarla o no.
+  address: z.string().min(3, "La dirección es requerida").max(300),
   city: z.string().min(2, "La ciudad es requerida").max(100),
   province: z.string().min(2, "La provincia es requerida").max(100),
   website: z
@@ -64,6 +64,8 @@ export const dealershipUpdateSchema = dealershipCreateSchema.partial().omit({ sl
   // Toggle del sitio público {slug}.motorflowapp.com. Default DB false — el
   // dealer lo activa cuando esté listo para lanzar.
   siteEnabled: z.boolean().optional(),
+  // Si false, la dirección no se muestra en el sitio público (el dealer elige).
+  showAddress: z.boolean().optional(),
   // Plantilla visual del sitio público. Valores válidos viven en
   // src/lib/tenant-templates.ts (TENANT_TEMPLATE_IDS). El runtime hace fallback
   // a "classic" si llega cualquier otro string — el validador acá es solo el

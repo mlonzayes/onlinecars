@@ -32,6 +32,9 @@ export async function findBlockingSale(
       vehicleId,
       dealershipId,
       status: { in: [...BLOCKING_SALE_STATUSES] },
+      // Las ventas de stock ilimitado (0km) NO bloquean la edición del vehículo:
+      // la publicación se sigue administrando aunque tenga ventas en curso.
+      unlimitedStock: false,
     },
     select: { id: true, status: true },
   });

@@ -1,93 +1,144 @@
 import { getCurrentDealership } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { unstable_cache } from "next/cache";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { VehicleTable } from "@/components/dashboard/vehicle-table";
+import { VehiclesTabs } from "@/components/dashboard/vehicles-tabs";
 import type { SerializedVehicleRow } from "@/components/dashboard/vehicle-table";
 import { TableSearch } from "@/components/dashboard/table-search";
 import { Pagination } from "@/components/dashboard/pagination";
 import { getPlanLimits } from "@/lib/plans";
 import { applySpread, getCurrentUsdRate } from "@/lib/exchange-rate";
 import { canSeeCosts } from "@/lib/permissions";
-import type { Prisma } from "@prisma/client";
+import { TableToolbar } from "@/components/dashboard/table-toolbar";
+import {
+  TableTransitionOverlay,
+  TableTransitionProvider,
+} from "@/components/dashboard/table-transition";
+import {
+  parsePage,
+  resolveFilter,
+  resolveSort,
+  toClientSortOptions,
+} from "@/lib/table/query-params";
+import {
+  buildVehicleWhere,
+  hasActiveVehicleFilters,
+  VEHICLE_CONDITION_FILTER,
+  VEHICLE_FILTERS,
+  VEHICLE_PUBLICATION_FILTER,
+  VEHICLE_SORT,
+  VEHICLE_STATUS_FILTER,
+} from "@/lib/table/vehicle-table-params";
 
 const PAGE_SIZE = 20;
 
-interface VehiculosPageProps {
-  searchParams: Promise<{ q?: string; page?: string }>;
-}
+/**
+ * Stats absolutos del concesionario (no dependen de filtros ni de la página).
+ *
+ * Se invalidan con `revalidateTag("vehicles-stats")` desde todo handler que
+ * mute vehículos — incluidos los de ventas, que sincronizan el status del
+ * vehículo al reservar o vender.
+ *
+ * Un `groupBy` resuelve total/reservados/vendidos en UNA query en vez de tres
+ * counts separados; publicados necesita la suya porque se deriva de `publishedAt`.
+ */
+const getCachedStats = unstable_cache(
+  async (dealershipId: string) => {
+    const [byStatus, totalPublished] = await Promise.all([
+      prisma.vehicle.groupBy({
+        by: ["status"],
+        where: { dealershipId },
+        _count: { _all: true },
+      }),
+      prisma.vehicle.count({ where: { dealershipId, publishedAt: { not: null } } }),
+    ]);
 
-function parsePage(raw: string | undefined): number {
-  if (!raw) return 1;
-  const n = parseInt(raw, 10);
-  return Number.isFinite(n) && n > 0 ? n : 1;
+    const countByStatus = new Map(byStatus.map((row) => [row.status, row._count._all]));
+    const totalAll = byStatus.reduce((acc, row) => acc + row._count._all, 0);
+
+    return {
+      totalAll,
+      totalPublished,
+      totalReserved: countByStatus.get("reserved") ?? 0,
+      totalSold: countByStatus.get("sold") ?? 0,
+    };
+  },
+  ["vehicles-stats"],
+  { tags: ["vehicles-stats"], revalidate: 3600 }
+);
+
+interface VehiculosPageProps {
+  searchParams: Promise<{
+    q?: string;
+    page?: string;
+    status?: string;
+    published?: string;
+    condition?: string;
+    sort?: string;
+  }>;
 }
 
 export default async function VehiculosPage({ searchParams }: VehiculosPageProps) {
   const dealership = await getCurrentDealership();
   if (!dealership) redirect("/onboarding");
 
-  const { q, page: pageParam } = await searchParams;
-  const search = q?.trim() ?? "";
-  const page = parsePage(pageParam);
+  const params = await searchParams;
+  const search = params.q?.trim() ?? "";
+  const page = parsePage(params.page);
   const skip = (page - 1) * PAGE_SIZE;
 
-  // Tokenizamos por espacios y exigimos AND de matches en algún campo de texto.
-  const tokens = search.split(/\s+/).filter(Boolean);
+  // Filtros y orden se resuelven contra sus definiciones: lo que venga en la
+  // URL fuera de la whitelist cae al default en vez de llegar a Prisma.
+  const status = resolveFilter(params.status, VEHICLE_STATUS_FILTER);
+  const published = resolveFilter(params.published, VEHICLE_PUBLICATION_FILTER);
+  const condition = resolveFilter(params.condition, VEHICLE_CONDITION_FILTER);
+  const sort = resolveSort(params.sort, VEHICLE_SORT);
 
-  const where: Prisma.VehicleWhereInput = {
+  const where = buildVehicleWhere({
     dealershipId: dealership.id,
-    ...(tokens.length > 0
-      ? {
-          AND: tokens.map((token) => ({
-            OR: [
-              { title: { contains: token, mode: "insensitive" as const } },
-              { brand: { contains: token, mode: "insensitive" as const } },
-              { model: { contains: token, mode: "insensitive" as const } },
-              { licensePlate: { contains: token, mode: "insensitive" as const } },
-              { vin: { contains: token, mode: "insensitive" as const } },
-            ],
-          })),
-        }
-      : {}),
-  };
+    search,
+    status,
+    published,
+    condition,
+  });
 
-  // Stats absolutos del dealership (independientes del search/page) en paralelo
-  // con la query paginada del listado.
-  const [total, vehicles, totalAll, totalPublished, totalReserved, totalSold, baseRate] =
-    await Promise.all([
-      prisma.vehicle.count({ where }),
-      prisma.vehicle.findMany({
-        where,
-        include: {
-          images: { where: { isPrimary: true }, take: 1 },
-          expenses: { select: { amount: true, currency: true } },
-        },
-        skip,
-        take: PAGE_SIZE,
-        orderBy: { createdAt: "desc" },
-      }),
-      prisma.vehicle.count({ where: { dealershipId: dealership.id } }),
-      prisma.vehicle.count({
-        where: { dealershipId: dealership.id, publishedAt: { not: null } },
-      }),
-      prisma.vehicle.count({
-        where: { dealershipId: dealership.id, status: "reserved" },
-      }),
-      prisma.vehicle.count({
-        where: { dealershipId: dealership.id, status: "sold" },
-      }),
-      getCurrentUsdRate(),
-    ]);
-
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const filtersActive = hasActiveVehicleFilters({ search, status, published, condition });
 
   // Costo y margen son datos sensibles: solo admins, o no-admins si el dealer lo
-  // habilitó. Si no puede ver costos, el costPrice NO viaja al cliente (ni en props).
+  // habilitó. Se resuelve ANTES de la query para no traer los gastos cuando no
+  // se van a poder mostrar — antes se pedían siempre y se descartaban después.
   const canViewCosts = canSeeCosts(dealership.currentUser, dealership);
+
+  // Sin filtros ni búsqueda, el total de la paginación es exactamente el
+  // `totalAll` que ya viene cacheado: nos ahorramos un COUNT(*). Con filtros
+  // activos el resultado depende de ellos y no se puede cachear, así que sí
+  // corremos el count.
+  const [stats, vehicles, filteredCount, baseRate] = await Promise.all([
+    getCachedStats(dealership.id),
+    prisma.vehicle.findMany({
+      where,
+      include: {
+        images: { where: { isPrimary: true }, take: 1 },
+        expenses: canViewCosts ? { select: { amount: true, currency: true } } : false,
+      },
+      skip,
+      take: PAGE_SIZE,
+      // Ya validado contra la whitelist de VEHICLE_SORT.
+      orderBy: sort.orderBy,
+    }),
+    filtersActive ? prisma.vehicle.count({ where }) : Promise.resolve(0),
+    getCurrentUsdRate(),
+  ]);
+
+  const { totalAll, totalPublished, totalReserved, totalSold } = stats;
+  const total = filtersActive ? filteredCount : totalAll;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
   // Cotización efectiva del dealer (oficial + spread) para convertir costos en USD.
   const usdRate = baseRate ? applySpread(baseRate, dealership.usdSpread).effective : null;
 
@@ -97,10 +148,11 @@ export default async function VehiculosPage({ searchParams }: VehiculosPageProps
     price: v.price.toString(),
     costPrice: canViewCosts && v.costPrice ? v.costPrice.toString() : null,
     costCurrency: canViewCosts ? v.costCurrency : null,
-    // Gastos solo si puede ver costos (no se filtran al client si no).
-    expenses: canViewCosts
-      ? v.expenses.map((e) => ({ amount: Number(e.amount), currency: e.currency }))
-      : [],
+    // Si no puede ver costos, los gastos ni se pidieron a la DB.
+    expenses: (v.expenses ?? []).map((e) => ({
+      amount: Number(e.amount),
+      currency: e.currency,
+    })),
     createdAt: v.createdAt.toISOString(),
     updatedAt: v.updatedAt.toISOString(),
     publishedAt: v.publishedAt?.toISOString() ?? null,
@@ -139,37 +191,61 @@ export default async function VehiculosPage({ searchParams }: VehiculosPageProps
         ))}
       </div>
 
-      <TableSearch
-        placeholder="Buscar por título, marca, modelo, patente o VIN..."
-        ariaLabel="Buscar vehículos"
-      />
+      {/* El listado va como children del componente de solapas: se renderiza en
+          el servidor y las solapas solo deciden cuál se muestra. */}
+      <VehiclesTabs dealershipCurrency={dealership.currency}>
+        {/* El provider comparte la transición entre la barra (que navega) y la
+            tabla (que muestra el loader mientras llega el nuevo resultado). */}
+        <TableTransitionProvider>
+          <TableToolbar
+            filters={VEHICLE_FILTERS}
+            values={{
+              [VEHICLE_STATUS_FILTER.param]: status,
+              [VEHICLE_PUBLICATION_FILTER.param]: published,
+              [VEHICLE_CONDITION_FILTER.param]: condition,
+            }}
+            sort={{
+              param: VEHICLE_SORT.param,
+              options: toClientSortOptions(VEHICLE_SORT),
+              value: sort.value,
+            }}
+          >
+            <TableSearch
+              placeholder="Buscar por título, marca, modelo, patente o VIN..."
+              ariaLabel="Buscar vehículos"
+            />
+          </TableToolbar>
 
-      {serialized.length === 0 && search ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
-          <p className="font-medium text-muted-foreground">
-            Sin resultados para &ldquo;{search}&rdquo;
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Probá con otra marca, modelo o patente.
-          </p>
-        </div>
-      ) : (
-        <VehicleTable
-          vehicles={serialized}
-          limits={getPlanLimits(dealership)}
-          usdRate={usdRate}
-          canViewCosts={canViewCosts}
-        />
-      )}
+          <TableTransitionOverlay>
+            {serialized.length === 0 && filtersActive ? (
+              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
+                <p className="font-medium text-muted-foreground">
+                  {search ? <>Sin resultados para &ldquo;{search}&rdquo;</> : "Sin resultados"}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Probá cambiando los filtros o limpiándolos para ver todo el stock.
+                </p>
+              </div>
+            ) : (
+              <VehicleTable
+                vehicles={serialized}
+                limits={getPlanLimits(dealership)}
+                usdRate={usdRate}
+                canViewCosts={canViewCosts}
+              />
+            )}
 
-      {total > 0 && (
-        <Pagination
-          currentPage={page}
-          totalPages={totalPages}
-          totalItems={total}
-          pageSize={PAGE_SIZE}
-        />
-      )}
+            {total > 0 && (
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                totalItems={total}
+                pageSize={PAGE_SIZE}
+              />
+            )}
+          </TableTransitionOverlay>
+        </TableTransitionProvider>
+      </VehiclesTabs>
     </div>
   );
 }

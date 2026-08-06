@@ -136,7 +136,7 @@ export function OnboardingForm() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="address">Dirección</Label>
+            <Label htmlFor="address">Dirección *</Label>
             <Input
               id="address"
               placeholder="Ej: Av. Perón 1234"

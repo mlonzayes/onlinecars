@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
+import { CACHE_TAGS } from "@/lib/cache-tags";
 import { auth } from "@clerk/nextjs/server";
 import { getCurrentDealership } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -63,7 +64,7 @@ export const PATCH = withLogger<SaleParams>(async (request, { requestId, params 
 
   const sale = await prisma.sale.findFirst({
     where: { id, dealershipId: dealership.id },
-    select: { id: true, status: true, vehicleId: true },
+    select: { id: true, status: true, vehicleId: true, unlimitedStock: true },
   });
 
   if (!sale) {
@@ -117,7 +118,9 @@ export const PATCH = withLogger<SaleParams>(async (request, { requestId, params 
       },
     });
 
-    if (vehicleStatus !== null) {
+    // Los ilimitados (0km) NUNCA sincronizan el status del vehículo: la
+    // publicación queda disponible/publicada aunque la venta se complete.
+    if (vehicleStatus !== null && !sale.unlimitedStock) {
       // Al completar la venta, además de marcar el vehículo como "sold",
       // lo despublicamos automáticamente. Razones:
       //  1) Los vendidos no deberían aparecer en el catálogo público
@@ -138,14 +141,19 @@ export const PATCH = withLogger<SaleParams>(async (request, { requestId, params 
   });
 
   // Invalidar el cache del tenant si el vehículo cambió de visibilidad pública.
-  if (nextStatus === "completed") {
+  // Los ilimitados no cambian de status/publicación, así que no hace falta.
+  if (nextStatus === "completed" && !sale.unlimitedStock) {
     const { invalidateTenantHomeBundle } = await import("@/lib/tenant");
     await invalidateTenantHomeBundle(dealership.slug);
   }
 
   // Una transición de status cambia los counters de los stats (un draft pasa
-  // a reserved → baja "draft" sube "reserved", etc). Invalidamos el cache.
-  revalidateTag("sales-stats");
+  // a reserved → baja "draft" sube "reserved", etc). Y como la transición
+  // sincroniza el status del VEHÍCULO, también quedan viejos los stats del
+  // listado de stock. El bundle del tenant, en cambio, solo se invalida arriba
+  // cuando cambia la visibilidad pública — por eso no se agrupan.
+  revalidateTag(CACHE_TAGS.salesStats);
+  revalidateTag(CACHE_TAGS.vehiclesStats);
 
   logger.info(requestId, "sales.status.ok", {
     dealershipId: dealership.id,

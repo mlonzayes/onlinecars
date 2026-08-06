@@ -32,6 +32,10 @@ model Dealership {
   // que el plan habilite allowWhatsappFab — defense in depth.
   whatsappFabEnabled   Boolean  @default(false)
   address     String?
+  // Si false, la dirección (calle) NO se muestra en el sitio público — el dealer
+  // igual la carga (ML necesita ubicación), pero elige no publicarla. Ciudad y
+  // provincia se siguen mostrando. Default true = comportamiento histórico.
+  showAddress Boolean  @default(true)
   city        String?
   province    String?
   // Ubicación geo del concesionario para el mapa del sitio público. Las coords
@@ -288,6 +292,10 @@ model Vehicle {
   condition    String    @default("used") // new | used
   status       String    @default("available") // available | reserved | sold
   featured     Boolean   @default(false)
+  // Stock ilimitado (típico de 0km): al vender NO se bloquea ni cambia de status
+  // — la publicación queda siempre disponible y se puede vender N veces. Ver la
+  // lógica en /api/ventas y el índice único parcial de Sale.
+  unlimitedStock Boolean @default(false)
   publishedAt  DateTime?
   publicSlug   String
   createdAt    DateTime  @default(now())
@@ -307,6 +315,13 @@ model Vehicle {
   @@unique([dealershipId, publicSlug])
   @@index([dealershipId, status])
   @@index([brand, model, year])
+  // Orden por defecto del listado del panel (createdAt desc). Sin este índice,
+  // Postgres escanea todos los vehículos del dealer y los ordena en memoria en
+  // CADA carga de la pantalla y de cada página.
+  @@index([dealershipId, createdAt])
+  // Filtro "Solo publicados / Solo borradores" del listado, y las queries del
+  // sitio público, que siempre acotan por publishedAt.
+  @@index([dealershipId, publishedAt])
   @@map("vehicles")
 }
 
@@ -469,6 +484,11 @@ model Sale {
   deliveryDate  DateTime?
   cancelReason  String?
   notes         String?
+  // Denormalizado desde Vehicle.unlimitedStock al crear la venta. Necesario para:
+  // 1) el índice único parcial (excluye ventas de stock ilimitado — permite varias
+  //    activas por vehículo), 2) findBlockingSale (no bloquean edición), 3) el sync
+  //    de status del vehículo (las ilimitadas no lo tocan).
+  unlimitedStock Boolean  @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

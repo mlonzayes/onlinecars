@@ -17,11 +17,14 @@ interface ContactSectionProps {
 // Las redes sociales NO van acá — viven en el footer para no duplicarlas.
 export function ContactSection({ section, dealership }: ContactSectionProps) {
   const config = section.config as ContactConfig;
-  // El mapa se muestra si el dealer lo activó en la sección Y cargó su dirección.
+  // El mapa se muestra si: el dealer lo activó, tiene coords, Y eligió mostrar la
+  // dirección. Si ocultó la dirección, ocultamos también el mapa (un pin revela
+  // la ubicación igual que el texto — sería contradictorio mostrarlo).
   const showMap =
     config.showMap &&
     dealership.latitude !== null &&
-    dealership.longitude !== null;
+    dealership.longitude !== null &&
+    (dealership.showAddress ?? true);
 
   return (
     <Section

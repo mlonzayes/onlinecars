@@ -61,6 +61,7 @@ export function TenantChrome({ dealership, basePath, children }: TenantChromePro
         email={dealership.email}
         whatsapp={dealership.whatsapp}
         address={dealership.address}
+        showAddress={dealership.showAddress ?? true}
         city={dealership.city}
         province={dealership.province}
         socialLinks={(dealership.socialLinks as SocialLinks | null) ?? null}

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { revalidateTag } from "next/cache";
+import { invalidateSaleCaches } from "@/lib/cache-tags";
 import { auth } from "@clerk/nextjs/server";
 import { getCurrentDealership } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -117,7 +117,7 @@ export const POST = withLogger(async (request, { requestId }) => {
   // Verificar que el vehículo existe, pertenece al concesionario y está disponible.
   const vehicle = await prisma.vehicle.findFirst({
     where: { id: vehicleId, dealershipId: dealership.id },
-    select: { id: true, status: true },
+    select: { id: true, status: true, unlimitedStock: true },
   });
 
   if (!vehicle) {
@@ -128,7 +128,9 @@ export const POST = withLogger(async (request, { requestId }) => {
     return NextResponse.json({ error: "Vehículo no encontrado" }, { status: 404 });
   }
 
-  if (vehicle.status !== "available") {
+  // Stock ilimitado (0km): siempre disponible, se puede vender N veces. Solo
+  // exigimos "available" para los vehículos normales (unidad única).
+  if (!vehicle.unlimitedStock && vehicle.status !== "available") {
     logger.warn(requestId, "sales.create.vehicle_not_available", {
       dealershipId: dealership.id,
       vehicleId,
@@ -167,6 +169,8 @@ export const POST = withLogger(async (request, { requestId }) => {
         ...(depositDate ? { depositDate: new Date(depositDate) } : {}),
         notes,
         status: "draft",
+        // Denormalizamos el flag: define si esta venta bloquea/consume el vehículo.
+        unlimitedStock: vehicle.unlimitedStock,
       },
       include: {
         customer: { select: { id: true, firstName: true, lastName: true, businessName: true } },
@@ -174,16 +178,21 @@ export const POST = withLogger(async (request, { requestId }) => {
       },
     });
 
-    await tx.vehicle.update({
-      where: { id: vehicleId },
-      data: { status: "reserved" },
-    });
+    // Los ilimitados (0km) NO cambian de status: la publicación queda disponible
+    // para seguir vendiéndose. Solo los vehículos normales pasan a "reserved".
+    if (!vehicle.unlimitedStock) {
+      await tx.vehicle.update({
+        where: { id: vehicleId },
+        data: { status: "reserved" },
+      });
+    }
 
     return created;
   });
 
-  // Invalidamos el cache de stats — el dashboard de ventas lo consume.
-  revalidateTag("sales-stats");
+  // Crear la venta sincroniza el status del vehículo (pasa a reservado), así que
+  // se mueven los stats de ventas Y los de vehículos.
+  await invalidateSaleCaches(dealership.slug);
 
   logger.info(requestId, "sales.create.ok", {
     dealershipId: dealership.id,

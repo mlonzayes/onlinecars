@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -27,6 +28,7 @@ interface FormState {
   email: string;
   whatsapp: string;
   address: string;
+  showAddress: boolean;
   city: string;
   province: string;
   description: string;
@@ -39,6 +41,7 @@ function buildInitialState(dealership: Dealership): FormState {
     email: dealership.email ?? "",
     whatsapp: dealership.whatsapp ?? "",
     address: dealership.address ?? "",
+    showAddress: dealership.showAddress ?? true,
     city: dealership.city ?? "",
     province: dealership.province ?? "",
     description: dealership.description ?? "",
@@ -143,6 +146,19 @@ export function ContactForm({ dealership }: ContactFormProps) {
               onChange={(e) => handleChange("address", e.target.value)}
               placeholder="Av. Corrientes 1234"
             />
+            <div className="flex items-center justify-between gap-3 rounded-lg border bg-muted/30 px-3 py-2.5">
+              <div>
+                <p className="text-sm font-medium">Mostrar en el sitio público</p>
+                <p className="text-xs text-muted-foreground">
+                  Si lo desactivás, la dirección y el mapa no aparecen en tu web (igual queda guardada).
+                </p>
+              </div>
+              <Switch
+                checked={form.showAddress}
+                onCheckedChange={(v) => setForm((prev) => ({ ...prev, showAddress: v }))}
+                aria-label="Mostrar la dirección en el sitio público"
+              />
+            </div>
           </div>
 
           {/* Ciudad y Provincia */}

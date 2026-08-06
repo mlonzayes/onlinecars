@@ -388,17 +388,22 @@ Los filtros y la búsqueda viven en la URL para que sean bookmarkables, soporten
 - **Client component**: filtros y search **modifican la URL** (`router.push` o `<Link>`), no estado local.
 - **Reset de `page`**: al cambiar un filtro, siempre borrá `?page` (volver a página 1).
 
-Ej de un Select de URL — ver [src/components/dashboard/sales-status-select.tsx](src/components/dashboard/sales-status-select.tsx):
+**Hay un patrón compartido para esto — NO escribir selects de filtro a mano.** Guía completa
+en [.claude/rules/table-filters.md](.claude/rules/table-filters.md); implementación de
+referencia en [src/app/dashboard/vehiculos/page.tsx](src/app/dashboard/vehiculos/page.tsx).
 
-```ts
-function handleChange(next: string | null) {
-  const params = new URLSearchParams(searchParams?.toString());
-  if (next === "all") params.delete("status");
-  else params.set("status", next);
-  params.delete("page");
-  router.push(qs ? `/dashboard/x?${qs}` : "/dashboard/x");
-}
-```
+Resumen: cada módulo DECLARA sus filtros y órdenes en `src/lib/table/<modulo>-table-params.ts`
+(`FilterDefinition[]` + `SortDefinition`), la page los resuelve con `resolveFilter()` /
+`resolveSort()`, y la UI sale de `<TableToolbar>`. El hook `useUrlFilters` escribe la URL,
+borra el param cuando el valor es `"all"` y resetea `?page`.
+
+**Crítico**: el `orderBy` de Prisma NUNCA se construye con el query string. `resolveSort()`
+busca el value en una whitelist y cae al default si no matchea. Nada de
+`orderBy: { [params.sort]: params.dir }`.
+
+`sales-status-select.tsx` y `quotations-filters.tsx` son **legacy** (la misma lógica copiada,
+con la ruta hardcodeada adentro). No usarlos como modelo; migrarlos cuando se toquen esos
+módulos.
 
 ### 3. Search con tokens + AND/OR
 

@@ -151,6 +151,17 @@ export type TenantTemplateId = keyof typeof TENANT_TEMPLATES;
 export const TENANT_TEMPLATE_IDS = Object.keys(TENANT_TEMPLATES) as TenantTemplateId[];
 
 /**
+ * Misma lista que TENANT_TEMPLATE_IDS pero tipada como tupla no vacía, que es lo
+ * que pide `z.enum(...)`. Existe para que los validators NO repitan los ids a
+ * mano: antes `dealershipUpdateSchema` tenía `["classic","dark","impacto"]`
+ * hardcodeado y sumar una plantilla acá dejaba el validator desincronizado.
+ */
+export const TENANT_TEMPLATE_ID_TUPLE = TENANT_TEMPLATE_IDS as [
+  TenantTemplateId,
+  ...TenantTemplateId[],
+];
+
+/**
  * Resuelve un templateId a su definición. Si el id no es válido (corrupción,
  * id viejo de una plantilla discontinuada), cae a "classic".
  */

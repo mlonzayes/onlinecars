@@ -34,14 +34,7 @@ export default async function AdminPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 p-6">
-      <div>
-        <h1 className="text-2xl font-bold">Panel de plataforma</h1>
-        <p className="text-sm text-muted-foreground">
-          Todas las cuentas de motorflow.
-        </p>
-      </div>
-
+    <div className="space-y-8">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {summaryCards.map((s) => (
           <Card key={s.label}>

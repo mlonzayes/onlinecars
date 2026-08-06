@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { normalizeSocialLinks } from "@/lib/social";
 import { COUNTRIES, CURRENCIES, LOCALES } from "@/lib/constants";
+import { TENANT_TEMPLATE_ID_TUPLE } from "@/lib/tenant-templates";
 
 // Formato IANA básico (Region/City). No validamos contra la lista completa de
 // timezones — alcanza con el shape; el set válido se ofrece desde la UI.
@@ -66,11 +67,11 @@ export const dealershipUpdateSchema = dealershipCreateSchema.partial().omit({ sl
   siteEnabled: z.boolean().optional(),
   // Si false, la dirección no se muestra en el sitio público (el dealer elige).
   showAddress: z.boolean().optional(),
-  // Plantilla visual del sitio público. Valores válidos viven en
-  // src/lib/tenant-templates.ts (TENANT_TEMPLATE_IDS). El runtime hace fallback
-  // a "classic" si llega cualquier otro string — el validador acá es solo el
+  // Plantilla visual del sitio público. La lista sale de TENANT_TEMPLATES
+  // (src/lib/tenant-templates.ts) — no repetir los ids acá. El runtime hace
+  // fallback a "classic" si llega cualquier otro string; el validador es el
   // primer filtro.
-  templateId: z.enum(["classic", "dark", "impacto"]).optional(),
+  templateId: z.enum(TENANT_TEMPLATE_ID_TUPLE).optional(),
   // Mensaje del cartel superior (announcement bar) del template "impacto".
   // Vacío → null (oculta la barra). Cap corto: es un cartel de una línea.
   announcement: z

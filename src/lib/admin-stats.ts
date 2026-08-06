@@ -14,6 +14,18 @@ export interface PlatformAccount {
   whatsapp: string | null;
   plan: string;
   subscriptionStatus: string;
+  // --- Sitio público ---
+  // Si false, {slug}.motorflowapp.com responde 404. Es el toggle que maneja el
+  // dealer desde su panel y el super-admin desde /admin/sitios.
+  siteEnabled: boolean;
+  // Plantilla visual activa (ver TENANT_TEMPLATES).
+  templateId: string;
+  // Dominio propio del dealer (Fase 2). Si está cargado, el sitio se sirve
+  // desde ahí y no desde el subdominio.
+  website: string | null;
+  // `active` = cuenta vigente. Es un gate distinto de siteEnabled y también
+  // apaga el sitio público — lo mostramos para no diagnosticar mal un 404.
+  active: boolean;
   trialEndsAt: string | null;
   // Días que faltan para que venza el trial. null si no está en trial / sin fecha.
   // Puede ser negativo si ya venció pero el cron todavía no lo marcó.
@@ -32,6 +44,11 @@ export interface PlatformSummary {
   active: number;
   expired: number;
   suspended: number;
+  // Sitios efectivamente online. Requiere las DOS condiciones que chequea
+  // getDealershipBySlug: cuenta activa Y sitio habilitado. Contar solo
+  // siteEnabled mentiría sobre una cuenta dada de baja.
+  sitesLive: number;
+  sitesPaused: number;
 }
 
 export interface PlatformData {
@@ -50,6 +67,10 @@ export async function getPlatformData(): Promise<PlatformData> {
       whatsapp: true,
       plan: true,
       subscriptionStatus: true,
+      siteEnabled: true,
+      templateId: true,
+      website: true,
+      active: true,
       trialEndsAt: true,
       paidUntil: true,
       createdAt: true,
@@ -68,6 +89,10 @@ export async function getPlatformData(): Promise<PlatformData> {
     whatsapp: d.whatsapp,
     plan: d.plan,
     subscriptionStatus: d.subscriptionStatus,
+    siteEnabled: d.siteEnabled,
+    templateId: d.templateId,
+    website: d.website,
+    active: d.active,
     trialEndsAt: d.trialEndsAt?.toISOString() ?? null,
     trialDaysLeft: d.trialEndsAt
       ? Math.ceil((d.trialEndsAt.getTime() - now) / 86_400_000)
@@ -92,6 +117,8 @@ export async function getPlatformData(): Promise<PlatformData> {
     active: accounts.filter((a) => a.subscriptionStatus === "active").length,
     expired: accounts.filter((a) => a.subscriptionStatus === "expired").length,
     suspended: accounts.filter((a) => a.subscriptionStatus === "suspended").length,
+    sitesLive: accounts.filter((a) => a.siteEnabled && a.active).length,
+    sitesPaused: accounts.filter((a) => !a.siteEnabled || !a.active).length,
   };
 
   return { accounts, summary };

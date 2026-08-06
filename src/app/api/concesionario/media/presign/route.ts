@@ -113,7 +113,25 @@ export const POST = withLogger(async (request, { requestId }) => {
   const filename = `${globalThis.crypto.randomUUID()}.${extension}`;
   const keyPrefix = `tenant/${dealership.id}/${purpose}`;
 
-  const signed = await storage.createUploadUrl({ keyPrefix, filename, mimeType });
+  // La firma se hace local (no pega a la red), pero puede tirar por env vars
+  // faltantes o por incompatibilidades del SDK con el provider. Sin este catch
+  // sale un 500 genérico y hay que ir a buscar el stack a los logs de Vercel.
+  let signed;
+  try {
+    signed = await storage.createUploadUrl({ keyPrefix, filename, mimeType });
+  } catch (error) {
+    logger.error(requestId, "media.presign.sign_failed", {
+      dealershipId: dealership.id,
+      purpose,
+      driver: process.env.STORAGE_DRIVER ?? "local",
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    return NextResponse.json(
+      { error: "No se pudo preparar la subida (storage)", requestId },
+      { status: 500 }
+    );
+  }
 
   // Driver local (dev): no firma nada. El cliente cae al POST tradicional, que
   // en local anda perfecto porque el límite de 4.5MB es de Vercel, no de Next.

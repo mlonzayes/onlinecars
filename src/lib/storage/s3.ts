@@ -68,9 +68,14 @@ function readEnv(): S3Env {
   // facturas) terminarían en un bucket público. Fallar acá es preferible a filtrar
   // datos personales en silencio.
   if (publicBucket === privateBucket) {
+    // Incluimos el nombre del bucket: no es un secreto (no da acceso a nada sin
+    // credenciales) y sin él el error te dice QUÉ pasa pero no CUÁL es el valor
+    // repetido — que es justo lo que necesitás para arreglarlo.
     throw new Error(
-      "S3_PUBLIC_BUCKET y S3_PRIVATE_BUCKET no pueden ser el mismo bucket: " +
-        "los documentos del legajo quedarían en el bucket público."
+      `S3_PUBLIC_BUCKET y S3_PRIVATE_BUCKET apuntan al mismo bucket ("${publicBucket}"): ` +
+        "los documentos del legajo (DNI, facturas) quedarían en un bucket con lectura pública. " +
+        "Creá un segundo bucket privado en el provider y apuntá S3_PRIVATE_BUCKET ahí. " +
+        "Recordá redeployar: las env vars se toman en el deploy, no en caliente."
     );
   }
 

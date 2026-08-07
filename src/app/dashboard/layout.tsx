@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getCurrentDealership } from "@/lib/auth";
+import { getPlatformEditTargetId } from "@/lib/admin-context";
 import { hasAcceptedCurrentTerms } from "@/lib/legal";
 import { applySpread, getCurrentUsdRate } from "@/lib/exchange-rate";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -21,6 +22,22 @@ export default async function DashboardLayout({
 
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
+
+  // GUARD DEL MODO PLATAFORMA — no se puede estar en dos lugares a la vez.
+  //
+  // Con el modo activo, los handlers de /api/concesionario/* resuelven al tenant
+  // IMPERSONADO. Pero las pages del dashboard leen con getCurrentDealership() —
+  // la cuenta PROPIA. O sea que /dashboard/configuracion te muestra tus datos y
+  // guarda en los del cliente. Verías una cosa y escribirías otra.
+  //
+  // Va en el layout y no página por página: así lo cubre TODO el dashboard,
+  // incluido lo que se sume mañana. Antes estaba solo en /dashboard/sitio-web y
+  // /dashboard/configuracion se coló — un guard que hay que acordarse de repetir
+  // en cada page nueva no es un guard, es una promesa.
+  //
+  // Para volver a tu panel: "Salir del modo" en el banner del editor.
+  const platformTargetId = await getPlatformEditTargetId();
+  if (platformTargetId) redirect(`/admin/sitios/${platformTargetId}/editar`);
 
   const dealership = await getCurrentDealership();
   if (!dealership) redirect("/onboarding");

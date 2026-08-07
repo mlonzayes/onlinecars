@@ -90,7 +90,8 @@ legajos (que tienen DNI y facturas de terceros).
 |---|---|
 | [lib/admin-context.ts](../src/lib/admin-context.ts) | `resolveSiteBuilderContext()`, `getPlatformEditTargetId()`, `auditFields()` |
 | [api/admin/impersonation](../src/app/api/admin/impersonation/route.ts) | POST entrar / DELETE salir |
-| [admin/sitios/[id]/editar](../src/app/admin/sitios/[id]/editar/page.tsx) | El editor, componiendo el builder existente |
+| [admin/sitios/[id]/editar](../src/app/admin/sitios/[id]/editar/page.tsx) | Guard + carga de datos del editor |
+| [site-editor.tsx](../src/components/admin/site-editor.tsx) | La composición en pestañas (Contenido · Apariencia · Datos) |
 | [platform-edit-banner.tsx](../src/components/admin/platform-edit-banner.tsx) | Banner sticky + salir |
 | [platform-edit-activate.tsx](../src/components/admin/platform-edit-activate.tsx) | Pantalla de activación (entrada directa por URL) |
 
@@ -138,6 +139,28 @@ legajos (que tienen DNI y facturas de terceros).
 
 8. **Auditoría:** toda mutación del builder loggea `actingSuperAdmin` vía
    `auditFields(ctx)`. En modo normal devuelve `{}` y no ensucia los logs.
+
+9. **El editor cubre TODO lo que el dealer puede editar de su sitio.** No alcanza
+   con el site-builder: cuatro paneles que viven en la pestaña General de
+   `/dashboard/configuracion` son puro sitio público (el propio `ContactForm`
+   dice "Estos datos aparecen en tu sitio público"). Se suman tal cual —
+   `ContactForm`, `WhatsappFabCard`, `LocationPicker`, `SocialLinksForm` — sin
+   tocarles una línea, porque los cuatro postean a `/api/concesionario`, que ya
+   resuelve el tenant por contexto.
+
+   Cobertura actual: secciones (orden, activación, copy, config, marcas,
+   opiniones, galería), logo, favicon, color de marca, plantilla, cartel de
+   anuncio, toggle del sitio, contacto, descripción, ubicación/mapa, FAB de
+   WhatsApp y redes. Lo único del sitio sin UI en ningún panel son los
+   `FinancingPlan` — el modelo existe y el tenant los renderiza, pero no hay
+   editor ni en el dashboard del dealer.
+
+10. **La whitelist creció con el editor, y tiene un límite explícito.**
+    `PLATFORM_EDITABLE_FIELDS` suma los campos de contacto, ubicación y WhatsApp.
+    Siguen AFUERA a propósito: `usdSpread`, `currency`, `locale`, `siteLocale`,
+    `timezone`, `country`, `showCostsToNonAdmins` y `website`. Son operatoria y
+    config comercial del cliente, no diseño de su web. Si alguna vez hace falta
+    mover uno, que sea una decisión de producto y no un ajuste silencioso.
 
 ---
 

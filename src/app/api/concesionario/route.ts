@@ -28,13 +28,39 @@ const CUSTOM_DOMAINS_ENABLED = false;
 // schema. Rechazamos con 403 en vez de strippear en silencio — si el editor
 // algún día manda un campo nuevo, queremos enterarnos, no que falle mudo.
 const PLATFORM_EDITABLE_FIELDS = new Set([
+  // Publicación y apariencia
   "siteEnabled",
   "templateId",
   "announcement",
   "logo",
-  "socialLinks",
+  // Identidad y textos que salen en el sitio (header, footer, SEO, sección
+  // "nosotros"). El ContactForm dice literal "Estos datos aparecen en tu sitio
+  // público" — son contenido, no configuración comercial.
+  "name",
+  "description",
+  // Contacto: se renderiza en la sección Contacto, el footer y el FAB
+  "phone",
+  "email",
+  "whatsapp",
+  "whatsappFabEnabled",
+  "whatsappMessage",
+  // Ubicación y mapa del sitio
+  "address",
   "showAddress",
+  "city",
+  "province",
+  "latitude",
+  "longitude",
+  "mapLabel",
+  // Redes del footer
+  "socialLinks",
 ]);
+
+// Deliberadamente AFUERA (y que siga así): usdSpread, currency, locale,
+// siteLocale, timezone, country, showCostsToNonAdmins y website. Son la
+// operatoria y la configuración comercial del cliente, no el diseño de su web.
+// El alcance del modo plataforma es el sitio; si mañana hace falta tocar algo
+// de esta lista, es una decisión de producto, no un ajuste de whitelist.
 
 // GET /api/concesionario
 // Retorna los datos del concesionario del usuario autenticado.

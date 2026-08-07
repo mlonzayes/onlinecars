@@ -1,28 +1,26 @@
 import Link from "next/link";
 import { Eye } from "lucide-react";
 import { getCurrentDealership } from "@/lib/auth";
-import { getPlatformEditTargetId } from "@/lib/admin-context";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { WebsiteSettings } from "@/components/dashboard/settings/website-settings";
 import { TemplateSelector } from "@/components/dashboard/settings/template-selector";
+import { WhatsappFabCard } from "@/components/dashboard/settings/whatsapp-fab-card";
+import { SocialLinksForm } from "@/components/dashboard/settings/social-links-form";
 import { SectionsBuilderClient } from "@/components/dashboard/sections-builder/sections-builder-client";
+import { getPlanLimits } from "@/lib/plans";
 import { getSectionsPageData } from "./sections-page-data";
-import type { DealershipTheme } from "@/types";
+import type { DealershipTheme, SocialLinks } from "@/types";
 
 export default async function SitioWebPage() {
-  // Guard anti-footgun: con el modo plataforma activo esta página leería el
-  // sitio PROPIO (getCurrentDealership) mientras los componentes del builder
-  // guardan en el del cliente (que resuelven por cookie). Verías tus secciones
-  // y escribirías las de otro. Mandamos al editor correcto.
-  const platformTargetId = await getPlatformEditTargetId();
-  if (platformTargetId) redirect(`/admin/sitios/${platformTargetId}/editar`);
-
+  // El guard del modo plataforma vive en el layout del dashboard — cubre esta
+  // página y todas las demás. No repetirlo acá.
   const dealership = await getCurrentDealership();
   if (!dealership) redirect("/onboarding");
 
   const theme = dealership.theme as DealershipTheme | null;
+  const limits = getPlanLimits(dealership);
 
   const [reviews, sectionsData] = await Promise.all([
     prisma.review.findMany({
@@ -91,6 +89,18 @@ export default async function SitioWebPage() {
         }}
         theme={theme}
       />
+
+      {/* Canales de contacto que se muestran en el sitio público. Viven acá y no
+          en Configuración porque el dealer los edita mirando cómo queda la web. */}
+      <WhatsappFabCard
+        enabled={dealership.whatsappFabEnabled}
+        message={dealership.whatsappMessage}
+        hasWhatsappNumber={Boolean(dealership.whatsapp)}
+        allowWhatsappFab={limits.allowWhatsappFab}
+        currentPlan={dealership.plan}
+      />
+
+      <SocialLinksForm socialLinks={(dealership.socialLinks as SocialLinks | null) ?? null} />
 
       <TemplateSelector currentTemplateId={dealership.templateId} />
     </div>

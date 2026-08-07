@@ -6,28 +6,21 @@ import { prisma } from "@/lib/prisma";
 import { isSuperAdmin } from "@/lib/super-admin";
 import { getPlatformEditTargetId } from "@/lib/admin-context";
 import { getSectionsPageData } from "@/app/dashboard/sitio-web/sections-page-data";
-import { WebsiteSettings } from "@/components/dashboard/settings/website-settings";
-import { TemplateSelector } from "@/components/dashboard/settings/template-selector";
-import { SectionsBuilderClient } from "@/components/dashboard/sections-builder/sections-builder-client";
+import { SiteEditor } from "@/components/admin/site-editor";
 import { PlatformEditBanner } from "@/components/admin/platform-edit-banner";
 import { PlatformEditActivate } from "@/components/admin/platform-edit-activate";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { DealershipTheme } from "@/types";
 
 /**
  * Editor del sitio de un cliente (modo plataforma).
  *
- * Compone LOS MISMOS componentes que /dashboard/sitio-web. No hay lógica de
- * builder duplicada: los componentes son client-side y postean a
- * /api/concesionario/*, que resuelve el tenant destino vía la cookie del modo
- * plataforma (ver src/lib/admin-context.ts).
+ * ¿Por qué no reusar /dashboard/sitio-web? El layout del dashboard tiene tres
+ * gates que expulsan al super-admin antes de llegar: /onboarding si no tiene
+ * concesionario propio, /aceptar-terminos si no firmó T&C, y /cuenta-pausada si
+ * la cuenta está suspendida — que es justo cuando más querrías entrar a armarle
+ * la web. Además el sidebar mostraría el tenant equivocado.
  *
- * ¿Por qué no reusar /dashboard/sitio-web directamente? El layout del dashboard
- * tiene tres gates que expulsan al super-admin antes de llegar: redirige a
- * /onboarding si no tiene concesionario propio, a /aceptar-terminos si no firmó
- * T&C, y a /cuenta-pausada si la cuenta está suspendida — que es justo cuando
- * más querrías entrar a armarle la web. Además el sidebar mostraría el nombre
- * del concesionario equivocado.
+ * La composición vive en <SiteEditor>; acá solo va el guard y la carga de datos.
  */
 export default async function AdminEditSitePage({
   params,
@@ -41,7 +34,23 @@ export default async function AdminEditSitePage({
   const { id } = await params;
 
   const dealership = await prisma.dealership.findUnique({ where: { id } });
-  if (!dealership) notFound();
+
+  // Cuenta inexistente CON el modo apuntando a ella: no podemos hacer notFound.
+  // El layout del dashboard redirige acá mientras la cookie viva, así que un 404
+  // dejaría al super-admin encerrado — sin panel propio y sin botón para salir.
+  // Renderizamos el banner (que trae el "Salir del modo") y explicamos.
+  if (!dealership) {
+    if ((await getPlatformEditTargetId()) !== id) notFound();
+    return (
+      <div className="space-y-6">
+        <PlatformEditBanner dealershipName="cuenta inexistente" slug={id} />
+        <p className="text-sm text-muted-foreground">
+          La cuenta que estabas editando ya no existe. Salí del modo plataforma para
+          volver a tu panel.
+        </p>
+      </div>
+    );
+  }
 
   // El modo tiene que estar activo Y apuntando a ESTA cuenta. Si no, las
   // mutaciones del builder irían a otro tenant: mostramos la activación en vez
@@ -97,38 +106,11 @@ export default async function AdminEditSitePage({
         </Link>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Secciones del sitio</CardTitle>
-          <CardDescription>
-            Activá, ordená y editá las secciones que se muestran en el sitio público
-            de este concesionario.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SectionsBuilderClient
-            initialSections={sectionsData.sections}
-            initialMedia={sectionsData.media}
-            theme={theme}
-            reviews={serializedReviews}
-          />
-        </CardContent>
-      </Card>
-
-      <WebsiteSettings
-        dealership={{
-          slug: dealership.slug,
-          logo: dealership.logo,
-          favicon: dealership.favicon,
-          website: dealership.website,
-          siteEnabled: dealership.siteEnabled,
-          announcement: dealership.announcement,
-          templateId: dealership.templateId,
-        }}
-        theme={theme}
+      <SiteEditor
+        dealership={dealership}
+        sectionsData={sectionsData}
+        reviews={serializedReviews}
       />
-
-      <TemplateSelector currentTemplateId={dealership.templateId} />
     </div>
   );
 }

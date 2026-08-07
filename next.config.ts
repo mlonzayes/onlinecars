@@ -12,9 +12,24 @@ function buildRemotePatterns() {
       const protocol = u.protocol.replace(":", "");
       if (protocol === "http" || protocol === "https") {
         patterns.push({ protocol, hostname: u.hostname });
+      } else {
+        console.warn(
+          `\n[next.config] S3_PUBLIC_URL usa el protocolo "${protocol}", se esperaba http/https.` +
+            `\n              next/image va a RECHAZAR todas las imágenes remotas.\n`
+        );
       }
     } catch {
-      // env var malformada — silenciar para no romper el build.
+      // Antes esto se silenciaba "para no romper el build" — y el precio fue
+      // caro: un valor mal pegado (con el nombre de la variable adentro:
+      // "S3_PUBLIC_URL=https://...") dejaba remotePatterns VACÍO, y next/image
+      // devolvía 400 INVALID_IMAGE_OPTIMIZE_REQUEST para TODAS las fotos, sin
+      // una sola pista de la causa. Seguimos sin romper el build (un dev sin
+      // storage tiene que poder buildear), pero ahora grita en los logs.
+      console.warn(
+        `\n[next.config] S3_PUBLIC_URL no es una URL válida: ${JSON.stringify(publicUrl)}` +
+          `\n              next/image va a RECHAZAR todas las imágenes remotas (400).` +
+          `\n              ¿Pegaste "S3_PUBLIC_URL=https://..." en vez de solo la URL?\n`
+      );
     }
   }
   return patterns;

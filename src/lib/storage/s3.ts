@@ -79,6 +79,27 @@ function readEnv(): S3Env {
     );
   }
 
+  // S3_PUBLIC_URL tiene que ser una URL absoluta http(s): se concatena con el key
+  // y el resultado se GUARDA EN LA BASE. Un valor mal pegado (típico: la línea
+  // entera "S3_PUBLIC_URL=https://..." en el campo Value de Vercel) no falla al
+  // subir — falla mucho después, con cada foto rota y sin pista de por qué.
+  // Fallar acá convierte un misterio de horas en un mensaje de una línea.
+  let parsedPublicUrl: URL;
+  try {
+    parsedPublicUrl = new URL(publicUrl!);
+  } catch {
+    throw new Error(
+      `S3_PUBLIC_URL no es una URL válida: ${JSON.stringify(publicUrl)}. ` +
+        `Tiene que ser absoluta (https://...). Si copiaste la línea del .env, ` +
+        `sacale el "S3_PUBLIC_URL=" del principio: en Vercel eso va en el campo Key.`
+    );
+  }
+  if (parsedPublicUrl.protocol !== "https:" && parsedPublicUrl.protocol !== "http:") {
+    throw new Error(
+      `S3_PUBLIC_URL debe usar http o https, recibido "${parsedPublicUrl.protocol}".`
+    );
+  }
+
   cachedEnv = {
     endpoint: endpoint!,
     region,

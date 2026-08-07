@@ -3,19 +3,26 @@ import { redirect } from "next/navigation";
 import { ContactForm } from "@/components/dashboard/settings/contact-form";
 import { UsersTab } from "@/components/dashboard/settings/users-tab";
 import { SubscriptionTab } from "@/components/dashboard/settings/subscription-tab";
-import { WhatsappFabCard } from "@/components/dashboard/settings/whatsapp-fab-card";
 import { LocationPicker } from "@/components/dashboard/settings/location-picker";
-import { SocialLinksForm } from "@/components/dashboard/settings/social-links-form";
 import { ExchangeRateCard } from "@/components/dashboard/settings/exchange-rate-card";
+import { SettingsShell } from "@/components/dashboard/settings/settings-shell";
 import { getCurrentUsdRate } from "@/lib/exchange-rate";
-import type { SocialLinks } from "@/types";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { resolveSettingsSection } from "@/lib/settings-sections";
 import { prisma } from "@/lib/prisma";
 import { getPlanLimits } from "@/lib/plans";
 import { clerkClient } from "@clerk/nextjs/server";
-export default async function ConfiguracionPage() {
+
+interface ConfiguracionPageProps {
+  searchParams: Promise<{ tab?: string }>;
+}
+
+export default async function ConfiguracionPage({ searchParams }: ConfiguracionPageProps) {
   const dealership = await getCurrentDealership();
   if (!dealership) redirect("/onboarding");
+
+  // El `tab` viene del query string: nunca se usa crudo, se matchea contra la
+  // whitelist de secciones y cae al default si no existe.
+  const initialSection = resolveSettingsSection((await searchParams).tab);
 
   // Obtener usuarios e invitaciones
   const [dealershipUsers, invites] = await Promise.all([
@@ -38,7 +45,7 @@ export default async function ConfiguracionPage() {
   const clerkUserIds = dealershipUsers.map(u => u.clerkUserId);
   const clerkClientInstance = await clerkClient();
   const clerkUsers = await clerkClientInstance.users.getUserList({ userId: clerkUserIds });
-  
+
   const usersWithEmail = dealershipUsers.map(du => {
     const clerkUser = clerkUsers.data.find(cu => cu.id === du.clerkUserId);
     const email = clerkUser?.emailAddresses[0]?.emailAddress ?? "";
@@ -52,49 +59,40 @@ export default async function ConfiguracionPage() {
         <p className="text-muted-foreground">Administrá tu concesionario, accesos y facturación.</p>
       </div>
 
-      <Tabs defaultValue="general" className="w-full space-y-6">
-        <TabsList>
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="usuarios">Usuarios y Accesos</TabsTrigger>
-          <TabsTrigger value="suscripcion">Suscripción</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="general" className="mt-0 space-y-6">
-          <ContactForm dealership={dealership} />
-          <ExchangeRateCard
-            usdSpread={Number(dealership.usdSpread)}
-            officialRate={usdRate?.rate ?? null}
-            rateDate={usdRate?.date ?? null}
-            isAdmin={dealership.currentUser.role === "admin"}
-          />
-          <WhatsappFabCard
-            enabled={dealership.whatsappFabEnabled}
-            message={dealership.whatsappMessage}
-            hasWhatsappNumber={Boolean(dealership.whatsapp)}
-            allowWhatsappFab={limits.allowWhatsappFab}
-            currentPlan={dealership.plan}
-          />
-          <LocationPicker
-            latitude={dealership.latitude}
-            longitude={dealership.longitude}
-          />
-          <SocialLinksForm socialLinks={(dealership.socialLinks as SocialLinks | null) ?? null} />
-        </TabsContent>
-        
-        <TabsContent value="usuarios" className="mt-0">
-          <UsersTab
-            users={usersWithEmail}
-            invites={invites.map(i => ({ id: i.id, role: i.role, token: i.token, createdAt: i.createdAt }))}
-            limits={limits}
-            showCostsToNonAdmins={dealership.showCostsToNonAdmins}
-            isAdmin={dealership.currentUser.role === "admin"}
-          />
-        </TabsContent>
-
-        <TabsContent value="suscripcion" className="mt-0">
-          <SubscriptionTab dealership={dealership} />
-        </TabsContent>
-      </Tabs>
+      <SettingsShell
+        initialSection={initialSection}
+        panels={{
+          // Quién sos y dónde estás: el mapa es la continuación de la dirección,
+          // por eso van en la misma sección.
+          general: (
+            <>
+              <ContactForm dealership={dealership} />
+              <LocationPicker
+                latitude={dealership.latitude}
+                longitude={dealership.longitude}
+              />
+            </>
+          ),
+          cotizacion: (
+            <ExchangeRateCard
+              usdSpread={Number(dealership.usdSpread)}
+              officialRate={usdRate?.rate ?? null}
+              rateDate={usdRate?.date ?? null}
+              isAdmin={dealership.currentUser.role === "admin"}
+            />
+          ),
+          usuarios: (
+            <UsersTab
+              users={usersWithEmail}
+              invites={invites.map(i => ({ id: i.id, role: i.role, token: i.token, createdAt: i.createdAt }))}
+              limits={limits}
+              showCostsToNonAdmins={dealership.showCostsToNonAdmins}
+              isAdmin={dealership.currentUser.role === "admin"}
+            />
+          ),
+          suscripcion: <SubscriptionTab dealership={dealership} />,
+        }}
+      />
     </div>
   );
 }

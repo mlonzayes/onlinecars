@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { PiArrowRight, PiCheckCircle } from "react-icons/pi";
+import { getPrimaryCta } from "@/lib/seo";
 
 const CHECKS = [
   "Sin comisiones por venta",
@@ -13,6 +14,8 @@ const CHECKS = [
 // hidrataba GSAP (~2.2s de render delay en mobile). Renderizándola estática,
 // pinta al instante. Las animaciones de scroll quedan para debajo del fold.
 export function HeroSection() {
+  const cta = getPrimaryCta();
+
   return (
     <section className="relative isolate -mt-[68px] overflow-hidden bg-white px-4 pb-0 pt-40 sm:pt-44">
       {/* Capa decorativa: gradiente base + glows azules suaves (animados, sutil).
@@ -35,9 +38,12 @@ export function HeroSection() {
       </div>
 
       <div className="relative mx-auto max-w-2xl text-center">
-        <h1 className="text-5xl font-semibold leading-[1.05] tracking-tight text-gray-900 sm:text-[3.5rem] lg:text-[4rem]">
+        {/* Peso 300 a 64px: la finura se gana en el display, no en el body.
+            tracking-tight es obligatorio acá — las letras light a este tamaño
+            se ven desparramadas sin cerrar el interletrado. */}
+        <h1 className="text-5xl font-light leading-[1.05] tracking-tight text-gray-900 sm:text-[3.5rem] lg:text-[4rem]">
           Vendé más vehículos desde tu{" "}
-          <span className="text-blue-600">propio sitio.</span>
+          <span className="font-normal text-blue-600">propio sitio.</span>
         </h1>
 
         <p className="mx-auto mt-5 max-w-xl text-base font-light leading-relaxed text-gray-600">
@@ -48,10 +54,10 @@ export function HeroSection() {
 
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link
-            href="/sign-up"
+            href={cta.href}
             className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-blue-700"
           >
-            Empezar gratis
+            {cta.label}
             <PiArrowRight className="h-4 w-4" />
           </Link>
           <a
@@ -64,7 +70,9 @@ export function HeroSection() {
 
         <div className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2">
           {CHECKS.map((c) => (
-            <span key={c} className="inline-flex items-center gap-1.5 text-xs font-light text-gray-500">
+            // Micro-copy a 12px SUBE de peso (400), no baja: a 300 los trazos
+            // se desarman en pantallas sin buen antialiasing (Windows @125%).
+            <span key={c} className="inline-flex items-center gap-1.5 text-xs font-normal text-gray-600">
               <PiCheckCircle className="h-3.5 w-3.5 text-blue-500" />
               {c}
             </span>

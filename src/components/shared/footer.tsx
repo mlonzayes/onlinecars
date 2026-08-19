@@ -40,9 +40,11 @@ export function Footer() {
               Producto
             </h3>
             <ul className="mt-4 flex flex-col gap-2.5 text-sm text-gray-400">
-              <li><Link href="/#como-funciona" className="transition hover:text-white">Cómo funciona</Link></li>
-              <li><Link href="/#servicios" className="transition hover:text-white">Servicios</Link></li>
-              <li><Link href="/precios" className="transition hover:text-white">Planes</Link></li>
+              {/* #como-funciona y #servicios apuntaban a secciones que ya no se
+                  renderizan en la home. Los servicios y el roadmap viven ahora
+                  en /precios. */}
+              <li><Link href="/#producto" className="transition hover:text-white">El producto</Link></li>
+              <li><Link href="/precios" className="transition hover:text-white">Planes y servicios</Link></li>
               <li><Link href="/blog" className="transition hover:text-white">Blog</Link></li>
               <li><Link href="/#faq" className="transition hover:text-white">FAQ</Link></li>
               <li><Link href="/#contacto" className="transition hover:text-white">Contacto</Link></li>

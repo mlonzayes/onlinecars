@@ -11,7 +11,9 @@
       "Bash(curl *)",
       "Bash(cat *)",
       "Bash(ls *)",
-      "Bash(mkdir *)"
+      "Bash(mkdir *)",
+      "Bash(rg -o 'font-\\(thin|extralight|light|normal|medium|semibold|bold|extrabold|black\\)' *.tsx)",
+      "Bash(pnpm lint *)"
     ],
     "deny": [
       "Bash(rm -rf /)",

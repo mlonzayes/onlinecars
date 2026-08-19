@@ -37,7 +37,7 @@ export function ProblemSection() {
           <p className="text-xs font-medium uppercase tracking-widest text-blue-400">
             El problema
           </p>
-          <h2 className="mt-3 text-2xl font-semibold text-white sm:text-3xl">
+          <h2 className="mt-3 text-2xl font-normal tracking-tight text-white sm:text-3xl">
             ¿Qué está frenando a tu concesionario?
           </h2>
         </FadeIn>
@@ -68,7 +68,7 @@ export function ProblemSection() {
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600/90 shadow-lg backdrop-blur-sm">
                   <Icon className="h-4 w-4 text-white" />
                 </div>
-                <h3 className="mt-4 text-base font-semibold text-white">{title}</h3>
+                <h3 className="mt-4 text-base font-medium text-white">{title}</h3>
                 <p className="mt-2 text-sm font-light leading-relaxed text-gray-300">
                   {description}
                 </p>

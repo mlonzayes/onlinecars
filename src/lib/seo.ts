@@ -30,3 +30,25 @@ export const SITE_WHATSAPP_MESSAGE =
 export const SITE_WHATSAPP_URL = `https://wa.me/${SITE_WHATSAPP}?text=${encodeURIComponent(
   SITE_WHATSAPP_MESSAGE
 )}`;
+
+/**
+ * Destino y texto del CTA primario de la landing.
+ *
+ * Con NEXT_PUBLIC_ENABLE_LOGIN apagado, /sign-up rebota al visitante de vuelta
+ * a la home (ver sign-up/page.tsx) — mandarlo ahí es perder el lead en el click
+ * más caro de la página. Mientras el flag esté en false caemos al formulario.
+ *
+ * Fuente ÚNICA a propósito: esto vivía duplicado en hero, mid-CTA y navbar, y
+ * se desincronizó (el navbar leía el flag, el hero no).
+ *
+ * NEXT_PUBLIC_* se inlinea en build, así que sirve en Server y Client Components.
+ */
+export function isSelfServeEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_ENABLE_LOGIN === "true";
+}
+
+export function getPrimaryCta(): { href: string; label: string } {
+  return isSelfServeEnabled()
+    ? { href: "/sign-up", label: "Crear mi cuenta" }
+    : { href: "#contacto", label: "Quiero mi sitio" };
+}

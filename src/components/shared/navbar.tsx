@@ -25,24 +25,26 @@ export async function Navbar() {
 
         {/* Links de navegación — solo desktop. En mobile el user scrollea. */}
         <div className="hidden items-center gap-7 md:flex">
-          <a
-            href="#servicios"
+          {/* Anclas con "/" adelante: el navbar se renderiza también en /precios
+              y /blog, donde un href="#faq" pelado no lleva a ningún lado. */}
+          <Link
+            href="/#producto"
             className="text-sm font-medium text-gray-600 transition hover:text-gray-900"
           >
-            Servicios
-          </a>
+            Producto
+          </Link>
           <Link
             href="/precios"
             className="text-sm font-medium text-gray-600 transition hover:text-gray-900"
           >
             Planes
           </Link>
-          <a
-            href="#faq"
+          <Link
+            href="/#faq"
             className="text-sm font-medium text-gray-600 transition hover:text-gray-900"
           >
             FAQ
-          </a>
+          </Link>
           <Link
             href="/blog"
             className="text-sm font-medium text-gray-600 transition hover:text-gray-900"
@@ -74,13 +76,13 @@ export async function Navbar() {
           )}
 
           {/* Contacto — acción PRIMARIA: el único botón sólido azul de la barra. */}
-          <a
-            href="#contacto"
+          <Link
+            href="/#contacto"
             className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
           >
             <PiEnvelope className="size-3.5" />
             <span>Contacto</span>
-          </a>
+          </Link>
         </div>
         
         <MobileMenu isLoginEnabled={isLoginEnabled} isSignedIn={isSignedIn} />

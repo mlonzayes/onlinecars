@@ -14,10 +14,12 @@ interface MobileMenuProps {
   isSignedIn: boolean;
 }
 
+// Anclas con "/" adelante: el menú se monta también en /precios y /blog, donde
+// un href="#faq" pelado no navega a ningún lado.
 const LINKS = [
-  { href: "#servicios", label: "Servicios" },
-  { href: "#planes", label: "Planes" },
-  { href: "#faq", label: "FAQ" },
+  { href: "/#producto", label: "Producto" },
+  { href: "/#planes", label: "Planes" },
+  { href: "/#faq", label: "FAQ" },
   { href: "/blog", label: "Blog" },
 ];
 
@@ -149,14 +151,14 @@ export function MobileMenu({ isLoginEnabled, isSignedIn }: MobileMenuProps) {
                 </a>
 
                 {/* Contacto — primario (azul sólido) */}
-                <a
-                  href="#contacto"
+                <Link
+                  href="/#contacto"
                   onClick={() => setIsOpen(false)}
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-blue-700"
                 >
                   <PiEnvelope className="size-4" />
                   <span>Contacto</span>
-                </a>
+                </Link>
               </div>
             </div>
           </div>,

@@ -15,13 +15,19 @@
  *  - Honeypot (campo invisible que solo bots llenan → 201 fake, no 4xx)
  *  - Zod parse con .strict() — no aceptamos campos extras del body
  */
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { z } from "zod";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { applyRateLimit, getClientIp, waitlistLimiter } from "@/lib/rate-limit";
 import { isHoneypotTriggered, HONEYPOT_FIELD } from "@/lib/honeypot";
 import { sendTelegramNotification, escapeTelegramHTML } from "@/lib/telegram";
+import {
+  extractMetaBrowserSignals,
+  getMainSiteCapiCredentials,
+  sendMetaConversionEvent,
+} from "@/lib/meta/capi";
+import { META_EVENT_ID_FIELD } from "@/lib/meta/events";
 
 // Coordinar con src/components/landing/contact-form.tsx — los valores tienen
 // que matchear 1:1.
@@ -51,6 +57,11 @@ const contactSchema = z
     phone: z.string().max(40).optional(),
     dealership: z.string().max(150).optional(),
     message: z.string().max(2000).optional(),
+    // Id que deduplica este Lead contra el que ya disparó el pixel del browser.
+    // Lo genera el cliente (ver src/lib/meta/client.ts). Opcional: si el
+    // visitante tiene un adblocker, el pixel no corrió y solo llega la CAPI —
+    // que es justamente el caso que la CAPI viene a cubrir.
+    [META_EVENT_ID_FIELD]: z.string().uuid().optional(),
   })
   .strict();
 
@@ -120,6 +131,50 @@ export const POST = withLogger(async (req, { requestId }) => {
   const text = lines.join("\n");
 
   void sendTelegramNotification({ text }, requestId);
+
+  // --- Conversión a Meta (Conversions API) ---
+  //
+  // Va en `after()` y NO en `void`: en Vercel, una promesa suelta después del
+  // return se puede cortar cuando la función se congela. `after()` le avisa al
+  // runtime que mantenga viva la invocación. Telegram usa `void` porque perder
+  // un aviso es molesto; perder una conversión te desoptimiza la campaña y te
+  // sube el costo por lead, así que este sí tiene que llegar.
+  //
+  // Y va DESPUÉS de la respuesta: el visitante no espera a Meta.
+  const capi = getMainSiteCapiCredentials();
+  if (capi) {
+    const eventId = parsed.data[META_EVENT_ID_FIELD] ?? globalThis.crypto.randomUUID();
+    const eventSourceUrl = req.headers.get("referer");
+    const signals = extractMetaBrowserSignals(req, eventSourceUrl);
+    // El form pide un campo "nombre" suelto. Separamos por el primer espacio:
+    // aproximado, pero un match parcial suma más de lo que resta.
+    const [firstName, ...rest] = name.trim().split(/\s+/);
+
+    after(async () => {
+      await sendMetaConversionEvent({
+        credentials: capi,
+        eventName: "Lead",
+        eventId,
+        eventSourceUrl,
+        userData: {
+          email,
+          phone,
+          firstName,
+          lastName: rest.join(" ") || null,
+          country: "AR",
+          clientIpAddress: ip,
+          ...signals,
+        },
+        customData: {
+          contentName: `contacto-${intent}`,
+          contentCategory: "saas-motorflow",
+          ...(plan ? { plan } : {}),
+        },
+        requestId,
+        logContext: { intent, surface: "marketing" },
+      });
+    });
+  }
 
   return NextResponse.json(
     { success: true },

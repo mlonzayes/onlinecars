@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getDealershipBySlug } from "@/lib/tenant";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
@@ -7,6 +7,13 @@ import { logger } from "@/lib/logger";
 import { applyRateLimit, getClientIp, publicLeadsLimiter } from "@/lib/rate-limit";
 import { isHoneypotTriggered } from "@/lib/honeypot";
 import { createNotification } from "@/lib/notifications";
+import {
+  extractMetaBrowserSignals,
+  getTenantCapiCredentials,
+  sendMetaConversionEvent,
+} from "@/lib/meta/capi";
+import { META_EVENT_ID_FIELD } from "@/lib/meta/events";
+import { canUseMetaPixel } from "@/lib/plans";
 
 type TenantParams = { slug: string };
 
@@ -16,6 +23,8 @@ const leadSchema = z.object({
   phone: z.string().optional().or(z.literal("")),
   message: z.string().optional().or(z.literal("")),
   vehicleId: z.string().optional(),
+  // Dedup contra el evento que ya mandó el pixel del browser del tenant.
+  [META_EVENT_ID_FIELD]: z.string().uuid().optional(),
 });
 
 export const POST = withLogger<TenantParams>(async (request, { requestId, params }) => {
@@ -100,6 +109,50 @@ export const POST = withLogger<TenantParams>(async (request, { requestId, params
     link: "/dashboard/leads",
     requestId,
   });
+
+  // --- Conversión al pixel DEL CONCESIONARIO (no al nuestro) ---
+  //
+  // El doble chequeo plan + credenciales es el mismo del tenant layout: si el
+  // dealer bajó de plan, dejamos de mandarle eventos aunque la config siga en
+  // la DB. Ver src/app/tenant/[slug]/layout.tsx.
+  //
+  // `after()` lo corre una vez respondido el 201 — el visitante no espera a Meta.
+  const capi = canUseMetaPixel(dealership) ? getTenantCapiCredentials(dealership) : null;
+  if (capi) {
+    const eventId = parsed.data[META_EVENT_ID_FIELD] ?? globalThis.crypto.randomUUID();
+    const eventSourceUrl = request.headers.get("referer");
+    const signals = extractMetaBrowserSignals(request, eventSourceUrl);
+    const [firstName, ...rest] = parsed.data.name.trim().split(/\s+/);
+
+    after(async () => {
+      await sendMetaConversionEvent({
+        credentials: capi,
+        eventName: "Lead",
+        eventId,
+        eventSourceUrl,
+        userData: {
+          email: parsed.data.email || null,
+          phone: parsed.data.phone || null,
+          firstName,
+          lastName: rest.join(" ") || null,
+          city: dealership.city,
+          state: dealership.province,
+          country: dealership.country,
+          clientIpAddress: ip,
+          ...signals,
+        },
+        customData: {
+          contentName: "consulta-vehiculo",
+          contentType: "vehicle",
+          // El vehículo consultado es la señal que le permite a Meta armar
+          // públicos por interés real (quién pregunta por pickups vs por 0km).
+          ...(lead.vehicleId ? { contentIds: [lead.vehicleId] } : {}),
+        },
+        requestId,
+        logContext: { slug, dealershipId: dealership.id, surface: "tenant" },
+      });
+    });
+  }
 
   return NextResponse.json({ data: { id: lead.id } }, { status: 201, headers: rl.headers });
 });

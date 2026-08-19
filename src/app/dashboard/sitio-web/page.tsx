@@ -8,6 +8,7 @@ import { WebsiteSettings } from "@/components/dashboard/settings/website-setting
 import { TemplateSelector } from "@/components/dashboard/settings/template-selector";
 import { WhatsappFabCard } from "@/components/dashboard/settings/whatsapp-fab-card";
 import { SocialLinksForm } from "@/components/dashboard/settings/social-links-form";
+import { MetaPixelCard } from "@/components/dashboard/settings/meta-pixel-card";
 import { SectionsBuilderClient } from "@/components/dashboard/sections-builder/sections-builder-client";
 import { getPlanLimits } from "@/lib/plans";
 import { getSectionsPageData } from "./sections-page-data";
@@ -101,6 +102,18 @@ export default async function SitioWebPage() {
       />
 
       <SocialLinksForm socialLinks={(dealership.socialLinks as SocialLinks | null) ?? null} />
+
+      {/* Medición de campañas. Se pasa `hasCapiToken` y NO el token: es un
+          secreto del dealer y esto es un Client Component — cualquier prop que
+          le mandemos viaja al browser en el payload de React. */}
+      <MetaPixelCard
+        pixelId={dealership.metaPixelId}
+        hasCapiToken={Boolean(dealership.metaCapiToken)}
+        testEventCode={dealership.metaTestEventCode}
+        enabled={dealership.metaTrackingEnabled}
+        allowMetaPixel={limits.allowMetaPixel}
+        currentPlan={dealership.plan}
+      />
 
       <TemplateSelector currentTemplateId={dealership.templateId} />
     </div>

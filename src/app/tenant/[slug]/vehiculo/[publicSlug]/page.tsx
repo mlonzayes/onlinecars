@@ -22,6 +22,7 @@ import {
 import { VehicleGallery } from "@/components/tenant/vehicle-gallery";
 import { TenantContactForm } from "@/components/tenant/contact-form";
 import { JsonLd } from "@/components/seo/json-ld";
+import { MetaTrackEvent } from "@/components/meta/meta-track-event";
 
 interface VehicleDetailPageProps {
   params: Promise<{ slug: string; publicSlug: string }>;
@@ -172,6 +173,22 @@ export default async function VehicleDetailPage({ params }: VehicleDetailPagePro
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
       <JsonLd data={carLd} />
+
+      {/* ViewContent con precio: es lo que le permite a Meta optimizar por VALOR
+          y no solo por volumen de clicks. Un dealer que pauta quiere leads de
+          las unidades caras, no del auto más barato del stock.
+          No-op si el dealer no configuró su pixel. */}
+      <MetaTrackEvent
+        eventName="ViewContent"
+        customData={{
+          contentName: vehicle.title,
+          contentType: "vehicle",
+          contentIds: [vehicle.id],
+          contentCategory: vehicle.bodyType ?? undefined,
+          value: Number(vehicle.price),
+          currency: vehicle.currency,
+        }}
+      />
 
       {/* Back */}
       <Link

@@ -80,7 +80,15 @@ export const GET = withLogger(async (_request, { requestId }) => {
   }
 
   logger.info(requestId, "dealership.get.ok", { dealershipId: dealership.id });
-  return NextResponse.json({ data: dealership });
+
+  // El token de la Conversions API NUNCA vuelve al cliente, ni siquiera al
+  // dueño de la cuenta. A la UI le alcanza con saber SI hay uno cargado para
+  // mostrar "configurado" y ofrecer reemplazarlo. Devolverlo para rellenar un
+  // input es cómodo y es exactamente cómo se filtran los secretos.
+  const { metaCapiToken, ...safeDealership } = dealership;
+  return NextResponse.json({
+    data: { ...safeDealership, hasMetaCapiToken: Boolean(metaCapiToken) },
+  });
 });
 
 // PUT /api/concesionario
@@ -149,6 +157,17 @@ export const PUT = withLogger(async (request, { requestId }) => {
   const limits = getPlanLimits(dealership);
   if (!limits.allowWhatsappFab && updateData.whatsappFabEnabled === true) {
     updateData.whatsappFabEnabled = false;
+  }
+
+  // Pixel de Meta: mismo criterio que el FAB. Si el plan no lo habilita,
+  // descartamos toda la config de tracking y forzamos el toggle en false. La
+  // UI ya lo gatea, esto es la defensa server-side — un POST a mano no alcanza
+  // para activarlo.
+  if (!limits.allowMetaPixel) {
+    delete updateData.metaPixelId;
+    delete updateData.metaCapiToken;
+    delete updateData.metaTestEventCode;
+    if (updateData.metaTrackingEnabled === true) updateData.metaTrackingEnabled = false;
   }
 
   // Dominios custom en STANDBY (Fase 2). Mientras CUSTOM_DOMAINS_ENABLED sea

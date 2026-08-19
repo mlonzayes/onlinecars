@@ -387,6 +387,12 @@ export interface TenantHomeBundleDealership {
   city: string | null;
   province: string | null;
   website: string | null;
+  // Plantilla visual activa. Vive en el bundle (y no se resuelve aparte) porque
+  // el home la necesita para decidir si usa layout fijo o las secciones
+  // configurables. Comparte la staleness del resto del bundle cacheado, y los
+  // dos handlers que la escriben (/api/concesionario y /api/admin/dealerships)
+  // ya llaman a invalidateTenantHomeBundle.
+  templateId: string | null;
   theme: DealershipTheme | null;
   // Ubicación geo para el mapa del sitio. Las coords vienen resueltas del
   // dashboard. La visibilidad la decide el config.showMap de la sección Contacto.
@@ -634,6 +640,7 @@ async function assembleTenantHomeBundle(
       city: dealership.city,
       province: dealership.province,
       website: dealership.website,
+      templateId: dealership.templateId,
       theme,
       latitude: dealership.latitude,
       longitude: dealership.longitude,

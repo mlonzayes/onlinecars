@@ -1,4 +1,5 @@
-import { Poppins, Space_Grotesk, Unbounded } from "next/font/google";
+import { DM_Sans, Poppins, Space_Grotesk, Unbounded } from "next/font/google";
+import type { SectionType } from "./constants";
 
 /**
  * Sistema de plantillas del sitio público del tenant.
@@ -8,11 +9,13 @@ import { Poppins, Space_Grotesk, Unbounded } from "next/font/google";
  *    los componentes del tenant consumen vía `bg-[var(--tenant-bg)]`, etc.
  *  - Una fuente cargada con next/font (auto-tree-shake: si nadie la usa,
  *    no llega al bundle).
+ *  - Opcionalmente un `layout` fijo: la lista exacta de bloques del home, en
+ *    orden. Ver "Plantillas con layout fijo" más abajo.
  *
  * Para sumar una plantilla nueva:
  *  1. Agregar la entrada a TENANT_TEMPLATES (id + name + description + font + tokens)
- *  2. Sumar el id al enum del validator (src/lib/validators/dealership.ts)
- *  3. Ya está — el layout aplica los tokens automáticamente
+ *  2. Ya está — el layout aplica los tokens automáticamente y el validator
+ *     deriva el enum de acá (ver TENANT_TEMPLATE_ID_TUPLE).
  *
  * Nota sobre fuentes: next/font NO soporta selección dinámica. Tenemos que
  * declarar TODAS las fuentes al top-level del módulo. El bundler solo incluye
@@ -43,6 +46,50 @@ const unbounded = Unbounded({
   display: "swap",
 });
 
+// DM Sans: la misma familia que usa el panel, pero expuesta como --font-tenant.
+// La usa "prestige". El look premium NO sale de la fuente sino del contraste de
+// pesos (300 para body, 700 para títulos) + tracking negativo — ver la escala
+// tipográfica scopeada en globals.css.
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "700"],
+  variable: "--font-tenant",
+  display: "swap",
+});
+
+/**
+ * Plantillas con layout fijo
+ *
+ * Por default el home del tenant se arma con las secciones que el dealer
+ * configura en /dashboard/sitio-web (filas en DB, con orden y enabled propios).
+ * Una plantilla puede en cambio declarar un `layout`: una lista cerrada de
+ * bloques, en orden, que ignora el orden/enabled de la DB.
+ *
+ * Ojo, esto NO ignora el CONTENIDO del dealer: los slots que corresponden a un
+ * SectionType siguen leyendo su título, subtítulo, config y media de la fila de
+ * la DB. Lo que la plantilla fija es la COMPOSICIÓN, no el texto.
+ *
+ * Los slots premium no tienen fila en DB: se alimentan del stock publicado que
+ * ya viene en el bundle, así que no agregan queries.
+ */
+export const PREMIUM_SLOTS = [
+  "stock-marquee",
+  "spotlight",
+  "sticky-specs",
+  // Los carruseles por categoría (0km, Usados, Oportunidades). En el home
+  // configurable se intercalan por ancla; en un layout fijo van agrupados en
+  // este slot.
+  "collections",
+] as const;
+
+export type PremiumSlot = (typeof PREMIUM_SLOTS)[number];
+
+export type TenantLayoutSlot = SectionType | PremiumSlot;
+
+export function isPremiumSlot(slot: TenantLayoutSlot): slot is PremiumSlot {
+  return (PREMIUM_SLOTS as readonly string[]).includes(slot);
+}
+
 export interface TenantTemplate {
   id: string;
   name: string;
@@ -60,6 +107,9 @@ export interface TenantTemplate {
   // Si true, el header es una barra sólida full-width pegada arriba (en vez de la
   // píldora flotante translúcida). Va con el look cuadrado del template "impacto".
   solidHeader?: boolean;
+  // Composición fija del home. Si está, pisa el orden/enabled de la DB.
+  // Si es undefined, el home usa las secciones configurables del dealer.
+  layout?: readonly TenantLayoutSlot[];
 }
 
 export const TENANT_TEMPLATES = {
@@ -142,6 +192,50 @@ export const TENANT_TEMPLATES = {
       "--tenant-radius-sm": "0px",
       // Sin drop shadow — el look plano se apoya en bordes, no en sombras.
       "--tenant-shadow-card": "0 0 0 1px rgb(0 0 0 / 0.06)",
+    },
+  },
+  prestige: {
+    id: "prestige",
+    name: "Prestige",
+    description:
+      "Composición editorial sobre negro: cada vehículo destacado ocupa la pantalla entera, con fichas que se despliegan al scrollear. Para stock de alta gama.",
+    tone: "dark",
+    font: dmSans,
+    // Composición cerrada: el dealer no reordena ni apaga bloques. El criterio es
+    // alternar formato en cada bloque (tira → pieza única → grilla → pin) para que
+    // el ojo no se acostumbre. Una grilla atrás de otra es lo que abarata el look.
+    layout: [
+      "hero",
+      "stock-marquee",
+      "spotlight",
+      "catalog",
+      "sticky-specs",
+      "collections",
+      "brands",
+      "reviews",
+      "contact",
+    ],
+    tokens: {
+      // Backgrounds — negro neutro (sin tinte azul, a diferencia de "dark"). El
+      // gris puro no le compite el color a las fotos de los autos.
+      "--tenant-bg": "#08090b",
+      "--tenant-surface": "#0f1113",
+      "--tenant-surface-hover": "#17191c",
+      // Foreground
+      "--tenant-fg": "#fafafa", // neutral-50
+      "--tenant-fg-muted": "#a1a1aa", // zinc-400
+      "--tenant-fg-subtle": "#71717a", // zinc-500
+      // Borders — hairline apenas perceptible. Sobre negro, un borde marcado
+      // recorta las cards y rompe la continuidad editorial.
+      "--tenant-border": "#1f2124",
+      "--tenant-border-strong": "#33363a",
+      // Radius — casi recto, pero no cero. El 0 absoluto ya lo usa "impacto";
+      // estos 4px leen como "imprenta", no como "brutalist".
+      "--tenant-radius": "0.25rem",
+      "--tenant-radius-sm": "0.125rem",
+      // Sobre negro el drop shadow no existe: usamos un hairline superior que
+      // simula luz cenital sobre la card.
+      "--tenant-shadow-card": "inset 0 1px 0 0 rgb(255 255 255 / 0.04)",
     },
   },
 } as const satisfies Record<string, TenantTemplate>;

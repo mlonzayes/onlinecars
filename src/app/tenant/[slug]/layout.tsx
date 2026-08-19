@@ -2,6 +2,9 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getDealershipBySlug, getTenantBasePath } from "@/lib/tenant";
 import { TenantChrome } from "@/components/tenant/tenant-chrome";
+import { MetaPixel } from "@/components/meta/meta-pixel";
+import { getTenantPixelId } from "@/lib/meta/config";
+import { canUseMetaPixel } from "@/lib/plans";
 
 interface TenantLayoutProps {
   children: React.ReactNode;
@@ -53,9 +56,24 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
 
   const basePath = await getTenantBasePath(slug);
 
+  // Pixel del CONCESIONARIO (no el nuestro). Doble condición a propósito:
+  //   - getTenantPixelId → el dealer lo configuró y tiene el toggle prendido
+  //   - canUseMetaPixel  → su plan lo habilita
+  // El segundo chequeo NO es redundante con el gating del PUT: si un dealer
+  // configura el pixel en plan Media y después baja a Base, la config queda en
+  // la DB y sin este guard seguiría trackeando una feature que ya no paga.
+  //
+  // Va acá y NO en <TenantChrome> porque el chrome lo reusa /vista-previa: si
+  // estuviera adentro, cada vez que el dealer previsualiza su sitio le
+  // ensuciaría las métricas con visitas propias.
+  const tenantPixelId = canUseMetaPixel(dealership) ? getTenantPixelId(dealership) : null;
+
   return (
-    <TenantChrome dealership={dealership} basePath={basePath}>
-      {children}
-    </TenantChrome>
+    <>
+      {tenantPixelId && <MetaPixel pixelId={tenantPixelId} />}
+      <TenantChrome dealership={dealership} basePath={basePath}>
+        {children}
+      </TenantChrome>
+    </>
   );
 }

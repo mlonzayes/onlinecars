@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { PiPaperPlaneTilt, PiCircleNotch, PiCheckCircle } from "react-icons/pi";
 import { HONEYPOT_FIELD, HONEYPOT_STYLE } from "@/lib/honeypot";
+import { trackMetaEventWithId } from "@/lib/meta/client";
+import { META_EVENT_ID_FIELD } from "@/lib/meta/events";
 
 // Planes válidos — coinciden con el Zod del endpoint (/api/public/contact).
 const PLAN_KEYS = ["base", "media", "premium", "enterprise", "no_se"] as const;
@@ -45,13 +47,27 @@ export function LandingContactForm() {
 
     setLoading(true);
     try {
+      const intent = plan ? "plan" : "otro";
+
+      // Conversión Lead por el pixel del browser. El eventId que devuelve viaja
+      // en el payload para que el server mande el MISMO evento por la
+      // Conversions API y Meta lo deduplique en vez de contarlo dos veces.
+      // Se dispara ANTES del fetch a propósito: si el visitante cierra la
+      // pestaña con la request en vuelo, la conversión ya salió igual.
+      const metaEventId = trackMetaEventWithId("Lead", {
+        contentName: `contacto-${intent}`,
+        contentCategory: "saas-motorflow",
+        ...(plan ? { plan } : {}),
+      });
+
       const payload: Record<string, string> = {
-        intent: plan ? "plan" : "otro",
+        intent,
         name: form.name,
         email: form.email,
         phone: form.phone,
         message: form.message,
         [HONEYPOT_FIELD]: form[HONEYPOT_FIELD],
+        [META_EVENT_ID_FIELD]: metaEventId,
       };
       if (plan) payload.plan = plan;
 

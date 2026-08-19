@@ -20,6 +20,11 @@ export interface PlanLimits {
   // Si true, el sitio público del tenant muestra el badge "Powered by motorflow"
   // en el footer. Gancho de upgrade clásico: el dealer quiere su sitio limpio.
   showPoweredBy: boolean;
+  // Pixel de Meta + Conversions API en el sitio público del tenant.
+  // Mismo escalón que ML: es la feature del dealer que YA invierte en pauta, y
+  // ese dealer no está en el plan base. Sin esto no puede optimizar campañas ni
+  // armar públicos similares con sus propios visitantes.
+  allowMetaPixel: boolean;
 }
 
 // Nota sobre clientes (CRM): NO hay límite por diseño.
@@ -37,6 +42,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowMLIntegration: false,
     allowWhatsappFab: false,
     showPoweredBy: true,
+    allowMetaPixel: false,
   },
   base: {
     maxVehicles: 30,
@@ -46,6 +52,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowMLIntegration: false,
     allowWhatsappFab: false, // Gancho para upgrade
     showPoweredBy: true, // Badge "Powered by motorflow" en el footer del tenant
+    allowMetaPixel: false, // Gancho para upgrade: el que pauta necesita medir
   },
   media: {
     maxVehicles: 100,
@@ -55,6 +62,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowMLIntegration: true, // ML habilitado a partir de este plan
     allowWhatsappFab: true,
     showPoweredBy: false,
+    allowMetaPixel: true, // Pixel + CAPI habilitados a partir de este plan
   },
   premium: {
     maxVehicles: Infinity,
@@ -64,6 +72,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowMLIntegration: true,
     allowWhatsappFab: true,
     showPoweredBy: false,
+    allowMetaPixel: true,
   },
   enterprise: {
     maxVehicles: Infinity,
@@ -73,6 +82,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowMLIntegration: true,
     allowWhatsappFab: true,
     showPoweredBy: false,
+    allowMetaPixel: true,
   },
 };
 
@@ -89,6 +99,13 @@ export function getPlanLimits(dealership: Pick<Dealership, "plan">): PlanLimits 
  */
 export function canUseML(dealership: Pick<Dealership, "plan">): boolean {
   return getPlanLimits(dealership).allowMLIntegration;
+}
+
+/**
+ * Verifica si el concesionario puede configurar el pixel de Meta en su sitio.
+ */
+export function canUseMetaPixel(dealership: Pick<Dealership, "plan">): boolean {
+  return getPlanLimits(dealership).allowMetaPixel;
 }
 
 /**

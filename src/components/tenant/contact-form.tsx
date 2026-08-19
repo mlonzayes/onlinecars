@@ -4,6 +4,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Send, Loader2 } from "lucide-react";
 import { HONEYPOT_FIELD, HONEYPOT_STYLE } from "@/lib/honeypot";
+import { trackMetaEventWithId } from "@/lib/meta/client";
+import { META_EVENT_ID_FIELD } from "@/lib/meta/events";
 
 interface TenantContactFormProps {
   slug: string;
@@ -37,12 +39,22 @@ export function TenantContactForm({ slug, vehicleId, vehicleTitle }: TenantConta
     setLoading(true);
 
     try {
+      // Lead al pixel DEL CONCESIONARIO. Si el dealer no configuró el suyo,
+      // `trackMetaEventWithId` no hace nada (no hay fbq montado) pero igual
+      // devuelve el id — que el server ignora si tampoco tiene credenciales.
+      const metaEventId = trackMetaEventWithId("Lead", {
+        contentName: "consulta-vehiculo",
+        contentType: "vehicle",
+        ...(vehicleId ? { contentIds: [vehicleId] } : {}),
+      });
+
       const res = await fetch(`/api/public/tenant/${slug}/leads`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
           vehicleId: vehicleId || undefined,
+          [META_EVENT_ID_FIELD]: metaEventId,
         }),
       });
 

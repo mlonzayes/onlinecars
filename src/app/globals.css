@@ -161,6 +161,78 @@
   border-radius: 0 !important;
 }
 
+/* Template "prestige": ESCALA TIPOGRÁFICA editorial.
+   Misma fuente que el resto del producto (DM Sans) — lo que cambia el registro
+   no es la familia sino tres cosas: peso base liviano (300), títulos en 700 y
+   tracking negativo fuerte. El salto título/body queda ~2.4:1; con el ~1.5:1
+   default todo lee como plantilla genérica.
+
+   Va por CSS scopeado y no tocando componentes por la misma razón que el
+   override de "impacto": los tamaños están hardcodeados en <Section> y en cada
+   bloque, y no queremos bifurcar 20 archivos por una plantilla.
+
+   Sobre especificidad: `[data-template] h2` es (0,1,1) y le gana a `.text-2xl`
+   (0,1,0), incluidas las variantes dentro de media query. Por eso no hay
+   !important acá. */
+[data-template="prestige"] {
+  font-weight: 300;
+}
+
+[data-template="prestige"] h1 {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  font-weight: 700;
+}
+
+[data-template="prestige"] h2 {
+  font-size: clamp(2.25rem, 4vw, 3.25rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+}
+
+[data-template="prestige"] h3 {
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: 500;
+}
+
+/* Bajada de sección: el <p> que va DESPUÉS del h2 dentro del header de
+   <Section>. El selector por hermano lo distingue del eyebrow (que es
+   `p:first-child`) sin depender de clases. */
+[data-template="prestige"] section header > h2 ~ p {
+  font-size: 1.0625rem; /* 17px */
+  line-height: 1.6;
+  max-width: 44ch; /* medida de lectura: sin esto la bajada se estira a 1200px */
+}
+
+/* Eyebrow: más chico y más espaciado que el default. En una plantilla oscura el
+   eyebrow es lo único con color de marca, así que conviene que sea discreto. */
+[data-template="prestige"] section header > p:first-child {
+  font-size: 0.6875rem; /* 11px */
+  letter-spacing: 0.18em;
+}
+
+/* Escape hatch de la escala.
+   Las reglas de arriba son (0,1,1) y le ganan a `.text-5xl` (0,1,0), así que un
+   bloque NO puede agrandar su título con una clase de Tailwind. Este hook es
+   (0,2,0) y sí gana. Se usa en los bloques a sangre (spotlight), donde el h2 es
+   la pieza y no el rótulo de una sección. */
+[data-template="prestige"] [data-display="xl"] {
+  font-size: clamp(2.75rem, 7vw, 5rem);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  font-weight: 700;
+}
+
+/* Números tabulares para specs y precios: sin esto las cifras "bailan" de ancho
+   entre vehículos y la grilla de specs queda desalineada de fila a fila. */
+[data-template="prestige"] [data-numeric] {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
 /* Glows decorativos del hero de la landing. Animan solo el transform (barato,
    GPU) y solo si el usuario no pidió menos movimiento. */
 @keyframes heroFloat {

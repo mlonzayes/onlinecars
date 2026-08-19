@@ -30,6 +30,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | State management | Solo Zustand si es estrictamente necesario (aún no instalado) |
 | Testing | **No configurado todavía.** No hay Vitest/Playwright instalados. Las reglas en `.claude/rules/testing.md` son aspiracionales hasta que se setee. |
 
+## Reglas detalladas (`.claude/rules/`)
+
+Este archivo es el mapa general. Los patrones con miga viven en archivos aparte
+— **leelos antes de tocar esas áreas**, no reinventes lo que ya está resuelto:
+
+| Archivo | Cuándo leerlo |
+|---|---|
+| [api-conventions.md](.claude/rules/api-conventions.md) | Endpoints nuevos: auth, multi-tenancy, formato de respuesta |
+| [code-styles.md](.claude/rules/code-styles.md) | TypeScript, React, imports, tamaño de archivos |
+| [frontend-design.md](.claude/rules/frontend-design.md) | Cualquier UI nueva |
+| [table-filters.md](.claude/rules/table-filters.md) | Listados del panel con filtros/orden/paginación |
+| [tracking.md](.claude/rules/tracking.md) | Meta Pixel, Conversions API, cualquier evento de analítica |
+| [testing.md](.claude/rules/testing.md) | **Aspiracional** — no hay testing configurado todavía |
+
+> **Mantenimiento de este archivo.** Ya se desincronizó una vez y mandó a buscar
+> endpoints que no existían. Si agregás un módulo, un modelo o una env var,
+> actualizá la sección correspondiente en el mismo commit. Ante la duda, el
+> repo manda: la estructura real se saca con `find src/app/api -name route.ts`
+> y las env vars con `rg -o "process\.env\.[A-Z0-9_]+" src`.
+
 ## Comandos
 
 Package manager: **pnpm**.
@@ -38,9 +58,13 @@ Package manager: **pnpm**.
 pnpm dev            # Next.js dev server (http://localhost:3000)
 pnpm build          # Build de producción
 pnpm start          # Levanta el build
+pnpm lint           # ESLint
+pnpm lint:fix       # ESLint con --fix
 ```
 
-**No hay scripts de `lint`, `typecheck` ni `test` definidos en `package.json`** — si necesitás chequear tipos, corré `pnpm exec tsc --noEmit`. Si vas a agregar testing o lint, primero pedile al usuario que confirme el setup.
+**No hay script de `typecheck` ni de `test`** — para chequear tipos corré `pnpm exec tsc --noEmit`. Si vas a agregar testing, primero pedile al usuario que confirme el setup.
+
+> **Gotcha del `.next` viejo.** Si `tsc --noEmit` tira errores de módulos que no existen bajo `.next/types/`, es el cache de rutas desactualizado (típico después de mover páginas o crear un route group). `rm -rf .next` y volvé a correr.
 
 ### Prisma
 
@@ -62,7 +86,7 @@ El modelo de multi-tenancy se resuelve por **subdomain routing** (default domain
 ```
 {slug}.motorflowapp.com  → Sitio público del concesionario (rewrite a /tenant/{slug})
 app.motorflowapp.com     → Panel de administración (dashboard)
-motorflowapp.com         → Landing pública (waitlist) + onboarding + sign-in
+motorflowapp.com         → Web de marketing + onboarding + sign-in
 ```
 
 El subdomain rewrite vive en [src/middleware.ts](src/middleware.ts) y **solo se activa fuera de `localhost`**. En dev se trabaja todo desde `localhost:3000` accediendo a `/dashboard`, `/tenant/{slug}`, etc. directamente.
@@ -72,7 +96,7 @@ El subdomain rewrite vive en [src/middleware.ts](src/middleware.ts) y **solo se 
 Mientras el producto no esté abierto, el dashboard está gateado por este flag:
 
 - Si `NEXT_PUBLIC_ENABLE_LOGIN !== "true"`, el middleware NO protege rutas y el layout del dashboard redirige a `/`.
-- En ese estado, la app funciona como landing pura con la waitlist.
+- En ese estado, la app funciona como sitio de marketing puro: la única conversión es el form de contacto.
 - Cualquier cambio en flow de auth tiene que respetar este gate.
 
 ### Estructura de la App (App Router) — estado real
@@ -80,79 +104,97 @@ Mientras el producto no esté abierto, el dashboard está gateado por este flag:
 ```
 src/
 ├── app/
-│   ├── page.tsx                     # Landing pública con waitlist (sin route group)
-│   ├── layout.tsx                   # Root layout
-│   ├── providers.tsx                # Providers globales (Clerk, theme, etc.)
-│   ├── dashboard/                   # Panel admin — gateado por NEXT_PUBLIC_ENABLE_LOGIN
-│   │   ├── layout.tsx               # Sidebar + header + verificación de Dealership
-│   │   ├── page.tsx                 # Dashboard home
-│   │   ├── vehiculos/               # CRUD de vehículos (list, [id], nuevo)
-│   │   ├── leads/                   # Gestión de consultas
-│   │   ├── clientes/                # CRUD de clientes (list, [id], nuevo)
-│   │   ├── ventas/                  # CRUD de ventas (list, [id], nueva)
-│   │   ├── sitio-web/               # Personalización del sitio público (theme, branding)
-│   │   └── configuracion/           # Settings del concesionario
-│   ├── (onboarding)/onboarding/     # Crea Dealership inicial al loguearse
-│   ├── sign-in/[[...sign-in]]/      # Clerk sign-in
+│   ├── layout.tsx                   # Root layout (Clerk + fuente + metadata base)
+│   ├── providers.tsx                # Providers globales (theme, tooltip)
+│   ├── robots.ts / sitemap.ts       # SEO del dominio de MARKETING (no del tenant)
+│   ├── (marketing)/                 # Web principal — motorflowapp.com
+│   │   ├── layout.tsx               # ⚠️ Monta el Meta Pixel de la web principal
+│   │   ├── page.tsx                 # Landing (hero, pricing, testimonios, FAQ, contacto)
+│   │   ├── precios/                 # Comparativa de planes
+│   │   ├── blog/                    # Listado + [slug]
+│   │   ├── terminos/ · privacidad/  # Legales
+│   ├── dashboard/                   # Panel del concesionario — gateado por NEXT_PUBLIC_ENABLE_LOGIN
+│   │   ├── vehiculos/ leads/ clientes/ ventas/ cotizaciones/
+│   │   ├── sitio-web/               # Secciones, branding, plantilla, redes, Meta Pixel
+│   │   ├── configuracion/           # Settings (solapas por ?tab=)
+│   │   ├── vendedores/ portales/    # Usuarios del tenant · integración MercadoLibre
+│   │   └── contabilidad/ bancos/ pagos/
+│   ├── admin/                       # Panel SUPER-ADMIN (cuentas, trials, /admin/sitios)
+│   ├── (onboarding)/                # onboarding/ + aceptar-terminos/
+│   ├── sign-in/ · sign-up/          # Clerk (catch-all)
+│   ├── invite/ · cuenta-pausada/    # Alta por invitación · cuenta suspendida
+│   ├── vista-previa/                # Preview del sitio propio sin publicarlo
 │   ├── tenant/[slug]/               # Sitio público del concesionario (target del rewrite)
-│   │   ├── layout.tsx               # generateMetadata por tenant (title/desc/OG/favicon)
-│   │   ├── page.tsx                 # Home del sitio (secciones configurables) + JsonLd AutoDealer
-│   │   ├── vehiculo/[publicSlug]/   # Detalle público del vehículo + JsonLd Car/Offer
-│   │   ├── sitemap.xml/route.ts     # Sitemap POR tenant (usa getTenantPublicUrl + vehículos)
-│   │   └── robots.txt/route.ts      # Robots POR tenant (indexa si siteEnabled; noindex si no)
-│   └── api/
-│       ├── waitlist/                # POST público para landing
-│       ├── onboarding/              # POST: crear Dealership + DealershipUser
-│       ├── concesionario/           # GET/PUT del dealership actual + /theme + /logo + /favicon (POST/DELETE upload branding)
-│       ├── vehiculos/               # GET, POST + [id] (GET/PUT/DELETE)
-│       │   └── [id]/
-│       │       ├── publish/         # PATCH toggle publicado
-│       │       ├── featured/        # PATCH toggle destacado
-│       │       ├── status/          # PATCH cambiar status (bloqueado si hay venta activa)
-│       │       └── images/          # POST + [imageId] (DELETE) + /order (PUT reordenar)
-│       ├── leads/                   # GET + [id] (GET/PATCH/DELETE)
-│       ├── clientes/                # GET, POST + [id] (GET/PUT/DELETE)
-│       ├── ventas/                  # GET, POST + [id] (GET/PATCH/DELETE) + [id]/status
-│       │   └── [id]/documentos/     # GET, POST + [docId] (DELETE) + [docId]/url (GET presigned)
-│       ├── dashboard/reviews/[id]/  # PATCH (moderar) + DELETE
-│       └── public/                  # Endpoints SIN auth — sitio del tenant + landing
-│           └── tenant/[slug]/
-│               ├── vehicles/        # GET catálogo
-│               ├── leads/           # POST consulta
-│               └── reviews/         # POST opinión (entra como pending)
+│   │   ├── layout.tsx               # generateMetadata por tenant + Meta Pixel DEL DEALER
+│   │   ├── page.tsx                 # Home (secciones configurables) + JsonLd AutoDealer
+│   │   ├── catalogo/ · cotizar/ · opinion/
+│   │   ├── vehiculo/[publicSlug]/   # Ficha pública + JsonLd Car/Offer
+│   │   └── sitemap.xml/ · robots.txt/  # SEO POR tenant
+│   └── api/                         # Ver árbol completo abajo
 ├── components/
-│   ├── ui/                          # shadcn/ui
-│   ├── dashboard/                   # sidebar, header, *-form, *-table, *-detail-sheet, settings/*, vehicle-image-uploader, sale-documents
-│   ├── tenant/                      # Componentes del sitio público (catálogo, contact-form, review-form, etc.)
-│   └── shared/                      # navbar, waitlist-form
+│   ├── ui/                          # shadcn/ui (Base UI por debajo)
+│   ├── landing/ · shared/           # Web principal (navbar, footer, secciones, contact-form)
+│   ├── dashboard/                   # Panel + settings/ + charts/ + sections-builder/
+│   ├── tenant/                      # Sitio público + tenant/premium/
+│   ├── admin/                       # Panel super-admin
+│   ├── meta/                        # Meta Pixel + tracking de eventos
+│   ├── seo/                         # JsonLd
+│   └── legal/
 ├── lib/
-│   ├── prisma.ts                    # Singleton con PrismaNeon adapter
-│   ├── redis.ts                     # Upstash Redis REST client
-│   ├── rate-limit.ts                # 4 limiters Upstash + applyRateLimit() helper (fail-open)
-│   ├── honeypot.ts                  # HONEYPOT_FIELD + isHoneypotTriggered() para anti-bots
-│   ├── auth.ts                      # getCurrentDealership() — resuelve Dealership del user logueado
-│   ├── tenant.ts                    # Queries para sitio público (getDealershipBySlug, getPublishedVehicles, ...)
-│   ├── api-handler.ts               # withLogger() — wrapper para route handlers (ver sección API)
-│   ├── logger.ts                    # JSON structured logger + generateRequestId()
-│   ├── sale-guards.ts               # findBlockingSale() — bloquea ediciones del vehículo si hay venta activa
-│   ├── storage/                     # Abstracción de storage (local | s3) — index, types, local.ts, s3.ts
-│   ├── utils.ts                     # cn() y helpers
-│   ├── validators/                  # Schemas Zod (vehicle, vehicle-image, lead, customer, sale, sale-document, dealership, review, waitlist)
-│   └── constants.ts                 # `as const` lists (FUEL_TYPES, STATUSES, PROVINCIAS_ARGENTINA, etc.)
-├── hooks/                           # use-mobile.ts (otros se irán sumando)
-├── data/                            # brands.json — datos estáticos de marcas
-├── types/index.ts                   # ApiResponse, ApiListResponse, ApiError, DealershipTheme
+│   ├── prisma.ts redis.ts logger.ts api-handler.ts utils.ts
+│   ├── auth.ts permissions.ts super-admin.ts admin-context.ts
+│   ├── rate-limit.ts honeypot.ts        # Protección de endpoints públicos
+│   ├── tenant.ts tenant-templates.ts tenant-defaults.ts tenant-format.ts
+│   ├── plans.ts                         # PLAN_LIMITS + gating por plan
+│   ├── meta/                            # Pixel + Conversions API (ver rules/tracking.md)
+│   ├── storage/                         # Abstracción local | s3
+│   ├── table/                           # Filtros/orden URL-based (ver rules/table-filters.md)
+│   ├── sections/ pdf/ mercadolibre/ import/
+│   ├── validators/ constants.ts cache-tags.ts
+│   ├── sale-guards.ts quotation-*.ts margin.ts exchange-rate.ts
+│   ├── notifications.ts telegram.ts     # Avisos in-app · avisos internos al equipo
+│   ├── dashboard-stats.ts dashboard-cache.ts admin-stats.ts
+│   └── seo.ts legal.ts maps.ts social.ts vercel.ts gsap.ts
+├── hooks/                           # use-mobile, use-url-filters, use-vehicle-import, ...
+├── data/                            # brands.json, posts (blog), vehicle-catalog.csv
+├── types/index.ts                   # ApiResponse, ApiListResponse, DealershipTheme, SocialLinks
 ├── middleware.ts                    # Subdomain routing + Clerk auth (con flag de login)
 └── prisma/
     ├── schema.prisma
     └── migrations/
 ```
 
-**Pendientes conocidos** (no existen aún en `src/`):
-- Webhooks de Clerk en `/api/webhooks/clerk/` para sync de usuarios (delete/rename).
-- Cache Redis del catálogo público + invalidación.
-- Email transaccional con Resend (deps instaladas, sin uso).
-- CSP (`Content-Security-Policy`) — los demás headers de seguridad ya están, este queda para una iteración aparte con tuneo Clerk-friendly en modo report-only primero.
+### Árbol de API (estado real)
+
+```
+/api
+├── public/                       # SIN auth — rate limit + honeypot OBLIGATORIOS
+│   ├── contact                   # POST — form de la landing (NO existe /api/waitlist)
+│   └── tenant/[slug]/{vehicles,leads,reviews}
+├── onboarding · terms/accept
+├── concesionario                 # GET/PUT + /theme /logo /favicon
+│   ├── media                     # + /presign /confirm /order /[id]
+│   ├── sections                  # + /[type] /order
+│   └── usuarios/invitar          # + /[id]
+├── vehiculos                     # + /[id] /publish /featured /status /bulk /catalog /import
+│   └── [id]/{images,gastos,ml}   # images: /[imageId] /order · ml: /sync
+├── clientes · leads · ventas · cotizaciones
+│   ├── ventas/[id]/documentos    # + /[docId] /[docId]/url (presigned)
+│   └── cotizaciones/[id]         # + /status /pdf
+├── notifications                 # + /unread-count
+├── mercadolibre/{auth,auth/callback,status,webhooks}
+├── dashboard/reviews/[id]
+├── admin/{dealerships/[id],dealerships/[id]/pagos,impersonation}
+├── cron/{expire-trials,sync-exchange-rate}
+└── webhooks/clerk
+```
+
+**Pendientes conocidos:**
+- Email transaccional con Resend (dependencia instalada, sin uso en el código).
+- CSP (`Content-Security-Policy`) — los demás headers de seguridad ya están; este
+  queda para una iteración aparte, con tuneo Clerk-friendly en modo report-only primero.
+- Testing (Vitest + RTL). Las reglas de `.claude/rules/testing.md` son aspiracionales.
+- Routing de dominios custom en el middleware (`CUSTOM_DOMAINS_ENABLED = false`).
 
 ## Convenciones de Código
 
@@ -254,14 +296,14 @@ Para logging usar SIEMPRE el `logger` de [src/lib/logger.ts](src/lib/logger.ts) 
 
 #### Rate limiting + honeypot en endpoints públicos
 
-Todo handler nuevo bajo `/api/public/*` (y `/api/waitlist`) debe aplicar **rate limiting** Y **honeypot**, en ese orden, antes de cualquier validación o acceso a DB. Helpers:
+Todo handler nuevo bajo `/api/public/*` debe aplicar **rate limiting** Y **honeypot**, en ese orden, antes de cualquier validación o acceso a DB. Helpers:
 
 - [src/lib/rate-limit.ts](src/lib/rate-limit.ts) — 4 limiters preconfigurados (`publicLeadsLimiter`, `publicReviewsLimiter`, `publicVehiclesLimiter`, `waitlistLimiter`). Usan `Ratelimit.slidingWindow` de `@upstash/ratelimit`. Función `applyRateLimit(limiter, key, requestId, context)` devuelve `{ ok, headers }`. **Fail-open**: si Upstash está caído, deja pasar y loggea (preferimos servicio sin rate limit a servicio caído).
 - [src/lib/honeypot.ts](src/lib/honeypot.ts) — `HONEYPOT_FIELD = "website"`, `isHoneypotTriggered(body)`. Si trigger: loggear `*.honeypot_triggered` y devolver **201 fake** con UUID random (NO 4xx — no enseñar al bot).
 
 **Key del rate limit**:
 - Endpoints con tenant: `${ip}:${slug}` para que un tenant no consuma cupo de otro.
-- Endpoints sin tenant (waitlist): solo `${ip}`.
+- Endpoints sin tenant (`/api/public/contact`): solo `${ip}`. Reusa `waitlistLimiter` — el nombre quedó de cuando la landing tenía waitlist.
 - IP se extrae con `getClientIp(request)` (lee `x-forwarded-for` con fallback).
 
 **Importante**: los headers `X-RateLimit-*` se devuelven SIEMPRE (éxito y error) en `NextResponse.json(..., { headers: rl.headers })` para que el cliente sepa cuántas requests le quedan. En 429 se suma `Retry-After`.
@@ -605,7 +647,20 @@ Ver schema completo en [prisma/schema.prisma](prisma/schema.prisma). Resumen:
 - **`SaleDocument`** — documento del legajo de venta. Categorizado en `customer | vehicle | operation` con `type` específico (DNI, F08, Boleto, FACTURA_AFIP, etc.). `dealershipId` denormalizado para queries rápidas por tenant. **Datos personales sensibles** — viven en bucket privado y se sirven solo vía presigned URL. Tabla: `sale_documents`.
 - **`Review`** — opinión pública del cliente sobre el concesionario. Entra como `pending` desde el form del sitio del tenant; el admin la modera en el dashboard (`pending | approved | rejected`). `rating: 1-5`. Tabla: `reviews`.
 - **`FinancingPlan`** — banner/video de planes de financiación administrable desde el dashboard (`assetType: image | video | youtube`). Se renderizan en el sitio del tenant. Tabla: `financing_plans`.
-- **`WaitlistEntry`** — entradas de la landing pre-launch. `email` único. Tabla: `waitlist_entries`.
+- **`WaitlistEntry`** — entradas de la landing pre-launch. `email` único. **Legacy**: la landing hoy usa el form de contacto (`/api/public/contact`), que NO persiste en DB — notifica por Telegram. El modelo sigue existiendo por los registros históricos. Tabla: `waitlist_entries`.
+
+**Modelos sumados después del MVP inicial:**
+
+- **`DealershipInvite`** — invitación a un vendedor para sumarse al tenant.
+- **`DealershipSection`** — secciones configurables del home del tenant (orden, copy, `config: Json`). Las gestiona el sections-builder del dashboard.
+- **`DealershipMedia`** — imágenes/videos asociados a una sección del sitio (`sectionType` + `purpose` + `order`).
+- **`Quotation`** + **`QuotationCounter`** — cotizaciones de compra y de venta, con numeración por tenant y PDF (pdfmake).
+- **`VehicleExpense`** — gastos imputados a un vehículo. Alimentan el margen real (`lib/margin.ts`). Visibles según `showCostsToNonAdmins`.
+- **`Notification`** — avisos in-app del panel (lead nuevo, review, venta). Polling desde `/api/notifications`.
+- **`MercadoLibreAccount`** + **`MercadoLibreListing`** — vínculo OAuth con ML y mapeo publicación ↔ vehículo. Los tokens se guardan cifrados (`ML_TOKEN_SECRET`).
+- **`ExchangeRate`** — cotización oficial USD (BCRA), global. El plus por tenant es `Dealership.usdSpread`; el valor efectivo se calcula al usarlo, **nunca se persiste sumado**.
+- **`SubscriptionPayment`** — pagos de la suscripción a la plataforma, cargados por el super-admin. Actualizan `Dealership.paidUntil`.
+- **`TermsAcceptance`** — registro de aceptación de términos por usuario.
 
 **Distinción clave Lead vs Customer:** un `Lead` es una consulta pre-venta (puede no tener email, puede ser anónimo). Un `Customer` es alguien que firma una operación — tiene documento obligatorio. No mezclar.
 
@@ -614,25 +669,21 @@ Todas las constantes de los string-enums viven en [src/lib/constants.ts](src/lib
 ## Redis (Upstash) — estado actual
 
 **Implementado:**
-- **Rate limiting** en `/api/public/*` y `/api/waitlist` con `@upstash/ratelimit` (sliding window). Ver convención en sección "Rate limiting + honeypot" más arriba.
 
-**Pendiente (cache-aside del catálogo público):**
+- **Rate limiting** en `/api/public/*` y en el form de contacto con `@upstash/ratelimit` (sliding window). Ver convención en la sección "Rate limiting + honeypot" más arriba.
+- **Cache-aside del sitio del tenant** — ya está en [src/lib/tenant.ts](src/lib/tenant.ts), no reinventarlo:
+  - `tenant:{slug}:dealership` — el `Dealership` completo (`getDealershipBySlug`).
+  - `tenant:{slug}:home:v2` — el bundle entero del home ya **serializado** (Decimal → string, Date → ISO) para que los Server Components lo pasen a Client Components sin re-procesar.
+  - TTL 30 min, pero es red de seguridad: la fuente de verdad es la **invalidación activa**.
 
-Los lugares previstos para sumar cache:
-- **Catálogo público** de vehículos por concesionario — invalidar al crear/editar/eliminar/publicar vehículo o reordenar imágenes.
-- **Datos del concesionario** (config, branding) — TTL de 5 minutos, invalidar al PUT de `/api/concesionario` o PATCH de `/api/concesionario/theme`.
+**Reglas del cache del tenant:**
 
-Pattern previsto: cache-aside con invalidación manual desde los handlers de mutación.
+1. **TODO handler que mute algo visible en el home llama a `invalidateTenantHomeBundle(slug)`** — vehículos, imágenes, reviews, theme, secciones, media, datos del dealership. Se olvida uno y el dealer ve su sitio viejo 30 minutos y abre un ticket.
+2. **Fail-open en lectura y en escritura.** Si Redis se cae, se loggea (`tenant.home.cache_read_failed`) y se va a la DB. Nunca tira.
+3. **Si cambiás el SHAPE del bundle, bumpeá la versión de la key** (`:home:v2` → `:v3`). Sin eso, los tenants cacheados siguen sirviendo el shape viejo y el render explota con campos `undefined`.
+4. **El bundle enumera sus campos uno por uno a propósito.** No lo conviertas en un spread del `Dealership`: hay secretos ahí (ver `metaCapiToken`) que no deben viajar al cliente.
 
-```ts
-const cacheKey = `dealership:${slug}:vehicles`;
-const cached = await redis.get(cacheKey);
-if (cached) return JSON.parse(cached);
-
-const vehicles = await prisma.vehicle.findMany({ where: { dealershipId } });
-await redis.set(cacheKey, JSON.stringify(vehicles), { ex: 300 });
-return vehicles;
-```
+**Pendiente:** cachear también el listado paginado de `/catalogo` (hoy va directo a DB en cada filtro).
 
 ## SEO — sitio del tenant
 
@@ -652,6 +703,10 @@ Cada concesionario se sirve desde su subdominio (`{slug}.motorflowapp.com`) o, e
 
 ## Variables de Entorno
 
+> La lista de abajo salió de los `process.env.*` que REALMENTE usa el código
+> (`rg -o "process\.env\.[A-Z0-9_]+" src`). Si agregás una variable, agregala acá.
+> No hay `.env.example` en el repo: los archivos `.env*` están protegidos.
+
 ```env
 # Database (Neon — Postgres serverless)
 DATABASE_URL=
@@ -661,6 +716,14 @@ NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 CLERK_SECRET_KEY=
 NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
 NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+CLERK_WEBHOOK_SECRET=
+
+# App
+NEXT_PUBLIC_APP_URL=
+NEXT_PUBLIC_APP_DOMAIN=motorflowapp.com
+NEXT_PUBLIC_ENABLE_LOGIN=false      # "true" habilita dashboard + protección de rutas
+SUPER_ADMIN_CLERK_USER_IDS=         # Clerk user IDs separados por coma → acceso a /admin
+NEXT_PUBLIC_SUPPORT_WHATSAPP=
 
 # Upstash Redis (REST API)
 UPSTASH_REDIS_REST_URL=
@@ -668,59 +731,95 @@ UPSTASH_REDIS_REST_TOKEN=
 
 # Storage
 STORAGE_DRIVER=local                # "local" para dev, "s3" para prod (Vercel NO soporta local)
-
-# Storage S3-compatible (Cloudflare R2 esperado) — solo si STORAGE_DRIVER=s3
-# Dos buckets separados: público (imágenes catálogo) + privado (documentos legajo).
-S3_ENDPOINT=                        # ej: https://<account>.r2.cloudflarestorage.com
-S3_REGION=auto                      # R2 usa "auto"; otros providers según corresponda
+S3_ENDPOINT=
+S3_REGION=auto
 S3_ACCESS_KEY_ID=
 S3_SECRET_ACCESS_KEY=
-S3_PUBLIC_BUCKET=                   # bucket público — imágenes del catálogo
-S3_PUBLIC_URL=                      # custom domain o https://pub-xxx.r2.dev (sin trailing slash)
-S3_PRIVATE_BUCKET=                  # bucket privado — documentos del legajo (presigned URLs)
+S3_PUBLIC_BUCKET=                   # imágenes del catálogo
+S3_PUBLIC_URL=                      # custom domain (sin trailing slash)
+S3_PRIVATE_BUCKET=                  # documentos del legajo (presigned URLs)
 
-# Email (Resend)
+# Meta (Facebook/Instagram) — tracking de la WEB PRINCIPAL.
+# El pixel de cada concesionario NO va acá: vive en la DB (Dealership.metaPixelId)
+# y lo carga el dealer desde el dashboard. Ver .claude/rules/tracking.md.
+NEXT_PUBLIC_META_PIXEL_ID=          # Su PRESENCIA es el interruptor del tracking
+META_CAPI_ACCESS_TOKEN=             # Conversions API (server-side). SECRETO.
+META_CAPI_TEST_EVENT_CODE=          # ⚠️ VACÍO EN PRODUCCIÓN o los eventos no cuentan
+
+# Notificaciones internas al equipo
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+
+# Integración MercadoLibre
+ML_CLIENT_ID=
+ML_CLIENT_SECRET=
+ML_TOKEN_SECRET=                    # Cifra los tokens de ML guardados en DB
+ML_WEBHOOK_SECRET=
+
+# Vercel (alta de dominios custom — Fase 2, hoy en standby)
+VERCEL_API_TOKEN=
+VERCEL_AUTH_TOKEN=
+VERCEL_PROJECT_ID=
+VERCEL_TEAM_ID=
+
+# Cron (/api/cron/*)
+CRON_SECRET=
+
+# Email (Resend) — dependencia instalada, SIN uso en el código
 RESEND_API_KEY=
-
-# App
-NEXT_PUBLIC_APP_URL=
-NEXT_PUBLIC_APP_DOMAIN=motorflowapp.com
-
-# Feature flags
-NEXT_PUBLIC_ENABLE_LOGIN=false      # "true" habilita dashboard + protección de rutas
 ```
 
 ## Estado actual del MVP
 
 **Hecho:**
-- Landing pública con waitlist (`/`) + `POST /api/waitlist`.
-- Auth con Clerk (sign-in en `/sign-in`).
-- Onboarding: usuario sin Dealership cae en `(onboarding)/onboarding` y crea su concesionario.
-- Dashboard layout con sidebar + header.
-- Vehículos: CRUD + `publish`, `featured`, `status` + gestión de imágenes (upload, delete, reorder) con storage abstraction.
-- Leads: list + detail sheet + update de estado + delete.
-- Clientes: CRUD completo.
-- Ventas: CRUD + transición de estado controlada + legajo de documentos con presigned URLs.
-- Reviews: form público en sitio del tenant + moderación en dashboard.
-- Configuración: contacto y theme del dealership; sección `sitio-web` para personalización.
-- Sitio público del concesionario (`/tenant/[slug]/...`) con catálogo, detalle, contact-form, review-form.
-- Endpoints públicos: `/api/public/tenant/[slug]/{vehicles,leads,reviews}` + `/api/waitlist`.
-- Middleware de subdomain routing (rewrite a `/tenant/{slug}` en producción).
-- Storage S3-compatible (Contabo) con dos buckets — público (imágenes) + privado (documentos legajo, presigned 5min TTL).
-- Convención de logging con `withLogger` + request_id propagado.
-- **Seguridad**: headers (X-Frame, nosniff, Referrer-Policy, Permissions-Policy, HSTS-prod), rate limiting Upstash en públicos, honeypot anti-bots en forms públicos.
-- Auditoría manual de `dealershipId` en todos los handlers autenticados (sin agujeros encontrados).
-- **SEO por tenant**: `generateMetadata` + `sitemap.xml` + `robots.txt` + JSON-LD (`AutoDealer`/`Car`) por concesionario (ver sección "SEO — sitio del tenant").
-- **Branding del tenant**: subida de logo Y favicon (ícono del sitio) desde `dashboard/sitio-web`, con fallback favicon→logo. Endpoints `/api/concesionario/{logo,favicon}`.
-- **Flow de auth robusto**: guards de sesión en `/sign-in` y `/sign-up` (cortan el loop OAuth con cuenta existente) + redirect unificado al `/dashboard` como único router de estado de cuenta. `loading.tsx` en las rutas de auth para feedback instantáneo.
-- **WhatsApp en la web principal**: FAB flotante + botón en el menú mobile (landing) y en el footer del dashboard, todo desde `SITE_WHATSAPP_URL` de `lib/seo.ts`.
+
+*Web principal*
+- Landing completa en el route group `(marketing)`: hero, problema/solución, showcase, servicios, beneficios, testimonios, pricing, blog, FAQ y form de contacto (`POST /api/public/contact` → notifica por Telegram). **No hay waitlist activa.**
+- Páginas `/precios`, `/blog` (+ `[slug]`), `/terminos`, `/privacidad`.
+- **Meta Pixel + Conversions API** con deduplicación por `eventId` (ver `.claude/rules/tracking.md`).
+- FAB de WhatsApp desde `SITE_WHATSAPP_URL` de `lib/seo.ts`.
+
+*Auth y cuentas*
+- Clerk + onboarding + aceptación de términos (`TermsAcceptance`).
+- Guards de sesión en `/sign-in` y `/sign-up` (cortan el loop OAuth con cuenta existente); `/dashboard` como único router de estado de cuenta.
+- Invitación de vendedores (`DealershipInvite`) + roles (`admin | editor | viewer`) y `lib/permissions.ts`.
+- **Webhooks de Clerk** en `/api/webhooks/clerk`.
+- Suscripción: `subscriptionStatus`, trials con cron de expiración, `SubscriptionPayment` y pantalla `cuenta-pausada`.
+
+*Panel del concesionario*
+- Vehículos: CRUD + publish/featured/status + imágenes (upload, delete, reorder) + **import masivo desde Excel** + acciones bulk + gastos por vehículo (`VehicleExpense`) y margen.
+- Leads, Clientes, Ventas (con legajo de documentos y presigned URLs), **Cotizaciones** (compra y venta, con numeración por tenant y PDF vía pdfmake).
+- Contabilidad, bancos y pagos.
+- **Integración MercadoLibre**: OAuth, sync de publicaciones, webhooks.
+- Notificaciones in-app con polling.
+- Cotización USD: base BCRA global (`ExchangeRate`, cron de sync) + `usdSpread` por tenant.
+- Filtros/orden URL-based en los listados (ver `.claude/rules/table-filters.md`).
+
+*Sitio público del tenant*
+- Home con **secciones configurables** (`DealershipSection` + `DealershipMedia`) desde el sections-builder, catálogo con filtros, ficha de vehículo, cotizador y opiniones.
+- **Plantillas visuales** (`templateId`) con tokens + fuente por plantilla.
+- Branding: logo y favicon propios, con fallback favicon→logo.
+- **Meta Pixel del dealer** (gateado por plan) + Conversions API.
+- **SEO por tenant**: `generateMetadata` + `sitemap.xml` + `robots.txt` + JSON-LD (`AutoDealer`/`Car`).
+- `/vista-previa` para ver el sitio propio antes de publicarlo.
+- **Cache-aside Upstash** del dealership y del bundle del home, con invalidación activa.
+
+*Panel super-admin (`/admin`)*
+- Listado de cuentas, trials por vencer, registro de pagos, `/admin/sitios` (toggle de publicación, plantilla, preview cross-tenant) y modo plataforma para editar el sitio de un cliente.
+
+*Plataforma*
+- Middleware de subdomain routing (rewrite a `/tenant/{slug}`, con `url.search` incluido).
+- Storage S3-compatible (Contabo) con dos buckets — público (imágenes) + privado (documentos, presigned 5 min).
+- Logging con `withLogger` + `request_id` propagado.
+- **Seguridad**: headers (X-Frame, nosniff, Referrer-Policy, Permissions-Policy, HSTS-prod), rate limiting Upstash y honeypot en todos los endpoints públicos.
+- i18n paso 1: `country`, `currency`, `locale`, `siteLocale`, `timezone` por tenant.
 
 **Pendiente:**
-- Cache Redis del catálogo público (cache-aside con invalidación).
-- CSP (Content-Security-Policy) — iteración aparte con Clerk-tuning en modo report-only primero.
-- Webhooks de Clerk para sync de usuarios.
-- Email transaccional con Resend.
-- Testing (Vitest + RTL).
+- CSP (Content-Security-Policy) — iteración aparte, con Clerk-tuning en modo report-only primero.
+- Email transaccional con Resend (dependencia instalada, sin uso).
+- Testing (Vitest + RTL) — no hay NADA configurado.
+- Cache del listado paginado de `/catalogo`.
+- Routing de dominios custom en el middleware (`CUSTOM_DOMAINS_ENABLED = false`).
 
 ## Reglas para Claude
 
@@ -739,5 +838,6 @@ NEXT_PUBLIC_ENABLE_LOGIN=false      # "true" habilita dashboard + protección de
 13. **Preguntar antes de decisiones arquitectónicas grandes.**
 14. **Manejo de estado Loading en Forms:** Cuando un form hace un redirect (`router.push()`) al terminar con éxito, **NO** hagas `setLoading(false)` en un bloque `finally`. El `router.push` es asíncrono y el `finally` se ejecuta antes, habilitando el botón mientras se cambia de página (riesgo de doble-click). Movelo a los bloques de error o usá el hook `useFormStatus` / `isPending` (useTransition) de React.
 15. **Labels Opcionales:** No incluyas el texto "(opcional)" en los labels de los campos que no son requeridos. La convención visual es indicar con un asterisco `*` los que SÍ son obligatorios; por descarte, se asume que los demás son opcionales. Evitar el ruido visual innecesario en la UI.
-16. **Rate limit + honeypot en endpoints públicos:** todo handler nuevo bajo `/api/public/*` o `/api/waitlist` debe aplicar `applyRateLimit(...)` y `isHoneypotTriggered(...)` ANTES de tocar DB. El honeypot devuelve 201 fake (no 4xx — para no enseñarle al bot). Headers `X-RateLimit-*` se incluyen en TODAS las responses (éxito y error).
-17. **AWS SDK v3 + S3-compatible providers:** el cliente S3 en [src/lib/storage/s3.ts](src/lib/storage/s3.ts) usa `requestChecksumCalculation: "WHEN_REQUIRED"` y `responseChecksumValidation: "WHEN_REQUIRED"`. **No sacar estas flags.** Sin ellas, el SDK manda un header `x-amz-sdk-checksum-algorithm` que Contabo/Backblaze B2/MinIO no entienden, responden con error en JSON (no XML), y el deserializer del SDK explota con `char '{' is not expected`.
+16. **Rate limit + honeypot en endpoints públicos:** todo handler nuevo bajo `/api/public/*` debe aplicar `applyRateLimit(...)` y `isHoneypotTriggered(...)` ANTES de tocar DB. El honeypot devuelve 201 fake (no 4xx — para no enseñarle al bot). Headers `X-RateLimit-*` se incluyen en TODAS las responses (éxito y error).
+17. **Tracking de Meta:** cualquier evento nuevo va por `src/lib/meta/` y sigue [.claude/rules/tracking.md](.claude/rules/tracking.md). Lo no negociable: el `eventId` lo genera el CLIENTE y viaja al server para deduplicar pixel vs Conversions API (si no, contás cada conversión el doble), los datos personales pasan SIEMPRE por `buildHashedUserData`, nunca se loggea PII, y el envío server-side va con `after()` de `next/server` — no con `void`.
+18. **AWS SDK v3 + S3-compatible providers:** el cliente S3 en [src/lib/storage/s3.ts](src/lib/storage/s3.ts) usa `requestChecksumCalculation: "WHEN_REQUIRED"` y `responseChecksumValidation: "WHEN_REQUIRED"`. **No sacar estas flags.** Sin ellas, el SDK manda un header `x-amz-sdk-checksum-algorithm` que Contabo/Backblaze B2/MinIO no entienden, responden con error en JSON (no XML), y el deserializer del SDK explota con `char '{' is not expected`.

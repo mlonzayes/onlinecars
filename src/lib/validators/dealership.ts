@@ -104,6 +104,38 @@ export const dealershipUpdateSchema = dealershipCreateSchema.partial().omit({ sl
   locale: z.enum(LOCALES).optional(),
   siteLocale: z.enum(LOCALES).optional(),
   timezone: timezoneSchema.optional(),
+  // --- Meta (Facebook) tracking del sitio público ---
+  // Gating por plan: se enforza en el handler (allowMetaPixel), no acá. El
+  // validator solo chequea el shape.
+  //
+  // Un pixel id es numérico de 15-16 dígitos. Validamos el formato para no
+  // inyectar en el HTML del sitio lo que el dealer haya pegado del portapapeles.
+  metaPixelId: z
+    .string()
+    .regex(/^\d{10,20}$/, "El ID del pixel son solo números (15-16 dígitos)")
+    .nullable()
+    .optional()
+    .or(z.literal("").transform(() => null)),
+  // ⚠️ SECRETO del dealer. Semántica de tres estados, a propósito:
+  //   undefined → no vino en el payload = NO tocar el token guardado
+  //   null      → el dealer lo quitó explícitamente
+  //   string    → token nuevo
+  // Por eso el form NO manda este campo cuando el input quedó vacío: si lo
+  // mandara como "", borraría el token cada vez que el dealer guarda cualquier
+  // otra cosa de la sección.
+  metaCapiToken: z
+    .string()
+    .min(20, "El token es más largo que eso — copialo completo del Events Manager")
+    .max(512)
+    .nullable()
+    .optional(),
+  metaTestEventCode: z
+    .string()
+    .max(40)
+    .nullable()
+    .optional()
+    .or(z.literal("").transform(() => null)),
+  metaTrackingEnabled: z.boolean().optional(),
 });
 
 export type DealershipCreateInput = z.infer<typeof dealershipCreateSchema>;

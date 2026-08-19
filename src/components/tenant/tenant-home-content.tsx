@@ -1,5 +1,7 @@
 import { SectionRenderer } from "./section-renderer";
 import { CollectionCarousel } from "./collection-carousel";
+import { PremiumLayout } from "./premium/premium-layout";
+import { resolveTemplate } from "@/lib/tenant-templates";
 import { CATALOG_CAROUSEL_KEY, type TenantHomeBundle } from "@/lib/tenant";
 
 // Ancla de cada colección: se renderiza JUSTO DESPUÉS de la sección de ese type.
@@ -22,6 +24,16 @@ interface TenantHomeContentProps {
  */
 export function TenantHomeContent({ bundle, basePath }: TenantHomeContentProps) {
   const { sections, collections } = bundle;
+
+  // Plantillas con layout fijo (ej: "prestige") declaran su propia composición
+  // y no usan el orden/enabled de la DB ni las anclas de colección de abajo.
+  const template = resolveTemplate(bundle.dealership.templateId);
+  if (template.layout) {
+    return (
+      <PremiumLayout layout={template.layout} bundle={bundle} basePath={basePath} />
+    );
+  }
+
   const pageCollections = collections.filter((c) => c.key !== CATALOG_CAROUSEL_KEY);
   const used = new Set<string>();
   const nodes: React.ReactNode[] = [];

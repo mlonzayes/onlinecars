@@ -104,6 +104,24 @@ model Dealership {
   siteLocale           String   @default("es-AR")
   // Zona horaria IANA para mostrar fechas en la hora local del tenant.
   timezone             String   @default("America/Argentina/Buenos_Aires")
+  // --- Meta (Facebook) tracking del sitio público del tenant ---
+  // Cada concesionario mide SUS propias campañas con SU pixel. Gateado por plan
+  // (allowMetaPixel, ver src/lib/plans.ts) y enforzado server-side en el PUT.
+  //
+  // metaPixelId es PÚBLICO: se renderiza en el HTML del sitio, no es un secreto.
+  metaPixelId          String?
+  // ⚠️ SECRETO. Token de la Conversions API del dealer. NO puede salir del
+  // server: nunca al bundle del tenant (que se cachea en Redis y viaja a Client
+  // Components), nunca en la respuesta del GET /api/concesionario sin enmascarar.
+  // Se usa solo desde src/lib/meta/capi.ts.
+  metaCapiToken        String?
+  // Código de "Test Events" del Events Manager. Solo para verificar la
+  // integración; si queda seteado en producción los eventos NO cuentan como
+  // conversiones reales.
+  metaTestEventCode    String?
+  // Interruptor del tracking del tenant. Default false: nadie empieza a mandarle
+  // datos a Meta sin activarlo a mano.
+  metaTrackingEnabled  Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

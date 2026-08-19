@@ -2,6 +2,7 @@ import { Navbar } from "@/components/shared/navbar";
 import { PricingTable } from "@/components/landing/pricing-table";
 import { PricingDisclaimer } from "@/components/landing/pricing-disclaimer";
 import { Footer } from "@/components/shared/footer";
+import { MetaTrackEvent } from "@/components/meta/meta-track-event";
 
 export const metadata = {
   title: "Precios | motorflow",
@@ -11,6 +12,13 @@ export const metadata = {
 export default function PreciosPage() {
   return (
     <div className="flex min-h-screen flex-col">
+      {/* Mirar los planes es la señal de intención más fuerte antes del form.
+          Es el público al que después le hacés retargeting: entró a precios y
+          no convirtió. Sin este evento, ese público no existe. */}
+      <MetaTrackEvent
+        eventName="ViewContent"
+        customData={{ contentName: "precios", contentCategory: "saas-motorflow" }}
+      />
       <Navbar />
       <main className="flex-1 bg-gray-50 px-4 py-16 sm:py-24">
         <div className="mx-auto max-w-6xl">

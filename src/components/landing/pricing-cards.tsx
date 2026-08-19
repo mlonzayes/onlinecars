@@ -3,6 +3,7 @@
 import { PiCheck } from "react-icons/pi";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { getPlanCtaHref, rememberSelectedPlan } from "@/lib/pricing-cta";
 
 const PLANS = [
   {
@@ -44,16 +45,15 @@ export function PricingCards() {
   const router = useRouter();
 
   const handleStart = (planKey: string) => {
-    // Guardar plan en cookie — el form de contacto lo lee para marcar intent="plan".
-    document.cookie = `selected_plan_id=${planKey}; path=/; max-age=3600`;
-    router.push("#contacto");
+    rememberSelectedPlan(planKey);
+    router.push(getPlanCtaHref(planKey));
   };
 
   return (
     <div className="w-full">
       <div className="mb-10 text-center">
         <span className="inline-block rounded-full bg-blue-50 px-4 py-1.5 text-xs font-medium text-blue-600">
-          50% OFF los primeros 6 meses
+          15 días de prueba gratuita
         </span>
       </div>
 
@@ -112,11 +112,6 @@ export function PricingCards() {
               >
                 {plan.ctaText}
               </button>
-              {plan.key !== "enterprise" && (
-                <p className="text-center text-xs font-light text-gray-500">
-                  15 días de prueba gratuita
-                </p>
-              )}
               <Link
                 href="/precios"
                 target="_blank"

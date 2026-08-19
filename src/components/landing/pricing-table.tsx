@@ -1,18 +1,18 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { PiCheck, PiMinus } from "react-icons/pi";
+import { getPlanCtaHref, rememberSelectedPlan } from "@/lib/pricing-cta";
 
 interface PlanCol {
   key: "base" | "media" | "premium" | "enterprise";
   name: string;
-  /** Precio promo de lanzamiento en ARS, o null si es "Hablemos" (enterprise) */
-  promoPriceArs: number | null;
-  /** Precio de tabla (sin promo). Se muestra tachado arriba del promo. */
-  fullPriceArs: number | null;
+  /** Precio mensual en ARS, o null si es "Hablemos" (enterprise) */
+  priceArs: number | null;
   tagline: string;
   highlighted?: boolean;
   highlightLabel?: string;
-  ctaHref: string;
+  /** El destino no se declara acá: sale de getPlanCtaHref(key), que lee el flag. */
   ctaLabel: string;
 }
 
@@ -35,39 +35,31 @@ const PLANS: PlanCol[] = [
   {
     key: "base",
     name: "Base",
-    promoPriceArs: 19990,
-    fullPriceArs: 34990,
+    priceArs: 19990,
     tagline: "Para arrancar con presencia online.",
-    ctaHref: "#contacto",
     ctaLabel: "Anotarme",
   },
   {
     key: "media",
     name: "Media",
-    promoPriceArs: 49990,
-    fullPriceArs: 74990,
+    priceArs: 49990,
     tagline: "Para concesionarios en crecimiento.",
     highlighted: true,
     highlightLabel: "Más elegida",
-    ctaHref: "#contacto",
     ctaLabel: "Anotarme",
   },
   {
     key: "premium",
     name: "Premium",
-    promoPriceArs: 99990,
-    fullPriceArs: 129990,
+    priceArs: 99990,
     tagline: "Para operación media y alta.",
-    ctaHref: "#contacto",
     ctaLabel: "Anotarme",
   },
   {
     key: "enterprise",
     name: "Enterprise",
-    promoPriceArs: null,
-    fullPriceArs: null,
+    priceArs: null,
     tagline: "Soluciones a medida.",
-    ctaHref: "#contacto",
     ctaLabel: "Hablemos",
   },
 ];
@@ -196,6 +188,13 @@ function Cell({ value, highlighted }: { value: CellValue; highlighted: boolean }
 }
 
 export function PricingTable() {
+  const router = useRouter();
+
+  const handleStart = (planKey: PlanCol["key"]) => {
+    rememberSelectedPlan(planKey);
+    router.push(getPlanCtaHref(planKey));
+  };
+
   return (
     <div className="relative">
       {/* Hint de scroll en mobile — visible solo bajo md cuando la tabla overflowea. */}
@@ -243,37 +242,21 @@ export function PricingTable() {
                         {plan.tagline}
                       </div>
                       <div className="mt-3">
-                        {plan.promoPriceArs === null || plan.fullPriceArs === null ? (
+                        {plan.priceArs === null ? (
                           <span className="text-2xl font-extrabold text-gray-900">Hablemos</span>
                         ) : (
-                          <>
-                            {/* Tachado: precio "de tabla" arriba en chico */}
-                            <div className="text-[11px] font-medium text-gray-400 line-through">
-                              ${formatArs(plan.fullPriceArs)} / mes
-                            </div>
-                            <div>
-                              <span className="text-2xl font-extrabold text-gray-900">
-                                ${formatArs(plan.promoPriceArs)}
-                              </span>
-                              <span className="ml-1 text-xs font-medium text-gray-500">/ mes</span>
-                            </div>
-                            <div className="mt-1">
-                              <span
-                                className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
-                                  isHighlighted
-                                    ? "bg-blue-600 text-white"
-                                    : "bg-emerald-100 text-emerald-700"
-                                }`}
-                              >
-                                Promo lanzamiento
-                              </span>
-                            </div>
-                          </>
+                          <div>
+                            <span className="text-2xl font-extrabold text-gray-900">
+                              ${formatArs(plan.priceArs)}
+                            </span>
+                            <span className="ml-1 text-xs font-medium text-gray-500">/ mes</span>
+                          </div>
                         )}
                       </div>
                       <div className="mt-auto pt-4">
-                        <a
-                          href={plan.ctaHref}
+                        <button
+                          type="button"
+                          onClick={() => handleStart(plan.key)}
                           className={`inline-flex w-full items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold transition ${
                             isHighlighted
                               ? "bg-blue-600 text-white hover:bg-blue-700"
@@ -281,7 +264,7 @@ export function PricingTable() {
                           }`}
                         >
                           {plan.ctaLabel}
-                        </a>
+                        </button>
                       </div>
                     </div>
                   </th>

@@ -13,7 +13,10 @@
       "Bash(ls *)",
       "Bash(mkdir *)",
       "Bash(rg -o 'font-\\(thin|extralight|light|normal|medium|semibold|bold|extrabold|black\\)' *.tsx)",
-      "Bash(pnpm lint *)"
+      "Bash(pnpm lint *)",
+      "Bash(rg -n \"treatPendingAsSignedOut|sessionStatus|'pending'|\\\\\"pending\\\\\"|taskUrl|tasks\" node_modules/@clerk/nextjs/dist/esm/server/*.js node_modules/@clerk/nextjs/dist/esm/server/**/*.js)",
+      "Bash(rg -rn \"task\" node_modules/@clerk/nextjs/dist/esm/server/)",
+      "Bash(rg -rln \"sessionTasks|SessionTask|tasks\" node_modules/@clerk/backend/dist/)"
     ],
     "deny": [
       "Bash(rm -rf /)",

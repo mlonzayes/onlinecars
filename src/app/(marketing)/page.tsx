@@ -12,6 +12,7 @@ import { WhatsAppFab } from "@/components/landing/whatsapp-fab";
 import { Toaster } from "@/components/ui/sonner";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, SITE_EMAIL, SITE_PHONE } from "@/lib/seo";
+import { COUNTRIES, COUNTRY_LABELS } from "@/lib/constants";
 
 /**
  * Landing de motorflow — 7 secciones.
@@ -50,7 +51,13 @@ function buildStructuredData() {
         description: SITE_DESCRIPTION,
         email: SITE_EMAIL,
         telephone: SITE_PHONE,
-        areaServed: { "@type": "Country", name: "Argentina" },
+        // Derivado de COUNTRIES: es el dato que Google y los motores de IA leen
+        // para saber a qué mercados llegamos. Hardcodear "Argentina" acá nos
+        // dejaba fuera de cualquier consulta hecha desde México, Chile o España.
+        areaServed: COUNTRIES.map((c) => ({
+          "@type": "Country",
+          name: COUNTRY_LABELS[c],
+        })),
       },
       {
         "@type": "WebSite",

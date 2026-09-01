@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     "CRM concesionario",
     "publicar autos sin comisiones",
     "MercadoLibre autos integración",
-    "concesionario Argentina",
+    "software para concesionarias en español",
   ],
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,

@@ -4,10 +4,13 @@ import { Footer } from "@/components/shared/footer";
 import { BlogCard } from "@/components/landing/blog-card";
 import { getAllPosts } from "@/data/posts";
 
+// Sin la marca en el title: la agrega el `template` del root layout.
+// El canonical propio pisa el "/" que se hereda del root.
 export const metadata: Metadata = {
-  title: "Notas y guías — motorflow",
+  title: "Notas y guías para concesionarias",
   description:
     "Recursos para concesionarios: vender más, gestionar stock con menos fricción y aprovechar todo lo que motorflow puede hacer.",
+  alternates: { canonical: "/blog" },
 };
 
 export default function BlogIndexPage() {

@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
 import { JsonLd } from "@/components/seo/json-ld";
+import { ArticleParagraph } from "@/components/landing/article-paragraph";
 import { SITE_URL, SITE_NAME } from "@/lib/seo";
 import { getPostBySlug, getAllPosts, categoryLabel } from "@/data/posts";
 
@@ -59,8 +60,21 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const post = getPostBySlug(slug);
   if (!post) notFound();
 
+  const postUrl = `${SITE_URL}/blog/${post.slug}`;
+
+  // BreadcrumbList: hace que Google muestre "motorflowapp.com › Blog › Título"
+  // en vez de la URL cruda. Es de lo que más rinde por lo poco que cuesta, y
+  // las migas tienen que coincidir con la navegación real de la página.
+  const breadcrumbLd = {
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Inicio", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE_URL}/blog` },
+      { "@type": "ListItem", position: 3, name: post.title, item: postUrl },
+    ],
+  };
+
   const articleLd = {
-    "@context": "https://schema.org",
     "@type": "BlogPosting",
     headline: post.title,
     description: post.excerpt,
@@ -79,14 +93,21 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     },
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": `${SITE_URL}/blog/${post.slug}`,
+      "@id": postUrl,
     },
     ...(post.coverImage ? { image: `${SITE_URL}${post.coverImage}` } : {}),
   };
 
+  // Un solo <script> con @graph en vez de dos sueltos: los nodos quedan
+  // vinculados como una misma página y no compiten entre sí.
+  const pageLd = {
+    "@context": "https://schema.org",
+    "@graph": [articleLd, breadcrumbLd],
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      <JsonLd data={articleLd} />
+      <JsonLd data={pageLd} />
       <Navbar />
 
       <main className="flex-1 px-4 pb-16 pt-28">
@@ -137,9 +158,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               <section key={section.heading}>
                 <h2 className="text-xl font-semibold text-gray-900">{section.heading}</h2>
                 {section.body.map((paragraph, i) => (
-                  <p key={i} className="mt-3 text-base font-light leading-relaxed text-gray-600">
-                    {paragraph}
-                  </p>
+                  <ArticleParagraph
+                    key={i}
+                    text={paragraph}
+                    className="mt-3 text-base font-light leading-relaxed text-gray-600"
+                  />
                 ))}
               </section>
             ))}

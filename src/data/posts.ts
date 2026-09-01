@@ -40,7 +40,7 @@ export const POSTS: BlogPost[] = [
       {
         heading: "Aparecé cuando te buscan: SEO local",
         body: [
-          "La mayoría de las búsquedas de autos arrancan en Google con intención local: \"concesionaria usados en [ciudad]\". Si tu negocio no tiene presencia web propia, esas búsquedas se las llevan los portales y la competencia.",
+          "La mayoría de las búsquedas de autos arrancan en Google con intención local: \"concesionaria usados en tu ciudad\". Si tu negocio no tiene presencia web propia, esas búsquedas se las llevan los portales y la competencia — el problema que desarrollamos en [por qué no alcanza con MercadoLibre para vender autos](/blog/por-que-no-alcanza-mercadolibre).",
           "Tener un sitio con tu marca, tu localidad y tu catálogo indexable hace que aparezcas en esos resultados. Es tráfico que no pagás: llega solo, todos los días.",
         ],
       },
@@ -48,14 +48,14 @@ export const POSTS: BlogPost[] = [
         heading: "Las fotos venden antes que el precio",
         body: [
           "Vender autos online es, en buena medida, vender fotos. Una publicación con imágenes claras, bien iluminadas y desde varios ángulos genera el doble de consultas que una con fotos oscuras o de celular apuradas.",
-          "No necesitás equipo profesional: luz natural, fondo limpio y consistencia entre vehículos alcanzan para diferenciarte de la mayoría.",
+          "No necesitás equipo profesional: luz natural, fondo limpio y consistencia entre vehículos alcanzan para diferenciarte de la mayoría. Lo desglosamos paso a paso en la [guía rápida para fotografiar autos del concesionario](/blog/guia-fotografiar-autos).",
         ],
       },
       {
         heading: "Respondé rápido o lo perdés",
         body: [
           "La velocidad de respuesta es el factor más subestimado. Un lead contestado en los primeros minutos tiene muchísima más chance de convertir que uno respondido al otro día.",
-          "Centralizar las consultas en un solo lugar —en vez de tenerlas desparramadas entre WhatsApp, mail y portales— te permite no perder ninguna y hacer seguimiento real.",
+          "Centralizar las consultas en un solo lugar —en vez de tenerlas desparramadas entre WhatsApp, mail y portales— te permite no perder ninguna y hacer seguimiento real. El panel de leads viene incluido en [todos los planes de motorflow](/precios).",
         ],
       },
     ],
@@ -76,7 +76,7 @@ export const POSTS: BlogPost[] = [
         heading: "Las comisiones se comen tu margen",
         body: [
           "Publicar en portales tiene un costo que crece con tu volumen. Cada operación que cerrás pagando comisión es margen que dejás en la mesa de otro.",
-          "Un sitio propio con suscripción fija invierte la ecuación: cuanto más vendés, más conviene, porque el costo no escala con las ventas.",
+          "Un sitio propio con suscripción fija invierte la ecuación: cuanto más vendés, más conviene, porque el costo no escala con las ventas. Hacé la cuenta contra lo que pagás hoy de comisión mirando [los planes y precios de motorflow](/precios).",
         ],
       },
       {
@@ -90,7 +90,7 @@ export const POSTS: BlogPost[] = [
         heading: "Los datos del cliente son tuyos",
         body: [
           "Cuando una consulta entra por un portal, el vínculo con ese cliente es del portal, no tuyo. Perdés la posibilidad de hacer seguimiento, fidelizar y volver a venderle.",
-          "Con sitio propio, cada lead y cada cliente quedan en tu base. Eso es un activo que se acumula con el tiempo y que ningún portal te puede quitar.",
+          "Con sitio propio, cada lead y cada cliente quedan en tu base. Eso es un activo que se acumula con el tiempo y que ningún portal te puede quitar, y es la materia prima para las palancas que explicamos en [cómo aumentar las consultas a tu concesionario en 30 días](/blog/aumentar-consultas-concesionario).",
         ],
       },
     ],
@@ -110,7 +110,7 @@ export const POSTS: BlogPost[] = [
       {
         heading: "La luz lo es casi todo",
         body: [
-          "Fotografiá con luz natural difusa: temprano a la mañana o al atardecer evitás los reflejos duros del sol del mediodía sobre la chapa.",
+          "Fotografiá con luz natural difusa: temprano a la mañana o al atardecer evitás los reflejos duros del sol del mediodía sobre la chapa. Las fotos son una de las tres palancas de [cómo aumentar las consultas a tu concesionario en 30 días](/blog/aumentar-consultas-concesionario).",
           "Evitá el contraluz y los fondos cargados. Una pared lisa o un espacio abierto y ordenado hacen que el auto sea el protagonista.",
         ],
       },
@@ -125,7 +125,7 @@ export const POSTS: BlogPost[] = [
         heading: "Postproducción mínima y consistente",
         body: [
           "Un encuadre parejo, recorte uniforme y un leve ajuste de brillo y contraste alcanzan. No exageres la edición: una foto demasiado retocada genera desconfianza.",
-          "Lo más importante es la consistencia: que todos tus vehículos sigan el mismo estilo. Eso transmite profesionalismo a primera vista.",
+          "Lo más importante es la consistencia: que todos tus vehículos sigan el mismo estilo. Eso transmite profesionalismo a primera vista. Las fotos flojas son, de hecho, uno de [los 5 errores más comunes al cargar stock online](/blog/errores-cargar-stock-online).",
         ],
       },
     ],
@@ -150,13 +150,13 @@ export const POSTS: BlogPost[] = [
       {
         heading: "2. Precios sin moneda o desactualizados",
         body: [
-          "Un precio sin aclarar si es en pesos o dólares genera consultas que no convierten. Y un precio viejo te hace perder credibilidad. Revisá y actualizá con frecuencia.",
+          "Un precio sin aclarar si es en pesos o dólares genera consultas que no convierten. Y un precio viejo te hace perder credibilidad. Revisá y actualizá con frecuencia, y si dudás del número mirá [cómo calcular el precio justo de un usado](/blog/calcular-precio-justo-usado).",
         ],
       },
       {
         heading: "3. Fotos pocas o de mala calidad",
         body: [
-          "Una sola foto, oscura o mal recortada, mata la publicación. El stock online se vende con imágenes: invertí esos minutos por vehículo.",
+          "Una sola foto, oscura o mal recortada, mata la publicación. El stock online se vende con imágenes: invertí esos minutos por vehículo siguiendo la [guía rápida para fotografiar autos del concesionario](/blog/guia-fotografiar-autos).",
         ],
       },
       {
@@ -188,13 +188,13 @@ export const POSTS: BlogPost[] = [
         heading: "Todo empieza en el celular",
         body: [
           "La gran mayoría de la búsqueda de un auto hoy se hace desde el teléfono. Si tu sitio no carga rápido y no se ve bien en mobile, perdés al comprador antes de que vea el precio.",
-          "Mobile-first no es opcional: es el punto de partida del diseño de cualquier catálogo online.",
+          "Mobile-first no es opcional: es el punto de partida del diseño de cualquier catálogo online. Todos [los sitios que armamos con motorflow](/precios) salen así por default.",
         ],
       },
       {
         heading: "Transparencia de precios",
         body: [
-          "El comprador 2026 desconfía del \"consultar precio\". Mostrar el precio claro, con la moneda y las condiciones, genera más confianza y filtra consultas serias.",
+          "El comprador 2026 desconfía del \"consultar precio\". Mostrar el precio claro, con la moneda y las condiciones, genera más confianza y filtra consultas serias. Para llegar a ese número con criterio, mirá [cómo calcular el precio justo de un usado](/blog/calcular-precio-justo-usado).",
         ],
       },
       {
@@ -232,6 +232,7 @@ export const POSTS: BlogPost[] = [
         heading: "Un método simple y repetible",
         body: [
           "Tomá el valor de mercado base, aplicá los ajustes por estado y kilometraje, y contrastá contra tu margen objetivo. Documentá el criterio: así tasás parejo y no a ojo.",
+          "Una vez definido el precio, cargalo bien: publicarlo sin moneda o desactualizado es uno de [los 5 errores más comunes al cargar stock online](/blog/errores-cargar-stock-online).",
         ],
       },
     ],

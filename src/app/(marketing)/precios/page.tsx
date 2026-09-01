@@ -4,10 +4,18 @@ import { PricingDisclaimer } from "@/components/landing/pricing-disclaimer";
 import { ServicesSection } from "@/components/landing/services-section";
 import { Footer } from "@/components/shared/footer";
 import { MetaTrackEvent } from "@/components/meta/meta-track-event";
+import type { Metadata } from "next";
 
-export const metadata = {
-  title: "Precios | motorflow",
-  description: "Compará nuestros planes y elegí el que mejor se adapte a tu concesionario.",
+// El `title.template` del root layout ya agrega "| MotorFlow" — no repitas la
+// marca acá o sale duplicada en el SERP.
+// `alternates.canonical` es OBLIGATORIO: el root declara canonical "/" y las
+// pages que no lo pisan lo heredan, o sea le dicen a Google que son una copia
+// de la home y no las indexa aparte.
+export const metadata: Metadata = {
+  title: "Precios y planes para concesionarias",
+  description:
+    "Planes desde $19.990 por mes para tu concesionaria: sitio web propio, catálogo ilimitado y gestión de leads. Sin comisiones por venta y cancelás cuando quieras.",
+  alternates: { canonical: "/precios" },
 };
 
 export default function PreciosPage() {

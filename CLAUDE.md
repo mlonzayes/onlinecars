@@ -44,6 +44,12 @@ Este archivo es el mapa general. Los patrones con miga viven en archivos aparte
 | [tracking.md](.claude/rules/tracking.md) | Meta Pixel, Conversions API, cualquier evento de analítica |
 | [testing.md](.claude/rules/testing.md) | **Aspiracional** — no hay testing configurado todavía |
 
+También hay una **skill** en `.claude/skills/`:
+
+| Skill | Cuándo se dispara |
+|---|---|
+| [seo-web](.claude/skills/seo-web/SKILL.md) | Crear/rediseñar/auditar una página del marketing o del tenant, escribir una nota de blog, o tocar metadata, sitemap, robots o JSON-LD |
+
 > **Mantenimiento de este archivo.** Ya se desincronizó una vez y mandó a buscar
 > endpoints que no existían. Si agregás un módulo, un modelo o una env var,
 > actualizá la sección correspondiente en el mismo commit. Ante la duda, el

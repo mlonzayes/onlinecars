@@ -2,11 +2,37 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+// OJO: esto es un ALLOWLIST. Con NEXT_PUBLIC_ENABLE_LOGIN=true, todo lo que no
+// esté acá pasa por auth.protect(), y Clerk responde 404 al visitante anónimo
+// (no un redirect). Para el dashboard es lo que queremos; para una página de
+// MARKETING significa que Googlebot y cualquier prospecto sin sesión ven un 404.
+//
+// ⚠️ Página de marketing nueva → sumala acá Y al sitemap, o desaparece del
+// sitio en cuanto se prenda el login. La home sola no alcanza: /precios es la
+// página de mayor intención comercial que tenemos.
 const isPublicRoute = createRouteMatcher([
   "/",
+  // Marketing público (route group `(marketing)`)
+  "/precios",
+  "/blog(.*)",
+  "/terminos",
+  "/privacidad",
+  // Auth y alta
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/onboarding(.*)",
+  // Archivos de SEO del dominio principal. El matcher de abajo excluye por
+  // extensión (png, css, js…) pero NO .txt ni .xml, así que estos SÍ pasan por
+  // acá y sin la excepción devuelven 404: Googlebot se queda sin sitemap.
+  //
+  // No los saques agregando `txt|xml` al matcher: el robots.txt y el
+  // sitemap.xml de CADA tenant se resuelven con el rewrite de subdominio de
+  // este mismo middleware. Si el middleware no corre, no hay rewrite y se caen
+  // los sitemaps de todos los concesionarios.
+  "/robots.txt",
+  "/sitemap.xml",
+  "/llms.txt",
+  // Sitios de los concesionarios + endpoints sin sesión
   "/tenant(.*)",
   "/api/public/(.*)",
   "/api/webhooks/(.*)",

@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { LegalShell } from "@/components/legal/legal-shell";
 
+// La marca la agrega el `template` del root layout. El canonical propio evita
+// heredar el "/" del root.
 export const metadata: Metadata = {
-  title: "Política de Privacidad — motorflow",
+  title: "Política de Privacidad",
   description:
     "Cómo motorflow recolecta, usa y protege los datos personales en su plataforma para concesionarios.",
+  alternates: { canonical: "/privacidad" },
 };
 
 export default function PrivacidadPage() {

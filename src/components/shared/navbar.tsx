@@ -19,7 +19,7 @@ export async function Navbar() {
         <Link href="/" className="flex items-center">
           <span className="text-lg font-extrabold tracking-tight text-gray-900">
             {/* motor<span className="text-blue-600">flow</span> */}
-            <Image src="/logo/motorflow_light.png" alt="Logo" width={150} height={150} />
+            <Image src="/logo/motorflow_light.png" alt="motorflow" width={150} height={150} />
           </span>
         </Link>
 

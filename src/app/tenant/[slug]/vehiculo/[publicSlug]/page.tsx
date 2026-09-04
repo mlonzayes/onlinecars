@@ -22,6 +22,7 @@ import {
 import { VehicleGallery } from "@/components/tenant/vehicle-gallery";
 import { TenantContactForm } from "@/components/tenant/contact-form";
 import { JsonLd } from "@/components/seo/json-ld";
+import { ShareButton } from "@/components/tenant/share-button";
 import { MetaTrackEvent } from "@/components/meta/meta-track-event";
 
 interface VehicleDetailPageProps {
@@ -42,13 +43,20 @@ export async function generateMetadata({ params }: VehicleDetailPageProps): Prom
     ? vehicle.description.slice(0, 160)
     : `${vehicle.brand} ${vehicle.model} ${vehicle.year} - ${price}. Disponible en ${dealership.name}.`;
 
+  // Canonical propio: el layout del tenant declara el de la home y sin este
+  // override CADA ficha de vehículo le diría a Google que es una copia de ella.
+  // En un catálogo de 80 autos, eso es el catálogo entero fuera del índice.
+  const canonical = `${getTenantPublicUrl(dealership)}/vehiculo/${vehicle.publicSlug}`;
+
   return {
     title,
     description,
+    alternates: { canonical },
     openGraph: {
       title,
       description,
       type: "website",
+      url: canonical,
       images: vehicle.images[0]?.url ? [vehicle.images[0].url] : [],
     },
   };
@@ -98,7 +106,6 @@ export default async function VehicleDetailPage({ params }: VehicleDetailPagePro
   const publicUrl = getTenantPublicUrl(dealership);
   const vehicleUrl = `${publicUrl}/vehiculo/${vehicle.publicSlug}`;
   const carLd = {
-    "@context": "https://schema.org",
     "@type": "Car",
     name: vehicle.title,
     url: vehicleUrl,
@@ -141,6 +148,24 @@ export default async function VehicleDetailPage({ params }: VehicleDetailPagePro
     },
   };
 
+  // BreadcrumbList: Google muestra "concesionaria.com › Catálogo › Auto" en vez
+  // de la URL cruda. Las migas coinciden con la navegación real de la ficha.
+  const breadcrumbLd = {
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Inicio", item: publicUrl },
+      { "@type": "ListItem", position: 2, name: "Catálogo", item: `${publicUrl}/catalogo` },
+      { "@type": "ListItem", position: 3, name: vehicle.title, item: vehicleUrl },
+    ],
+  };
+
+  // Un solo <script> con @graph: los nodos quedan vinculados como una misma
+  // página en vez de competir entre sí.
+  const pageLd = {
+    "@context": "https://schema.org",
+    "@graph": [carLd, breadcrumbLd],
+  };
+
   const whatsappMessage = encodeURIComponent(
     `Hola! Me interesa el ${vehicle.title} (${formatPrice(vehicle.price, vehicle.currency)}). ¿Está disponible?`
   );
@@ -172,7 +197,7 @@ export default async function VehicleDetailPage({ params }: VehicleDetailPagePro
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
-      <JsonLd data={carLd} />
+      <JsonLd data={pageLd} />
 
       {/* ViewContent con precio: es lo que le permite a Meta optimizar por VALOR
           y no solo por volumen de clicks. Un dealer que pauta quiere leads de
@@ -276,6 +301,14 @@ export default async function VehicleDetailPage({ params }: VehicleDetailPagePro
                 Consultar por WhatsApp
               </a>
             )}
+
+            {/* Compartir (punto 22). Secundario a propósito: la conversión es
+                consultar, compartir es la vía por la que el auto llega a alguien
+                que todavía no visitó el sitio. */}
+            <ShareButton
+              title={vehicle.title}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--tenant-border)] px-6 py-3 text-sm font-medium text-[var(--tenant-fg-muted)] transition-colors hover:bg-[var(--tenant-surface-hover)] hover:text-[var(--tenant-fg)]"
+            />
           </div>
         </div>
       </div>

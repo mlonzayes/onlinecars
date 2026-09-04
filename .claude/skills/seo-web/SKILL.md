@@ -97,16 +97,16 @@ export const metadata: Metadata = {
 
 ---
 
-## 2. Canonical (punto 1, y el gap abierto del repo)
+## 2. Canonical (punto 1) — la trampa que más cuesta
 
 El root layout define `metadataBase: new URL(SITE_URL)`, así que en **marketing**
 el canonical puede ser **relativo** y Next lo resuelve solo. Referencia viva:
 [blog/[slug]/page.tsx:39](<../../../src/app/(marketing)/blog/[slug]/page.tsx#L39>).
 
-**En el tenant esto NO alcanza y es un bug latente.** `metadataBase` apunta a
-`motorflowapp.com`, así que un canonical relativo servido desde
-`kansas.motorflowapp.com` resuelve al dominio equivocado y le dice a Google que
-el contenido del dealer es nuestro. En el tenant el canonical va **absoluto**:
+**En el tenant esto NO alcanza.** `metadataBase` apunta a `motorflowapp.com`,
+así que un canonical relativo servido desde `kansas.motorflowapp.com` resuelve
+al dominio equivocado y le dice a Google que el contenido del dealer es nuestro.
+En el tenant el canonical va **absoluto**:
 
 ```ts
 // tenant/[slug]/layout.tsx — generateMetadata
@@ -119,9 +119,27 @@ return {
 };
 ```
 
-Hoy [tenant/[slug]/layout.tsx](../../../src/app/tenant/[slug]/layout.tsx) **no
-tiene ninguno de los dos**. Está anotado como gap en CLAUDE.md. Si tocás esa
-metadata, arreglalo en el mismo cambio.
+Ya está implementado en [tenant/[slug]/layout.tsx](../../../src/app/tenant/[slug]/layout.tsx).
+
+### ⚠️ Y ahora CADA sub-página necesita el suyo
+
+Poner el canonical en un layout resuelve la home **y crea el problema en todas
+las hijas**: heredan ese valor y le dicen a Google que son una copia de la home.
+Con un catálogo de 80 autos, eso es el catálogo entero fuera del índice.
+
+Por eso `catalogo`, `cotizar`, `opinion` y `vehiculo/[publicSlug]` declaran cada
+una la suya, **absoluta**:
+
+```ts
+alternates: { canonical: `${getTenantPublicUrl(dealership)}/catalogo` },
+```
+
+**Página nueva del tenant → canonical propio, sin excepción.** Es la misma
+trampa que ya se comió a `/precios` y `/blog` en marketing, una capa más abajo.
+
+En el catálogo el canonical va **sin query params**: la page se sirve también
+con `?page=2&brand=…&sort=…` y cada combinación es una URL distinta para Google.
+Todas apuntan a la URL limpia.
 
 ---
 
@@ -255,7 +273,7 @@ Detalle y plantillas en `references/archivos-tecnicos.md`. Resumen de qué exist
 |---|---|---|
 | robots (17) | [app/robots.ts](../../../src/app/robots.ts) ✅ | [route handler](../../../src/app/tenant/[slug]/robots.txt/route.ts) ✅ |
 | sitemap (25) | [app/sitemap.ts](../../../src/app/sitemap.ts) ✅ | [route handler](../../../src/app/tenant/[slug]/sitemap.xml/route.ts) ✅ |
-| llms.txt (20) | [app/llms.txt/route.ts](../../../src/app/llms.txt/route.ts) ✅ | ❌ no existe |
+| llms.txt (20) | [app/llms.txt](../../../src/app/llms.txt/route.ts) ✅ | [tenant/[slug]/llms.txt](../../../src/app/tenant/[slug]/llms.txt/route.ts) ✅ |
 
 **Por qué el tenant usa route handlers y no la convención `sitemap.ts`:** hay que
 resolver el `slug` por `params` y controlar el XML entero. Está documentado en el
@@ -306,9 +324,9 @@ respetar ese gate.
 | 17 | robots.txt | ✅ ambas superficies |
 | 18 | URLs limpias | sección 8 |
 | 19 | Paginación no indexable | sección 8 — **`?page=`, no `/page/`** |
-| 20 | llms.txt | ✅ marketing · ❌ tenant |
+| 20 | llms.txt | ✅ ambas superficies |
 | 21 | CTA fijo en móvil | ✅ FAB de WhatsApp |
-| 22 | Botón de compartir | sección 7 |
+| 22 | Botón de compartir | ✅ `ShareButton` en la ficha de vehículo |
 | 23 | GA4 | **N/A** — acá es Meta Pixel + CAPI |
 | 24 | Search Console | sección 10 |
 | 25 | sitemap.xml | ✅ ambas superficies |
@@ -319,23 +337,28 @@ omitirlo en silencio.
 
 ### Gaps abiertos del repo (arreglalos si tocás esa zona)
 
-1. **`alternates.canonical` ausente en el tenant** → contenido duplicado entre
-   `{slug}.motorflowapp.com` y `motorflowapp.com/tenant/{slug}`.
-2. **`metadataBase` sin override por tenant** → OG y canonical relativos
-   resuelven al dominio de marketing.
-3. **`llms.txt` del tenant** — el de marketing ya existe; falta el handler
-   bajo `tenant/[slug]/llms.txt/`, gateado por `siteEnabled`.
-4. **Sin `BreadcrumbList` en la ficha de vehículo** (Home › Catálogo › Auto).
-   Las notas del blog ya lo tienen; la ficha es donde más rinde.
-5. **Sin botón de compartir** (punto 22) en la ficha de vehículo.
-6. **`SITE_URL` no sanea un path.** [lib/seo.ts](../../../src/lib/seo.ts) solo
+1. **`SITE_URL` no sanea un path.** [lib/seo.ts](../../../src/lib/seo.ts) solo
    saca la barra final de `NEXT_PUBLIC_APP_URL`. Si esa env trae un path (en
    `.env.local` estaba como `http://localhost:3000/dashboard`), se cuela en el
    `metadataBase` y TODOS los canonical y OG salen con ese prefijo.
+2. **Search Console sin automatizar.** Cada `{slug}.motorflowapp.com` es una
+   propiedad aparte. A mano no escala; iría por la Search Console API en el alta
+   del tenant.
+3. **La política de privacidad solo cita la ley argentina**, con el producto ya
+   habilitado en 6 países. Es tema de abogado, no de código.
 
 ### Ya resueltos (no los re-reportes)
 
 - Títulos con marca duplicada en marketing → las pages ya no repiten la marca.
-- Canonical heredado del root → `/precios`, `/blog`, `/terminos` y
-  `/privacidad` declaran el suyo.
+- Canonical heredado del root → todas las pages de marketing declaran el suyo.
 - Marketing y archivos SEO 404 con el login prendido → allowlist del middleware.
+- Canonical + `metadataBase` del tenant → el layout los overridea con
+  `getTenantPublicUrl()`, y **cada sub-página declara el suyo** (catálogo,
+  cotizar, opinión y ficha de vehículo) porque si no heredan el de la home.
+- `llms.txt` en las dos superficies.
+- `BreadcrumbList` en las notas del blog y en la ficha de vehículo.
+- Botón de compartir en la ficha (`ShareButton`, Web Share API + copiar).
+- `addressCountry`/`areaServed` del tenant salían hardcodeados en "AR" → ahora
+  de `dealership.country` (el bundle lo expone desde `:home:v3`).
+- `<Toaster />` faltaba en el chrome del tenant: el `toast.success` del form de
+  contacto y del cotizador no renderizaba nada.

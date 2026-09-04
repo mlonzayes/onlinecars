@@ -1,13 +1,18 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getDealershipBySlug } from "@/lib/tenant";
+import { getDealershipBySlug, getTenantPublicUrl } from "@/lib/tenant";
 import { ReviewForm } from "@/components/tenant/review-form";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const dealership = await getDealershipBySlug(slug);
   if (!dealership) return { title: "No encontrado" };
-  return { title: `Dejar Opinión | ${dealership.name}` };
+  // Canonical propio: sin él hereda el de la home que declara el layout.
+  return {
+    title: `Dejar Opinión | ${dealership.name}`,
+    description: `Contanos tu experiencia con ${dealership.name}. Tu opinión ayuda a otros compradores a decidir.`,
+    alternates: { canonical: `${getTenantPublicUrl(dealership)}/opinion` },
+  };
 }
 
 export default async function TenantOpinionPage({ params }: { params: Promise<{ slug: string }> }) {

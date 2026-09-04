@@ -4,6 +4,7 @@ import { TenantHeader } from "./tenant-header";
 import { TenantFooter } from "./tenant-footer";
 import { TenantAnnouncementBar } from "./tenant-announcement-bar";
 import { WhatsAppFab } from "./whatsapp-fab";
+import { Toaster } from "@/components/ui/sonner";
 import type { Dealership } from "@prisma/client";
 import type { DealershipTheme, SocialLinks } from "@/types";
 
@@ -74,6 +75,13 @@ export function TenantChrome({ dealership, basePath, children }: TenantChromePro
         getPlanLimits(dealership).allowWhatsappFab && (
           <WhatsAppFab whatsapp={dealership.whatsapp} message={dealership.whatsappMessage} />
         )}
+      {/* Sin esto, el `toast.success("¡Consulta enviada!")` de contact-form y el
+          de quote-form NO renderizan nada: el visitante manda la consulta y se
+          queda sin saber si salió. El <Toaster /> estaba solo en la landing y en
+          el dashboard. Va en el chrome (y no en el layout del tenant) para que
+          /vista-previa también lo tenga — a diferencia del pixel, acá que el
+          dealer vea el feedback al previsualizar es lo correcto. */}
+      <Toaster />
     </div>
   );
 }

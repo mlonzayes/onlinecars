@@ -113,6 +113,7 @@ src/
 │   ├── layout.tsx                   # Root layout (Clerk + fuente + metadata base)
 │   ├── providers.tsx                # Providers globales (theme, tooltip)
 │   ├── robots.ts / sitemap.ts       # SEO del dominio de MARKETING (no del tenant)
+│   ├── llms.txt/                    # Resumen del sitio para motores de IA
 │   ├── (marketing)/                 # Web principal — motorflowapp.com
 │   │   ├── layout.tsx               # ⚠️ Monta el Meta Pixel de la web principal
 │   │   ├── page.tsx                 # Landing (hero, pricing, testimonios, FAQ, contacto)
@@ -135,7 +136,7 @@ src/
 │   │   ├── page.tsx                 # Home (secciones configurables) + JsonLd AutoDealer
 │   │   ├── catalogo/ · cotizar/ · opinion/
 │   │   ├── vehiculo/[publicSlug]/   # Ficha pública + JsonLd Car/Offer
-│   │   └── sitemap.xml/ · robots.txt/  # SEO POR tenant
+│   │   └── sitemap.xml/ · robots.txt/ · llms.txt/  # SEO POR tenant
 │   └── api/                         # Ver árbol completo abajo
 ├── components/
 │   ├── ui/                          # shadcn/ui (Base UI por debajo)
@@ -679,14 +680,14 @@ Todas las constantes de los string-enums viven en [src/lib/constants.ts](src/lib
 - **Rate limiting** en `/api/public/*` y en el form de contacto con `@upstash/ratelimit` (sliding window). Ver convención en la sección "Rate limiting + honeypot" más arriba.
 - **Cache-aside del sitio del tenant** — ya está en [src/lib/tenant.ts](src/lib/tenant.ts), no reinventarlo:
   - `tenant:{slug}:dealership` — el `Dealership` completo (`getDealershipBySlug`).
-  - `tenant:{slug}:home:v2` — el bundle entero del home ya **serializado** (Decimal → string, Date → ISO) para que los Server Components lo pasen a Client Components sin re-procesar.
+  - `tenant:{slug}:home:v3` — el bundle entero del home ya **serializado** (Decimal → string, Date → ISO) para que los Server Components lo pasen a Client Components sin re-procesar.
   - TTL 30 min, pero es red de seguridad: la fuente de verdad es la **invalidación activa**.
 
 **Reglas del cache del tenant:**
 
 1. **TODO handler que mute algo visible en el home llama a `invalidateTenantHomeBundle(slug)`** — vehículos, imágenes, reviews, theme, secciones, media, datos del dealership. Se olvida uno y el dealer ve su sitio viejo 30 minutos y abre un ticket.
 2. **Fail-open en lectura y en escritura.** Si Redis se cae, se loggea (`tenant.home.cache_read_failed`) y se va a la DB. Nunca tira.
-3. **Si cambiás el SHAPE del bundle, bumpeá la versión de la key** (`:home:v2` → `:v3`). Sin eso, los tenants cacheados siguen sirviendo el shape viejo y el render explota con campos `undefined`.
+3. **Si cambiás el SHAPE del bundle, bumpeá la versión de la key** (`:home:v2` → `:v3` → `:v4`…). Sin eso, los tenants cacheados siguen sirviendo el shape viejo y el render explota con campos `undefined`.
 4. **El bundle enumera sus campos uno por uno a propósito.** No lo conviertas en un spread del `Dealership`: hay secretos ahí (ver `metaCapiToken`) que no deben viajar al cliente.
 
 **Pendiente:** cachear también el listado paginado de `/catalogo` (hoy va directo a DB en cada filtro).
@@ -701,9 +702,19 @@ Cada concesionario se sirve desde su subdominio (`{slug}.motorflowapp.com`) o, e
 - **Structured data (JSON-LD)** vía [components/seo/json-ld.tsx](src/components/seo/json-ld.tsx): `AutoDealer` (con `PostalAddress`) en la home, `Car` + `Offer` (con precio y `seller: AutoDealer`) en la ficha de vehículo. Esto es lo que genera los **rich results** (precio + foto en Google).
 - **`getTenantPublicUrl(dealership)`** en [lib/tenant.ts](src/lib/tenant.ts) — URL pública ABSOLUTA para canonical/sitemap/JSON-LD. Si el dealer cargó `website` (dominio custom) lo usa; si no, el subdominio. **Usar siempre esta función**, no hardcodear el host.
 
+- **`llms.txt` por tenant** — [tenant/[slug]/llms.txt/route.ts](src/app/tenant/[slug]/llms.txt/route.ts). Markdown con los datos del dealer y su stock con precios, para que los motores de IA lo citen. Gateado por `siteEnabled` igual que el robots.
+- **`BreadcrumbList`** en la ficha de vehículo, dentro de un `@graph` junto al `Car`.
+- **Botón de compartir** (`ShareButton`) con Web Share API y fallback a copiar.
+
+> **⚠️ Canonical: el layout del tenant declara el suyo y las hijas lo HEREDAN.**
+> Por eso `catalogo`, `cotizar`, `opinion` y `vehiculo/[publicSlug]` declaran cada
+> una un `alternates.canonical` **absoluto** con `getTenantPublicUrl()`. Página
+> nueva del tenant → canonical propio, o le dice a Google que es una copia de la
+> home. En el catálogo va **sin query params** (`?page=`, `?brand=`, `?sort=`).
+
 **Gaps conocidos (pendientes):**
-- **Falta `alternates.canonical`** en la metadata del tenant → riesgo de contenido duplicado entre el subdominio y `motorflowapp.com/tenant/{slug}`. Fix: `alternates: { canonical: getTenantPublicUrl(dealership) }`.
-- **`metadataBase`** (root layout) apunta al dominio principal → en subdominios, las URLs relativas (OG/canonical) resuelven mal. Habría que overridearlo por tenant.
+- **`SITE_URL` no sanea un path**: [lib/seo.ts](src/lib/seo.ts) solo saca la barra final de `NEXT_PUBLIC_APP_URL`. Si esa env trae un path, se cuela en el `metadataBase` y todos los canonical/OG salen con ese prefijo.
+- **Search Console no está automatizado**: cada `{slug}.motorflowapp.com` es una propiedad aparte. A mano no escala; iría por la Search Console API en el alta del tenant.
 
 > **Nota SEO marketing (dominio principal):** `sitemap.ts`/`robots.ts` en la raíz de `app/` son SOLO del dominio de marketing (motorflowapp.com). Las constantes viven en [lib/seo.ts](src/lib/seo.ts) (`SITE_URL`, `SITE_PHONE`, `SITE_WHATSAPP`, `SITE_WHATSAPP_URL`) — fuente única del contacto público, usada por navbar/footer/FAB/schema.org.
 

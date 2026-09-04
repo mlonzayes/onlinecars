@@ -7,6 +7,7 @@ import {
   countPublishedVehicles,
   getAvailableBrands,
   getTenantBasePath,
+  getTenantPublicUrl,
 } from "@/lib/tenant";
 import { VehicleCard } from "@/components/tenant/vehicle-card";
 import {
@@ -31,8 +32,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const dealership = await getDealershipBySlug(slug);
   if (!dealership) return { title: "No encontrado" };
+  // Canonical propio y SIN query params. La page se sirve también con
+  // ?page=2&brand=...&sort=..., y cada combinación de filtros es una URL nueva
+  // para Google: sin esto compiten entre sí como contenido duplicado y diluyen
+  // el crawl del catálogo. Todas apuntan a la URL limpia.
+  //
+  // Va absoluto porque el metadataBase que overridea el layout ya es el del
+  // tenant, pero explicitarlo evita depender del orden de merge.
   return {
     title: `Catálogo de Vehículos | ${dealership.name}`,
+    description: `Vehículos disponibles en ${dealership.name}. Mirá el stock actualizado, con fotos, precios y ficha completa de cada unidad.`,
+    alternates: { canonical: `${getTenantPublicUrl(dealership)}/catalogo` },
   };
 }
 

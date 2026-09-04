@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTenantHomeBundle, getTenantBasePath, getTenantPublicUrl } from "@/lib/tenant";
 import { TenantHomeContent } from "@/components/tenant/tenant-home-content";
 import { JsonLd } from "@/components/seo/json-ld";
+import { COUNTRY_LABELS } from "@/lib/constants";
 
 interface TenantHomePageProps {
   params: Promise<{ slug: string }>;
@@ -37,11 +38,14 @@ export default async function TenantHomePage({ params }: TenantHomePageProps) {
             ...(d.address ? { streetAddress: d.address } : {}),
             ...(d.city ? { addressLocality: d.city } : {}),
             ...(d.province ? { addressRegion: d.province } : {}),
-            addressCountry: "AR",
+            // Del dealer, NO hardcodeado: con "AR" fijo, una concesionaria de
+            // México publicaba que estaba en Argentina y Google la sacaba del
+            // pack local de su propia ciudad.
+            addressCountry: d.country,
           },
         }
       : {}),
-    areaServed: { "@type": "Country", name: "Argentina" },
+    areaServed: { "@type": "Country", name: COUNTRY_LABELS[d.country] },
   };
 
   return (

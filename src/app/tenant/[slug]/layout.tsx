@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getDealershipBySlug, getTenantBasePath } from "@/lib/tenant";
+import { getDealershipBySlug, getTenantBasePath, getTenantPublicUrl } from "@/lib/tenant";
 import { TenantChrome } from "@/components/tenant/tenant-chrome";
 import { MetaPixel } from "@/components/meta/meta-pixel";
 import { getTenantPixelId } from "@/lib/meta/config";
@@ -35,14 +35,27 @@ export async function generateMetadata({
     ? { icon: iconUrl, shortcut: iconUrl, apple: iconUrl }
     : undefined;
 
+  // metadataBase del ROOT apunta a motorflowapp.com. Servido desde
+  // {slug}.motorflowapp.com, cualquier URL relativa (canonical, OG) resolvería
+  // a NUESTRO dominio, o sea le diríamos a Google que el contenido del dealer
+  // es nuestro. Por eso se overridea por tenant y el canonical va ABSOLUTO.
+  //
+  // getTenantPublicUrl respeta el dominio propio del dealer si cargó `website`.
+  const base = getTenantPublicUrl(dealership);
+
   return {
     title,
     description,
     icons,
+    metadataBase: new URL(base),
+    // Sin esto, el subdominio y motorflowapp.com/tenant/{slug} compiten como
+    // contenido duplicado y Google elige cuál indexar por su cuenta.
+    alternates: { canonical: base },
     openGraph: {
       title,
       description,
       type: "website",
+      url: base,
       ...(dealership.logo ? { images: [dealership.logo] } : {}),
     },
   };

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getDealershipBySlug } from "@/lib/tenant";
+import { getDealershipBySlug, getTenantPublicUrl } from "@/lib/tenant";
 import { Section } from "@/components/tenant/section";
 import { QuoteForm } from "@/components/tenant/quote-form";
 
@@ -15,9 +15,12 @@ export async function generateMetadata({
   const dealership = await getDealershipBySlug(slug);
   if (!dealership) return { title: "No encontrado" };
 
+  // Canonical propio: el layout del tenant declara el suyo (la home) y sin este
+  // override esta página le diría a Google que es una copia de la home.
   return {
     title: `Cotizá tu auto | ${dealership.name}`,
     description: `Cotizá tu vehículo usado en ${dealership.name}. Te ofrecemos un precio justo y un proceso simple.`,
+    alternates: { canonical: `${getTenantPublicUrl(dealership)}/cotizar` },
   };
 }
 

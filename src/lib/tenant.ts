@@ -4,7 +4,7 @@ import type { Dealership, DealershipMedia, DealershipSection } from "@prisma/cli
 import { redis } from "./redis";
 import { logger } from "./logger";
 import type { DealershipTheme, SocialLinks } from "@/types";
-import { SECTION_TYPES, type MediaPurpose, type SectionType } from "./constants";
+import { SECTION_TYPES, type Country, type MediaPurpose, type SectionType } from "./constants";
 import { DEFAULT_SECTION_COPY, DEFAULT_SECTION_CONFIG } from "./tenant-defaults";
 import type { SectionConfigByType } from "./sections/config-types";
 import { seedDefaultSections } from "./sections/seed";
@@ -334,7 +334,8 @@ const TENANT_HOME_TTL_SECONDS = 1800; // 30 min
 
 function tenantHomeKey(slug: string): string {
   // v2: se agregó `collections` al bundle. El bump invalida el shape viejo.
-  return `tenant:${slug}:home:v2`;
+  // v3: se agregó `country` (lo necesita el JSON-LD para no hardcodear "AR").
+  return `tenant:${slug}:home:v3`;
 }
 
 function tenantDealershipKey(slug: string): string {
@@ -386,6 +387,11 @@ export interface TenantHomeBundleDealership {
   showAddress: boolean;
   city: string | null;
   province: string | null;
+  // País del concesionario (ISO-2). Lo consume el JSON-LD `AutoDealer`:
+  // `addressCountry` y `areaServed` estaban hardcodeados en "AR", así que un
+  // dealer de México publicaba structured data diciendo que estaba en
+  // Argentina y Google lo dejaba afuera del pack local de su ciudad.
+  country: Country;
   website: string | null;
   // Plantilla visual activa. Vive en el bundle (y no se resuelve aparte) porque
   // el home la necesita para decidir si usa layout fijo o las secciones
@@ -639,6 +645,7 @@ async function assembleTenantHomeBundle(
       showAddress: dealership.showAddress,
       city: dealership.city,
       province: dealership.province,
+      country: dealership.country as Country,
       website: dealership.website,
       templateId: dealership.templateId,
       theme,

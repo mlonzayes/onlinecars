@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { notFound, redirect } from "next/navigation";
 import { isSuperAdmin } from "@/lib/super-admin";
 import { AdminNav } from "@/components/admin/admin-nav";
+import { AppClerkProvider } from "@/components/auth/app-clerk-provider";
 
 // Panel interno: nunca indexable.
 export const metadata: Metadata = {
@@ -26,17 +27,19 @@ export default async function AdminLayout({
   if (!isSuperAdmin(userId)) notFound();
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 p-6">
-      <div>
-        <h1 className="text-2xl font-bold">Panel de plataforma</h1>
-        <p className="text-sm text-muted-foreground">
-          Todas las cuentas de motorflow.
-        </p>
+    <AppClerkProvider>
+      <div className="mx-auto max-w-7xl space-y-6 p-6">
+        <div>
+          <h1 className="text-2xl font-bold">Panel de plataforma</h1>
+          <p className="text-sm text-muted-foreground">
+            Todas las cuentas de motorflow.
+          </p>
+        </div>
+
+        <AdminNav />
+
+        {children}
       </div>
-
-      <AdminNav />
-
-      {children}
-    </div>
+    </AppClerkProvider>
   );
 }

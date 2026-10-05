@@ -1,5 +1,6 @@
 import { MetaPixel } from "@/components/meta/meta-pixel";
 import { getMainSitePixelId } from "@/lib/meta/config";
+import { AppClerkProvider } from "@/components/auth/app-clerk-provider";
 
 /**
  * Layout de la superficie de MARKETING (motorflowapp.com): landing, precios,
@@ -24,9 +25,9 @@ export default function MarketingLayout({
   const pixelId = getMainSitePixelId();
 
   return (
-    <>
+    <AppClerkProvider>
       {pixelId && <MetaPixel pixelId={pixelId} />}
       {children}
-    </>
+    </AppClerkProvider>
   );
 }

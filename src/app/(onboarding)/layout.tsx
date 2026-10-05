@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { AppClerkProvider } from "@/components/auth/app-clerk-provider";
 
 export default async function OnboardingLayout({
   children,
@@ -10,8 +11,10 @@ export default async function OnboardingLayout({
   if (!userId) redirect("/sign-in");
 
   return (
-    <div className="min-h-screen bg-muted/40 flex items-center justify-center p-4">
-      {children}
-    </div>
+    <AppClerkProvider>
+      <div className="min-h-screen bg-muted/40 flex items-center justify-center p-4">
+        {children}
+      </div>
+    </AppClerkProvider>
   );
 }

@@ -9,6 +9,7 @@ import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { DashboardFooter } from "@/components/dashboard/dashboard-footer";
 import { Toaster } from "@/components/ui/sonner";
+import { AppClerkProvider } from "@/components/auth/app-clerk-provider";
 
 export default async function DashboardLayout({
   children,
@@ -75,14 +76,16 @@ export default async function DashboardLayout({
     : null;
 
   return (
-    <SidebarProvider>
-      <DashboardSidebar dealership={dealership} />
-      <main className="flex flex-1 flex-col">
-        <DashboardHeader dealershipName={dealership.name} usdRate={usdRate} />
-        <div className="flex-1 p-6">{children}</div>
-        <DashboardFooter />
-      </main>
-      <Toaster />
-    </SidebarProvider>
+    <AppClerkProvider>
+      <SidebarProvider>
+        <DashboardSidebar dealership={dealership} />
+        <main className="flex flex-1 flex-col">
+          <DashboardHeader dealershipName={dealership.name} usdRate={usdRate} />
+          <div className="flex-1 p-6">{children}</div>
+          <DashboardFooter />
+        </main>
+        <Toaster />
+      </SidebarProvider>
+    </AppClerkProvider>
   );
 }

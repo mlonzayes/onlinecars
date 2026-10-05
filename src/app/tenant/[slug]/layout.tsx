@@ -6,6 +6,20 @@ import { MetaPixel } from "@/components/meta/meta-pixel";
 import { getTenantPixelId } from "@/lib/meta/config";
 import { canUseMetaPixel } from "@/lib/plans";
 
+// ISR: el sitio del tenant se cachea en el edge de Vercel y se regenera en
+// background. Sin esto cada visita renderizaba de cero (TTFB ~800 ms).
+// La fuente de verdad es la invalidación activa: invalidateTenantHomeBundle()
+// hace revalidatePath de todo /tenant/{slug} en cada mutación. Los 30 min son
+// red de seguridad, igual que el TTL del cache de Redis (TENANT_HOME_TTL_SECONDS).
+export const revalidate = 1800;
+
+// Lista vacía = no se prerenderiza nada en el build, pero cada slug que se
+// visita queda cacheado (sin generateStaticParams, Next trata el segmento
+// dinámico como 100% dinámico y no cachea nada).
+export function generateStaticParams(): { slug: string }[] {
+  return [];
+}
+
 interface TenantLayoutProps {
   children: React.ReactNode;
   params: Promise<{ slug: string }>;
@@ -67,7 +81,7 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
 
   if (!dealership) notFound();
 
-  const basePath = await getTenantBasePath(slug);
+  const basePath = getTenantBasePath(slug);
 
   // Pixel del CONCESIONARIO (no el nuestro). Doble condición a propósito:
   //   - getTenantPixelId → el dealer lo configuró y tiene el toggle prendido

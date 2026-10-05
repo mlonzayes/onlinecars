@@ -1,6 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getTenantPathPrefix, isTenantSubdomainRouting } from "@/lib/tenant-routing";
 
 // OJO: esto es un ALLOWLIST. Con NEXT_PUBLIC_ENABLE_LOGIN=true, todo lo que no
 // esté acá pasa por auth.protect(), y Clerk responde 404 al visitante anónimo
@@ -53,12 +54,36 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   if (hostname.endsWith(`.${appDomain}`)) {
     const subdomain = hostname.slice(0, -1 * (appDomain.length + 1));
     if (subdomain && subdomain !== "app" && subdomain !== "www") {
+      // Red de seguridad: un link armado con el prefijo de path
+      // ({slug}.motorflowapp.com/tenant/{slug}/catalogo) se reescribiría a
+      // /tenant/{slug}/tenant/{slug}/catalogo → 404. Lo mandamos a la URL limpia.
+      const prefix = getTenantPathPrefix(subdomain);
+      if (url.pathname === prefix || url.pathname.startsWith(`${prefix}/`)) {
+        const clean = url.pathname.slice(prefix.length) || "/";
+        return NextResponse.redirect(new URL(`${clean}${url.search}`, req.url), 308);
+      }
+
       // IMPORTANTE: incluir url.search en el rewrite. Sin él, el query string
       // (?sort=...&brand=...&page=...) se PIERDE porque el path absoluto del
       // primer arg de new URL descarta el search del base req.url. Resultado:
       // los filtros/orden del catálogo no funcionaban en los subdominios.
       return NextResponse.rewrite(
         new URL(`/tenant/${subdomain}${url.pathname}${url.search}`, req.url)
+      );
+    }
+  }
+
+  // En producción el sitio del tenant vive SOLO en su subdominio. El acceso por
+  // path (motorflowapp.com/tenant/{slug}/...) redirige allá: es contenido
+  // duplicado para Google, y además las páginas del tenant arman los links sin
+  // prefijo (ver getTenantBasePath), así que por path quedarían rotos.
+  if (isTenantSubdomainRouting()) {
+    const match = url.pathname.match(/^\/tenant\/([a-z0-9-]+)(\/.*)?$/);
+    if (match) {
+      const [, slug, rest = "/"] = match;
+      return NextResponse.redirect(
+        new URL(`${rest}${url.search}`, `https://${slug}.${appDomain}`),
+        308
       );
     }
   }

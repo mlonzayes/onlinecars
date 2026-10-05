@@ -23,6 +23,11 @@ import type { Metadata } from "next";
 // con el dealer si se cambia este número.
 const VEHICLES_PER_PAGE = 12;
 
+// El layout del tenant es ISR, pero el catálogo depende de los filtros del
+// query string: tiene que renderizar por request. Explícito para que nunca se
+// sirva desde cache una página filtrada a otro visitante.
+export const dynamic = "force-dynamic";
+
 interface TenantCatalogPageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<Record<string, string | undefined>>;
@@ -82,7 +87,7 @@ export default async function TenantCatalogPage({ params, searchParams }: Tenant
 
   const totalPages = Math.max(1, Math.ceil(totalCount / VEHICLES_PER_PAGE));
   const currentPage = Math.min(requestedPage, totalPages);
-  const basePath = await getTenantBasePath(slug);
+  const basePath = getTenantBasePath(slug);
 
   // searchParams a preservar en los links de paginación. Importante: `page`
   // NO va, lo escribe el componente de paginación.

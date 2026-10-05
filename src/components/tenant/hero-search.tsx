@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Car, MessageCircle, Search, Tag } from "lucide-react";
 import { VEHICLE_CONDITIONS } from "@/lib/constants";
 import type { TenantHomeBundleMedia, TenantHomeBundleSection } from "@/lib/tenant";
 import type { HeroConfig } from "@/lib/sections/config-types";
-import { DURATION, EASE, gsap, useIsomorphicLayoutEffect } from "@/lib/gsap";
 
 interface HeroSearchProps {
   basePath: string;
@@ -38,20 +38,27 @@ function resolveHeroSource(
   media: TenantHomeBundleMedia[] | undefined,
   legacyType: "image" | "video" | "none",
   legacyUrl: string | null | undefined
-): { kind: "image" | "video" | "none"; url: string | null; posterUrl: string | null } {
+): {
+  kind: "image" | "video" | "none";
+  url: string | null;
+  posterUrl: string | null;
+  // true si la imagen sale de nuestro storage (host permitido en next/image).
+  // El hero legacy (theme.heroUrl) puede ser cualquier URL externa: no se optimiza.
+  optimizable: boolean;
+} {
   const video = media?.find((m) => m.purpose === "hero_video");
   const image = media?.find((m) => m.purpose === "hero_image");
 
   if (video) {
-    return { kind: "video", url: video.url, posterUrl: image?.url ?? null };
+    return { kind: "video", url: video.url, posterUrl: image?.url ?? null, optimizable: true };
   }
   if (image) {
-    return { kind: "image", url: image.url, posterUrl: null };
+    return { kind: "image", url: image.url, posterUrl: null, optimizable: true };
   }
   if (legacyType !== "none" && legacyUrl) {
-    return { kind: legacyType, url: legacyUrl, posterUrl: null };
+    return { kind: legacyType, url: legacyUrl, posterUrl: null, optimizable: false };
   }
-  return { kind: "none", url: null, posterUrl: null };
+  return { kind: "none", url: null, posterUrl: null, optimizable: false };
 }
 
 export function HeroSearch({
@@ -66,10 +73,6 @@ export function HeroSearch({
   subhead,
 }: HeroSearchProps) {
   const router = useRouter();
-  const scopeRef = useRef<HTMLElement>(null);
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const subtitleRef = useRef<HTMLParagraphElement>(null);
-  const formRef = useRef<HTMLFormElement>(null);
   const [brand, setBrand] = useState("");
   const [condition, setCondition] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -79,43 +82,9 @@ export function HeroSearch({
   const [showVideo, setShowVideo] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
 
-  // Animacion de entrada del hero: solo el contenido (titulo + subtitulo + form).
-  // El fondo (image/video/gradient) queda intacto para no provocar parpadeos.
-  useIsomorphicLayoutEffect(() => {
-    const scope = scopeRef.current;
-    if (!scope) return;
-
-    const ctx = gsap.context(() => {
-      const candidates: Array<HTMLElement | null> = [
-        titleRef.current,
-        subtitleRef.current,
-        formRef.current,
-      ];
-      const targets = candidates.filter(
-        (el): el is HTMLElement => el !== null
-      );
-      if (targets.length === 0) return;
-
-      const mm = gsap.matchMedia();
-
-      mm.add("(prefers-reduced-motion: no-preference)", () => {
-        gsap.set(targets, { autoAlpha: 0, y: 24 });
-        gsap.to(targets, {
-          autoAlpha: 1,
-          y: 0,
-          duration: DURATION,
-          ease: EASE,
-          stagger: 0.08,
-        });
-      });
-
-      mm.add("(prefers-reduced-motion: reduce)", () => {
-        gsap.set(targets, { autoAlpha: 1, y: 0 });
-      });
-    }, scope);
-
-    return () => ctx.revert();
-  }, []);
+  // La entrada del hero (título + subtítulo + form) es CSS puro: ver
+  // `.hero-enter-*` en globals.css. Antes era GSAP, que ocultaba el <h1> hasta
+  // hidratar: el título es el LCP del sitio y se pintaba recién ~3s después.
 
   // Resolver headline/subhead/config desde la sección si vino, si no usar props legacy.
   const resolvedHeadline = section?.title ?? headline ?? "Encontrá tu próximo auto";
@@ -175,9 +144,15 @@ export function HeroSearch({
     // h-[100dvh]: ocupa la altura REAL del viewport (descuenta address bar en
     // mobile, evita el espacio en blanco). -mt-24 hace que el hero arranque
     // BAJO el navbar flotante (compensa el pt-24 que el layout aplica al main).
-    <section ref={scopeRef} className="relative isolate -mt-24 flex h-[100dvh] flex-col justify-center overflow-hidden bg-slate-900">
+    <section className="relative isolate -mt-24 flex h-[100dvh] flex-col justify-center overflow-hidden bg-slate-900">
       {/* Background media */}
-      {heroSource.kind === "image" && heroSource.url && (
+      {/* next/image con priority: el browser la descubre en el HTML (preload)
+          y la baja en WebP al ancho del device. Un background-image inline
+          recién se pide cuando se calculan los estilos, tarde para el LCP. */}
+      {heroSource.kind === "image" && heroSource.url && heroSource.optimizable && (
+        <Image src={heroSource.url} alt="" fill priority sizes="100vw" className="object-cover" />
+      )}
+      {heroSource.kind === "image" && heroSource.url && !heroSource.optimizable && (
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${heroSource.url})` }}
@@ -189,9 +164,13 @@ export function HeroSearch({
               o el degradé de marca. Mata el rectángulo negro mientras carga el
               video y es lo ÚNICO que se ve en mobile/conexión lenta. */}
           {heroSource.posterUrl ? (
-            <div
-              className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: `url(${heroSource.posterUrl})` }}
+            <Image
+              src={heroSource.posterUrl}
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover"
             />
           ) : (
             <div
@@ -240,15 +219,13 @@ export function HeroSearch({
       <div className="relative mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
         <div className={headlineWrapperClass}>
           <h1
-            ref={titleRef}
-            className={`text-3xl font-bold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl ${alignClass}`}
+            className={`hero-enter-title text-3xl font-bold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl ${alignClass}`}
           >
             {resolvedHeadline}
           </h1>
           {resolvedSubhead && (
             <p
-              ref={subtitleRef}
-              className={`mt-4 max-w-xl text-base text-slate-300 sm:text-lg ${
+              className={`hero-enter-subtitle mt-4 max-w-xl text-base text-slate-300 sm:text-lg ${
                 config.align === "center" ? "mx-auto text-center" : ""
               }`}
             >
@@ -264,9 +241,8 @@ export function HeroSearch({
             por el ring blanco + shadow oscuro. */}
         {config.showSearch && (
           <form
-            ref={formRef}
             onSubmit={handleSubmit}
-            className="mx-auto mt-10 max-w-4xl rounded-3xl bg-[var(--tenant-surface)]/15 p-2 shadow-2xl shadow-black/40 ring-1 ring-white/30 backdrop-blur-2xl sm:mt-12"
+            className="hero-enter-form mx-auto mt-10 max-w-4xl rounded-3xl bg-[var(--tenant-surface)]/15 p-2 shadow-2xl shadow-black/40 ring-1 ring-white/30 backdrop-blur-2xl sm:mt-12"
           >
             <div className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_auto]">
               {/* Marca */}

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
 import { Providers } from "./providers";
 import { cn } from "@/lib/utils";
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/lib/seo";
@@ -67,12 +66,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider afterSignOutUrl="/">
-      <html lang="es" className={cn("font-sans font-light", dmSans.variable)} suppressHydrationWarning>
-        <body>
-          <Providers>{children}</Providers>
-        </body>
-      </html>
-    </ClerkProvider>
+    // Sin ClerkProvider acá: lo monta cada superficie con sesión vía
+    // <AppClerkProvider>, así los sitios de los tenants no cargan Clerk.
+    <html lang="es" className={cn("font-sans font-light", dmSans.variable)} suppressHydrationWarning>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
+    </html>
   );
 }

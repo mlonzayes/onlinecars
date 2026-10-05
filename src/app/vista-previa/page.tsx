@@ -6,7 +6,7 @@ import type { Dealership } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCurrentDealership } from "@/lib/auth";
 import { isSuperAdmin } from "@/lib/super-admin";
-import { getTenantHomeBundleForPreview, getTenantBasePath } from "@/lib/tenant";
+import { getTenantHomeBundleForPreview, getTenantPathPrefix } from "@/lib/tenant";
 import { TenantChrome } from "@/components/tenant/tenant-chrome";
 import { TenantHomeContent } from "@/components/tenant/tenant-home-content";
 
@@ -57,7 +57,9 @@ export default async function VistaPreviaPage({ searchParams }: VistaPreviaPageP
 
   // Bundle SIN gatear por siteEnabled: se puede ver el sitio antes de publicarlo.
   const bundle = await getTenantHomeBundleForPreview(dealership.slug);
-  const basePath = await getTenantBasePath(dealership.slug);
+  // Siempre por path: la preview se ve desde app.motorflowapp.com, no desde el
+  // subdominio del dealer, así que un basePath "" mandaría los links al panel.
+  const basePath = getTenantPathPrefix(dealership.slug);
 
   return (
     <>

@@ -1,4 +1,4 @@
-import { headers } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { prisma } from "./prisma";
 import type { Dealership, DealershipMedia, DealershipSection } from "@prisma/client";
 import { redis } from "./redis";
@@ -8,21 +8,12 @@ import { SECTION_TYPES, type Country, type MediaPurpose, type SectionType } from
 import { DEFAULT_SECTION_COPY, DEFAULT_SECTION_CONFIG } from "./tenant-defaults";
 import type { SectionConfigByType } from "./sections/config-types";
 import { seedDefaultSections } from "./sections/seed";
+import { getTenantPathPrefix } from "./tenant-routing";
 
-/**
- * Calcula el `basePath` correcto para los links del sitio público del tenant.
- *
- * - En producción con subdomain (`{slug}.motorflowapp.com`): devuelve "" — las
- *   pages del tenant viven en la raíz del subdomain, los links deben ser
- *   absolutos al subdomain (`/catalogo`, `/cotizar`, etc).
- * - En localhost / vercel preview / dominio principal: devuelve "/tenant/{slug}"
- *   — las pages del tenant viven bajo ese prefijo, hay que armar los links
- *   con el prefix completo (`/tenant/{slug}/catalogo`, etc).
- *
- * Antes el código tenía `/tenant/{slug}` hardcoded en todas las pages. En
- * producción los clicks resultaban en `subdomain.../tenant/{slug}/...` que el
- * middleware re-reescribía a `/tenant/{slug}/tenant/{slug}/...` → 404.
- */
+// El basePath de los links vive en tenant-routing.ts (lo usa también el
+// middleware, que no puede importar Prisma). Se re-exporta por compatibilidad.
+export { getTenantBasePath, getTenantPathPrefix } from "./tenant-routing";
+
 /**
  * URL pública ABSOLUTA del sitio del tenant (para canonical, sitemap, JSON-LD).
  * Si el dealer cargó un dominio custom (`website`), lo usa; si no, el subdominio
@@ -38,24 +29,6 @@ export function getTenantPublicUrl(dealership: {
   }
   const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "motorflowapp.com";
   return `https://${dealership.slug}.${appDomain}`;
-}
-
-export async function getTenantBasePath(slug: string): Promise<string> {
-  const headersList = await headers();
-  const host = headersList.get("host") ?? "";
-  const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "motorflowapp.com";
-  // Sacamos el puerto (host puede venir "x.com:3000") para comparar el dominio.
-  const hostname = host.split(":")[0];
-
-  if (hostname.endsWith(`.${appDomain}`)) {
-    const sub = hostname.slice(0, -(appDomain.length + 1));
-    // Si el sub coincide con el slug, estamos sirviendo el tenant desde su
-    // subdomain → basePath vacío. Cualquier otro caso (incluido "app"/"www")
-    // cae al fallback.
-    if (sub === slug) return "";
-  }
-
-  return `/tenant/${slug}`;
 }
 
 /**
@@ -719,6 +692,20 @@ export async function invalidateTenantHomeBundle(slug: string): Promise<void> {
     ]);
   } catch (error) {
     logger.warn(undefined, "tenant.home.cache_invalidate_failed", {
+      slug,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  // Las páginas del tenant son ISR (ver tenant/[slug]/layout.tsx): además del
+  // Redis hay que tirar el HTML cacheado en Vercel. "layout" invalida TODAS las
+  // páginas bajo /tenant/{slug} (home, fichas, cotizar...). Va DESPUÉS del
+  // Redis: si no, la regeneración podría leer el bundle viejo.
+  // try/catch: fuera de un request (scripts, tests) revalidatePath tira.
+  try {
+    revalidatePath(getTenantPathPrefix(slug), "layout");
+  } catch (error) {
+    logger.warn(undefined, "tenant.isr.revalidate_failed", {
       slug,
       error: error instanceof Error ? error.message : String(error),
     });

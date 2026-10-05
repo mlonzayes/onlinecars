@@ -13,7 +13,7 @@ export default async function TenantHomePage({ params }: TenantHomePageProps) {
   const bundle = await getTenantHomeBundle(slug);
   if (!bundle) notFound();
 
-  const basePath = getTenantBasePath(slug);
+  const basePath = await getTenantBasePath(slug);
 
   // Structured data AutoDealer (LocalBusiness): le dice a Google/IA que esto es
   // una concesionaria, con su contacto y ubicación. Alimenta el pack local y las

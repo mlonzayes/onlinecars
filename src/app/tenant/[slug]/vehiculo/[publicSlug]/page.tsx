@@ -29,12 +29,6 @@ interface VehicleDetailPageProps {
   params: Promise<{ slug: string; publicSlug: string }>;
 }
 
-// ISR por ficha (ver revalidate en tenant/[slug]/layout.tsx): cada vehículo
-// se cachea al primer visitante y se invalida junto con el resto del sitio.
-export function generateStaticParams(): { publicSlug: string }[] {
-  return [];
-}
-
 export async function generateMetadata({ params }: VehicleDetailPageProps): Promise<Metadata> {
   const { slug, publicSlug } = await params;
   const dealership = await getDealershipBySlug(slug);
@@ -105,7 +99,7 @@ export default async function VehicleDetailPage({ params }: VehicleDetailPagePro
   const vehicle = await getPublishedVehicleBySlug(dealership.id, publicSlug);
   if (!vehicle) notFound();
 
-  const basePath = getTenantBasePath(slug);
+  const basePath = await getTenantBasePath(slug);
 
   // Structured data Car + Offer: precio, año, km, condición. Es lo que hace que
   // Google/IA puedan listar y entender este vehículo en particular.

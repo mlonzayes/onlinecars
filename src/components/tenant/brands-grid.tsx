@@ -59,11 +59,18 @@ function BrandCard({ brand, basePath }: BrandCardProps) {
     >
       {brand.logoUrl ? (
         <div className="flex h-10 flex-1 items-center justify-center">
+          {/* width/height = tamaño de los WebP de public/brands (solo dan el
+              aspect ratio antes de cargar; w-auto/h-auto respeta el real).
+              Lazy: la sección de marcas siempre queda abajo del hero. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={brand.logoUrl}
             alt={`Logo ${brand.name}`}
-            className="max-h-full max-w-[80%] object-contain transition-all"
+            width={320}
+            height={180}
+            loading="lazy"
+            decoding="async"
+            className="h-auto max-h-full w-auto max-w-[80%] object-contain transition-all"
           />
         </div>
       ) : (

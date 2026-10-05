@@ -2,13 +2,13 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { Search } from "lucide-react";
 import {
-  getDealershipBySlug,
   getPublishedVehicles,
   countPublishedVehicles,
   getAvailableBrands,
   getTenantBasePath,
   getTenantPublicUrl,
 } from "@/lib/tenant";
+import { getTenantDealership } from "@/lib/tenant-render";
 import { VehicleCard } from "@/components/tenant/vehicle-card";
 import {
   VehicleFilters,
@@ -23,6 +23,11 @@ import type { Metadata } from "next";
 // con el dealer si se cambia este número.
 const VEHICLES_PER_PAGE = 12;
 
+// El layout del tenant es ISR, pero el catálogo depende de los filtros del
+// query string: tiene que renderizar por request. Explícito para que nunca se
+// sirva desde cache una página filtrada a otro visitante.
+export const dynamic = "force-dynamic";
+
 interface TenantCatalogPageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<Record<string, string | undefined>>;
@@ -30,7 +35,7 @@ interface TenantCatalogPageProps {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const dealership = await getDealershipBySlug(slug);
+  const dealership = await getTenantDealership(slug);
   if (!dealership) return { title: "No encontrado" };
   // Canonical propio y SIN query params. La page se sirve también con
   // ?page=2&brand=...&sort=..., y cada combinación de filtros es una URL nueva
@@ -50,7 +55,7 @@ export default async function TenantCatalogPage({ params, searchParams }: Tenant
   const { slug } = await params;
   const sp = await searchParams;
 
-  const dealership = await getDealershipBySlug(slug);
+  const dealership = await getTenantDealership(slug);
   if (!dealership) notFound();
 
   // searchParams llegan como `string | undefined` libre. Para los enums (sort,
@@ -82,7 +87,7 @@ export default async function TenantCatalogPage({ params, searchParams }: Tenant
 
   const totalPages = Math.max(1, Math.ceil(totalCount / VEHICLES_PER_PAGE));
   const currentPage = Math.min(requestedPage, totalPages);
-  const basePath = await getTenantBasePath(slug);
+  const basePath = getTenantBasePath(slug);
 
   // searchParams a preservar en los links de paginación. Importante: `page`
   // NO va, lo escribe el componente de paginación.

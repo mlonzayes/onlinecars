@@ -1,4 +1,4 @@
-import { headers } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { prisma } from "./prisma";
 import type { Dealership, DealershipMedia, DealershipSection } from "@prisma/client";
 import { redis } from "./redis";
@@ -8,21 +8,12 @@ import { SECTION_TYPES, type Country, type MediaPurpose, type SectionType } from
 import { DEFAULT_SECTION_COPY, DEFAULT_SECTION_CONFIG } from "./tenant-defaults";
 import type { SectionConfigByType } from "./sections/config-types";
 import { seedDefaultSections } from "./sections/seed";
+import { getTenantPathPrefix } from "./tenant-routing";
 
-/**
- * Calcula el `basePath` correcto para los links del sitio público del tenant.
- *
- * - En producción con subdomain (`{slug}.motorflowapp.com`): devuelve "" — las
- *   pages del tenant viven en la raíz del subdomain, los links deben ser
- *   absolutos al subdomain (`/catalogo`, `/cotizar`, etc).
- * - En localhost / vercel preview / dominio principal: devuelve "/tenant/{slug}"
- *   — las pages del tenant viven bajo ese prefijo, hay que armar los links
- *   con el prefix completo (`/tenant/{slug}/catalogo`, etc).
- *
- * Antes el código tenía `/tenant/{slug}` hardcoded en todas las pages. En
- * producción los clicks resultaban en `subdomain.../tenant/{slug}/...` que el
- * middleware re-reescribía a `/tenant/{slug}/tenant/{slug}/...` → 404.
- */
+// El basePath de los links vive en tenant-routing.ts (lo usa también el
+// middleware, que no puede importar Prisma). Se re-exporta por compatibilidad.
+export { getTenantBasePath, getTenantPathPrefix } from "./tenant-routing";
+
 /**
  * URL pública ABSOLUTA del sitio del tenant (para canonical, sitemap, JSON-LD).
  * Si el dealer cargó un dominio custom (`website`), lo usa; si no, el subdominio
@@ -40,28 +31,29 @@ export function getTenantPublicUrl(dealership: {
   return `https://${dealership.slug}.${appDomain}`;
 }
 
-export async function getTenantBasePath(slug: string): Promise<string> {
-  const headersList = await headers();
-  const host = headersList.get("host") ?? "";
-  const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "motorflowapp.com";
-  // Sacamos el puerto (host puede venir "x.com:3000") para comparar el dominio.
-  const hostname = host.split(":")[0];
-
-  if (hostname.endsWith(`.${appDomain}`)) {
-    const sub = hostname.slice(0, -(appDomain.length + 1));
-    // Si el sub coincide con el slug, estamos sirviendo el tenant desde su
-    // subdomain → basePath vacío. Cualquier otro caso (incluido "app"/"www")
-    // cae al fallback.
-    if (sub === slug) return "";
-  }
-
-  return `/tenant/${slug}`;
+/**
+ * Lee el dealership público directo de la DB, SIN Redis.
+ *
+ * Es el lector de las PÁGINAS del tenant (vía tenant-render.ts). Las páginas son
+ * ISR y el cliente de Upstash hace fetch con `cache: "no-store"`: llamarlo durante
+ * un render estático tira "Dynamic server usage" y la página responde 500.
+ * Pasó en producción. Con ISR el cache es el HTML, así que Redis ahí sobra.
+ *
+ * siteEnabled gateado acá: si el dealer no activó su sitio, TODAS las rutas
+ * públicas del tenant ven 404 — páginas, API públicos y rewrites del middleware.
+ */
+export async function getPublicDealershipFromDb(slug: string): Promise<Dealership | null> {
+  // findUnique con compound where (slug + active) genera SQL con OR redundante en
+  // Prisma 7. Buscamos solo por slug y filtramos en JS.
+  const dealership = await prisma.dealership.findUnique({ where: { slug } });
+  if (!dealership || !dealership.active || !dealership.siteEnabled) return null;
+  return dealership;
 }
 
 /**
- * Obtiene un dealership por su slug.
- * Usado en las páginas públicas del tenant (subdomain) — cache-aside Upstash.
- * Misma TTL que el bundle (30 min) y se invalida en conjunto.
+ * Obtiene un dealership por su slug con cache-aside Upstash.
+ * SOLO para handlers dinámicos (API públicos, robots/sitemap/llms). En páginas
+ * del tenant usar getTenantDealership() de tenant-render.ts (ver arriba por qué).
  */
 export async function getDealershipBySlug(slug: string): Promise<Dealership | null> {
   const key = tenantDealershipKey(slug);
@@ -76,16 +68,11 @@ export async function getDealershipBySlug(slug: string): Promise<Dealership | nu
     });
   }
 
-  // findUnique con compound where (slug + active) genera SQL con OR redundante en
-  // Prisma 7. Buscamos solo por slug y filtramos en JS.
-  // siteEnabled gateado acá: si el dealer no activó su sitio, TODAS las rutas
-  // públicas del tenant ven 404 — incluye páginas, API públicos y rewrites del
-  // middleware (que terminan cayendo acá).
-  const dealership = await prisma.dealership.findUnique({ where: { slug } });
-  if (!dealership || !dealership.active || !dealership.siteEnabled) return null;
+  const dealership = await getPublicDealershipFromDb(slug);
+  if (!dealership) return null;
 
   try {
-    await redis.set(key, dealership, { ex: TENANT_HOME_TTL_SECONDS });
+    await redis.set(key, dealership, { ex: TENANT_DEALERSHIP_TTL_SECONDS });
   } catch (error) {
     logger.warn(undefined, "tenant.dealership.cache_write_failed", {
       slug,
@@ -270,7 +257,7 @@ import GLOBAL_BRANDS from "@/data/brands.json";
  * Prioriza las marcas oficiales para mostrar sus logos.
  *
  * Recibe stockBrands ya resueltas para evitar duplicar la query de marcas cuando
- * se llama desde fetchTenantHomeBundleFromDb (que ya las obtiene en el Promise.all).
+ * se llama desde getTenantHomeBundleFromDb (que ya las obtiene en el Promise.all).
  */
 export function getDisplayBrands(
   stockBrands: string[],
@@ -318,25 +305,18 @@ export async function getApprovedReviews(dealershipId: string) {
 }
 
 // ============================================================================
-// Tenant home bundle — cache-aside del paquete completo del home del tenant.
+// Tenant home bundle — el paquete completo de datos del home del tenant.
 // ============================================================================
 //
-// Una sola key Redis por slug. Se invalida desde los handlers de mutación que
-// afecten cualquier dato del bundle (vehículos, reviews, theme, etc.) llamando
-// invalidateTenantHomeBundle(slug). TTL es safety net: la fuente de verdad es
-// la invalidación activa.
+// Ya NO se cachea en Redis: el home es ISR y el cache es el HTML que guarda
+// Vercel (ver tenant/[slug]/layout.tsx). Se invalida desde los handlers de
+// mutación con invalidateTenantHomeBundle(slug).
 //
-// El bundle se almacena ya serializado (Decimal → string, Date → ISO string)
-// para que los Server Components que lo consumen puedan pasarlo a Client
-// Components sin re-procesar.
+// El bundle sale ya serializado (Decimal → string, Date → ISO string) para que
+// los Server Components lo pasen a Client Components sin re-procesar.
 
-const TENANT_HOME_TTL_SECONDS = 1800; // 30 min
-
-function tenantHomeKey(slug: string): string {
-  // v2: se agregó `collections` al bundle. El bump invalida el shape viejo.
-  // v3: se agregó `country` (lo necesita el JSON-LD para no hardcodear "AR").
-  return `tenant:${slug}:home:v3`;
-}
+// TTL del dealership cacheado en Redis (lo leen los handlers dinámicos).
+const TENANT_DEALERSHIP_TTL_SECONDS = 1800; // 30 min
 
 function tenantDealershipKey(slug: string): string {
   return `tenant:${slug}:dealership`;
@@ -560,10 +540,14 @@ function buildCollections(vehicles: PublishedVehicleRow[]): TenantHomeCollection
     .filter((c) => c.vehicles.length > 0);
 }
 
-async function fetchTenantHomeBundleFromDb(
+/**
+ * Bundle del home leído de la DB, sin Redis. En páginas usar
+ * getTenantHomeBundle() de tenant-render.ts, que además deduplica por render.
+ */
+export async function getTenantHomeBundleFromDb(
   slug: string
 ): Promise<TenantHomeBundle | null> {
-  const dealership = await getDealershipBySlug(slug);
+  const dealership = await getPublicDealershipFromDb(slug);
   if (!dealership) return null;
   return assembleTenantHomeBundle(dealership);
 }
@@ -671,54 +655,29 @@ async function assembleTenantHomeBundle(
 }
 
 /**
- * Devuelve el paquete completo de datos del home del tenant.
- * Cache-aside con Upstash. Fail-open en errores de Redis (cae a DB).
- */
-export async function getTenantHomeBundle(
-  slug: string
-): Promise<TenantHomeBundle | null> {
-  const key = tenantHomeKey(slug);
-
-  try {
-    const cached = await redis.get<TenantHomeBundle>(key);
-    if (cached) return cached;
-  } catch (error) {
-    // Cache caído — fail-open. Loggeamos pero no fallamos la request.
-    logger.warn(undefined, "tenant.home.cache_read_failed", {
-      slug,
-      error: error instanceof Error ? error.message : String(error),
-    });
-  }
-
-  const bundle = await fetchTenantHomeBundleFromDb(slug);
-  if (!bundle) return null;
-
-  try {
-    await redis.set(key, bundle, { ex: TENANT_HOME_TTL_SECONDS });
-  } catch (error) {
-    logger.warn(undefined, "tenant.home.cache_write_failed", {
-      slug,
-      error: error instanceof Error ? error.message : String(error),
-    });
-  }
-
-  return bundle;
-}
-
-/**
- * Invalida el cache del home del tenant. Llamar desde TODOS los handlers que
- * modifiquen datos visibles en el home: vehículos, reviews, theme, dealership.
+ * Invalida el sitio público del tenant: el HTML ISR de todas sus páginas y el
+ * dealership cacheado en Redis. Llamar desde TODOS los handlers que modifiquen
+ * datos visibles en el sitio: vehículos, reviews, theme, dealership, secciones.
  *
  * No tira si Redis está caído — solo loggea (mismo principio fail-open).
  */
 export async function invalidateTenantHomeBundle(slug: string): Promise<void> {
   try {
-    await Promise.all([
-      redis.del(tenantHomeKey(slug)),
-      redis.del(tenantDealershipKey(slug)),
-    ]);
+    await redis.del(tenantDealershipKey(slug));
   } catch (error) {
     logger.warn(undefined, "tenant.home.cache_invalidate_failed", {
+      slug,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  // Las páginas del tenant son ISR (ver tenant/[slug]/layout.tsx). "layout"
+  // invalida TODAS las páginas bajo /tenant/{slug} (home, fichas, cotizar...).
+  // try/catch: fuera de un request (scripts, tests) revalidatePath tira.
+  try {
+    revalidatePath(getTenantPathPrefix(slug), "layout");
+  } catch (error) {
+    logger.warn(undefined, "tenant.isr.revalidate_failed", {
       slug,
       error: error instanceof Error ? error.message : String(error),
     });

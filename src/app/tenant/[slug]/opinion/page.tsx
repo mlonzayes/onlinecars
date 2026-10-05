@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getDealershipBySlug, getTenantPublicUrl } from "@/lib/tenant";
+import { getTenantPublicUrl } from "@/lib/tenant";
+import { getTenantDealership } from "@/lib/tenant-render";
 import { ReviewForm } from "@/components/tenant/review-form";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const dealership = await getDealershipBySlug(slug);
+  const dealership = await getTenantDealership(slug);
   if (!dealership) return { title: "No encontrado" };
   // Canonical propio: sin él hereda el de la home que declara el layout.
   return {
@@ -17,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function TenantOpinionPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const dealership = await getDealershipBySlug(slug);
+  const dealership = await getTenantDealership(slug);
   if (!dealership) notFound();
 
   return (

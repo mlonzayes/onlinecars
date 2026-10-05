@@ -97,6 +97,10 @@ motorflowapp.com         → Web de marketing + onboarding + sign-in
 
 El subdomain rewrite vive en [src/middleware.ts](src/middleware.ts) y **solo se activa fuera de `localhost`**. En dev se trabaja todo desde `localhost:3000` accediendo a `/dashboard`, `/tenant/{slug}`, etc. directamente.
 
+**En producción (`VERCEL_ENV=production`) el sitio del tenant vive SOLO en su subdominio**: el middleware redirige (308) `motorflowapp.com/tenant/{slug}/...` a `{slug}.motorflowapp.com/...`. Por eso `getTenantBasePath()` ([src/lib/tenant-routing.ts](src/lib/tenant-routing.ts)) decide por entorno y no por el header `host`: leer `headers()` vuelve dinámica la página y la saca del ISR.
+
+**ClerkProvider NO está en el root layout**: lo monta cada superficie con sesión vía `<AppClerkProvider>` ([src/components/auth/app-clerk-provider.tsx](src/components/auth/app-clerk-provider.tsx)). Así el sitio del tenant no descarga Clerk. Ruta nueva que use componentes/hooks de Clerk en el cliente → envolverla en su layout.
+
 ### Feature flag global de login: `NEXT_PUBLIC_ENABLE_LOGIN`
 
 Mientras el producto no esté abierto, el dashboard está gateado por este flag:
@@ -678,17 +682,18 @@ Todas las constantes de los string-enums viven en [src/lib/constants.ts](src/lib
 **Implementado:**
 
 - **Rate limiting** en `/api/public/*` y en el form de contacto con `@upstash/ratelimit` (sliding window). Ver convención en la sección "Rate limiting + honeypot" más arriba.
-- **Cache-aside del sitio del tenant** — ya está en [src/lib/tenant.ts](src/lib/tenant.ts), no reinventarlo:
-  - `tenant:{slug}:dealership` — el `Dealership` completo (`getDealershipBySlug`).
-  - `tenant:{slug}:home:v3` — el bundle entero del home ya **serializado** (Decimal → string, Date → ISO) para que los Server Components lo pasen a Client Components sin re-procesar.
-  - TTL 30 min, pero es red de seguridad: la fuente de verdad es la **invalidación activa**.
+- **Cache del sitio del tenant** — ya está armado, no reinventarlo:
+  - **Páginas → ISR de Vercel**, no Redis. Leen la DB con `getTenantDealership` / `getTenantHomeBundle` de [src/lib/tenant-render.ts](src/lib/tenant-render.ts) (deduplicados por render con `cache()` de React). El bundle del home sale **serializado** (Decimal → string, Date → ISO) para pasarlo a Client Components.
+  - **Handlers dinámicos** (API públicos, robots/sitemap/llms) → `getDealershipBySlug` con cache-aside Redis en `tenant:{slug}:dealership` ([src/lib/tenant.ts](src/lib/tenant.ts)).
+  - TTL 30 min en los dos, pero es red de seguridad: la fuente de verdad es la **invalidación activa**.
 
 **Reglas del cache del tenant:**
 
 1. **TODO handler que mute algo visible en el home llama a `invalidateTenantHomeBundle(slug)`** — vehículos, imágenes, reviews, theme, secciones, media, datos del dealership. Se olvida uno y el dealer ve su sitio viejo 30 minutos y abre un ticket.
 2. **Fail-open en lectura y en escritura.** Si Redis se cae, se loggea (`tenant.home.cache_read_failed`) y se va a la DB. Nunca tira.
-3. **Si cambiás el SHAPE del bundle, bumpeá la versión de la key** (`:home:v2` → `:v3` → `:v4`…). Sin eso, los tenants cacheados siguen sirviendo el shape viejo y el render explota con campos `undefined`.
-4. **El bundle enumera sus campos uno por uno a propósito.** No lo conviertas en un spread del `Dealership`: hay secretos ahí (ver `metaCapiToken`) que no deben viajar al cliente.
+3. **Las páginas del tenant son ISR** (`revalidate = 1800` + `generateStaticParams` vacío en `tenant/[slug]/layout.tsx`). `invalidateTenantHomeBundle` hace `revalidatePath("/tenant/{slug}", "layout")`, así que la regla 1 cubre el HTML cacheado en Vercel. El catálogo es la excepción (`force-dynamic` por los filtros).
+4. **⚠️ Nada de Redis ni APIs dinámicas en el render de las páginas del tenant.** El cliente de Upstash hace `fetch` con `cache: "no-store"`, y en un render ISR eso tira "Dynamic server usage" → **500 en producción** (ya pasó: el build pasa igual, solo explota en runtime). Tampoco `headers()`, `cookies()` ni `searchParams`. En páginas, `getTenantDealership`, nunca `getDealershipBySlug`.
+5. **El bundle enumera sus campos uno por uno a propósito.** No lo conviertas en un spread del `Dealership`: hay secretos ahí (ver `metaCapiToken`) que no deben viajar al cliente.
 
 **Pendiente:** cachear también el listado paginado de `/catalogo` (hoy va directo a DB en cada filtro).
 
@@ -772,6 +777,10 @@ ML_CLIENT_ID=
 ML_CLIENT_SECRET=
 ML_TOKEN_SECRET=                    # Cifra los tokens de ML guardados en DB
 ML_WEBHOOK_SECRET=
+
+# Vercel — VERCEL_ENV la setea Vercel sola (system env). "production" activa el
+# routing por subdominio de los tenants (ver lib/tenant-routing.ts).
+VERCEL_ENV=
 
 # Vercel (alta de dominios custom — Fase 2, hoy en standby)
 VERCEL_API_TOKEN=

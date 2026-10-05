@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { getTenantHomeBundle, getTenantBasePath, getTenantPublicUrl } from "@/lib/tenant";
+import { getTenantBasePath, getTenantPublicUrl } from "@/lib/tenant";
+import { getTenantHomeBundle } from "@/lib/tenant-render";
 import { TenantHomeContent } from "@/components/tenant/tenant-home-content";
 import { JsonLd } from "@/components/seo/json-ld";
 import { COUNTRY_LABELS } from "@/lib/constants";
@@ -13,7 +14,7 @@ export default async function TenantHomePage({ params }: TenantHomePageProps) {
   const bundle = await getTenantHomeBundle(slug);
   if (!bundle) notFound();
 
-  const basePath = await getTenantBasePath(slug);
+  const basePath = getTenantBasePath(slug);
 
   // Structured data AutoDealer (LocalBusiness): le dice a Google/IA que esto es
   // una concesionaria, con su contacto y ubicación. Alimenta el pack local y las

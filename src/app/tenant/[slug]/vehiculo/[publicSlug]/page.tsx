@@ -13,12 +13,8 @@ import {
   MessageCircle,
   Star,
 } from "lucide-react";
-import {
-  getDealershipBySlug,
-  getPublishedVehicleBySlug,
-  getTenantBasePath,
-  getTenantPublicUrl,
-} from "@/lib/tenant";
+import { getPublishedVehicleBySlug, getTenantBasePath, getTenantPublicUrl } from "@/lib/tenant";
+import { getTenantDealership } from "@/lib/tenant-render";
 import { VehicleGallery } from "@/components/tenant/vehicle-gallery";
 import { TenantContactForm } from "@/components/tenant/contact-form";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -29,9 +25,15 @@ interface VehicleDetailPageProps {
   params: Promise<{ slug: string; publicSlug: string }>;
 }
 
+// ISR por ficha (ver revalidate en tenant/[slug]/layout.tsx): cada vehículo
+// se cachea al primer visitante y se invalida junto con el resto del sitio.
+export function generateStaticParams(): { publicSlug: string }[] {
+  return [];
+}
+
 export async function generateMetadata({ params }: VehicleDetailPageProps): Promise<Metadata> {
   const { slug, publicSlug } = await params;
-  const dealership = await getDealershipBySlug(slug);
+  const dealership = await getTenantDealership(slug);
   if (!dealership) return { title: "No encontrado" };
 
   const vehicle = await getPublishedVehicleBySlug(dealership.id, publicSlug);
@@ -93,13 +95,13 @@ const TRANSMISSION_LABELS: Record<string, string> = {
 
 export default async function VehicleDetailPage({ params }: VehicleDetailPageProps) {
   const { slug, publicSlug } = await params;
-  const dealership = await getDealershipBySlug(slug);
+  const dealership = await getTenantDealership(slug);
   if (!dealership) notFound();
 
   const vehicle = await getPublishedVehicleBySlug(dealership.id, publicSlug);
   if (!vehicle) notFound();
 
-  const basePath = await getTenantBasePath(slug);
+  const basePath = getTenantBasePath(slug);
 
   // Structured data Car + Offer: precio, año, km, condición. Es lo que hace que
   // Google/IA puedan listar y entender este vehículo en particular.

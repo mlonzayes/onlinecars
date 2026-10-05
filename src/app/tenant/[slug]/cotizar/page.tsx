@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getDealershipBySlug, getTenantPublicUrl } from "@/lib/tenant";
+import { getTenantPublicUrl } from "@/lib/tenant";
+import { getTenantDealership } from "@/lib/tenant-render";
 import { Section } from "@/components/tenant/section";
 import { QuoteForm } from "@/components/tenant/quote-form";
 
@@ -12,7 +13,7 @@ export async function generateMetadata({
   params,
 }: CotizarPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const dealership = await getDealershipBySlug(slug);
+  const dealership = await getTenantDealership(slug);
   if (!dealership) return { title: "No encontrado" };
 
   // Canonical propio: el layout del tenant declara el suyo (la home) y sin este
@@ -26,7 +27,7 @@ export async function generateMetadata({
 
 export default async function CotizarPage({ params }: CotizarPageProps) {
   const { slug } = await params;
-  const dealership = await getDealershipBySlug(slug);
+  const dealership = await getTenantDealership(slug);
   if (!dealership) notFound();
 
   const whatsappUrl = dealership.whatsapp

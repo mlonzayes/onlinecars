@@ -264,6 +264,36 @@
   }
 }
 
+/* Entrada del hero del TENANT. CSS puro a propósito: corre desde el primer
+   paint, sin esperar a que React hidrate.
+   El título anima SOLO transform, nunca opacity: es el LCP del sitio y Chrome
+   no cuenta como pintado un elemento con opacity 0. Si lo fundimos desde 0, el
+   LCP se corre al final de la animación. Subtítulo y form sí hacen fade. */
+@keyframes heroEnterRise {
+  from {
+    transform: translate3d(0, 24px, 0);
+  }
+}
+
+@keyframes heroEnterFadeUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-enter-title {
+    animation: heroEnterRise 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  }
+  .hero-enter-subtitle {
+    animation: heroEnterFadeUp 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.08s both;
+  }
+  .hero-enter-form {
+    animation: heroEnterFadeUp 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.16s both;
+  }
+}
+
 /* Hero shot: arranca grisado y se prende a color a medida que scrolleás.
    Solo desktop (lg+). Scroll-driven CSS, sin JS → no afecta el LCP (la imagen
    pinta igual, solo desaturada). @supports: si el navegador no soporta

@@ -27,3 +27,11 @@ export function canSeeCosts(
 export function canEditCosts(user: Pick<DealershipUser, "role">): boolean {
   return user.role === "admin";
 }
+
+/**
+ * Indica si el user puede crear, editar, publicar o borrar vehículos.
+ * admin y editor (vendedor) sí; viewer es solo lectura.
+ */
+export function canEditInventory(user: Pick<DealershipUser, "role">): boolean {
+  return user.role === "admin" || user.role === "editor";
+}

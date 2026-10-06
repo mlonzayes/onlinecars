@@ -153,7 +153,8 @@ src/
 │   └── legal/
 ├── lib/
 │   ├── prisma.ts redis.ts logger.ts api-handler.ts utils.ts
-│   ├── auth.ts permissions.ts super-admin.ts admin-context.ts
+│   ├── auth.ts permissions.ts super-admin.ts admin-context.ts account-status.ts
+│   ├── services/                        # Lógica de negocio compartida por canales (ver abajo)
 │   ├── rate-limit.ts honeypot.ts        # Protección de endpoints públicos
 │   ├── tenant.ts tenant-templates.ts tenant-defaults.ts tenant-format.ts
 │   ├── plans.ts                         # PLAN_LIMITS + gating por plan
@@ -275,6 +276,20 @@ return NextResponse.json({ data: items, meta: { total, page, limit } });
 // ✅ Error
 return NextResponse.json({ error: "Vehículo no encontrado" }, { status: 404 });
 ```
+
+#### Capa de servicios (`src/lib/services/`)
+
+La lógica de negocio de un recurso (permisos por rol, cuenta activa, guards de
+venta, límite del plan, invalidación de cache) vive en `src/lib/services/<recurso>/`,
+no en el handler. Hoy está migrado **vehículos** (CRUD, publish, status); el resto
+de los handlers todavía tiene la lógica inline.
+
+- El servicio recibe un `ServiceContext` (`requestId`, `dealership`, `source`) y tira
+  `ServiceError` para errores de negocio. No conoce HTTP.
+- El handler valida con Zod, arma el contexto con `getDashboardContext()` y envuelve
+  la llamada en `withServiceErrors()`, que traduce el error a JSON + status.
+- El MCP (en camino) usa los mismos servicios con `source: "mcp"`. **Canal nuevo →
+  reusar el servicio, nunca reimplementar los chequeos.**
 
 #### Wrapper `withLogger` (convención del proyecto)
 

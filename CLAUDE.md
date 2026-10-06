@@ -294,6 +294,10 @@ de los handlers todavía tiene la lógica inline.
   la llamada en `withServiceErrors()`, que traduce el error a JSON + status.
 - El MCP usa los mismos servicios con `source: "mcp"`. **Canal nuevo → reusar el
   servicio, nunca reimplementar los chequeos.** Gastos también está migrado.
+- Hay servicios **de solo lectura** para leads, ventas, cotizaciones, reviews,
+  MercadoLibre e `insights/` (resumen del negocio, stock inmovilizado, cotización).
+  Hoy solo los usa el MCP; los handlers de esos módulos siguen con la lógica inline.
+  **No devuelven números de documento ni el legajo** — no los agregues.
 
 #### MCP (`/api/mcp` + `src/lib/mcp/`)
 
@@ -315,6 +319,14 @@ Deja que el dealer opere el panel desde Claude o ChatGPT ("cargame este auto",
   Los dos son fail-open.
 - **Errores:** `ServiceError` vuelve como resultado con `isError` y el mensaje en
   español, para que la IA se lo explique al usuario. Lo inesperado solo muestra el `requestId`.
+- **Tools (18):** stock (`buscar_vehiculos`, `ver_vehiculo`, `crear_vehiculo`,
+  `actualizar_vehiculo`, `publicar_vehiculo`), gastos (`cargar_gasto`, `ver_costos_vehiculo`,
+  `eliminar_gasto`), negocio (`resumen_negocio`, `stock_inmovilizado`, `cotizacion_dolar`),
+  `listar_leads`/`ver_lead`, `listar_ventas`/`ver_venta`, `listar_cotizaciones`,
+  `listar_opiniones` y `estado_mercadolibre`. Una tool por archivo temático en `src/lib/mcp/tools/`.
+- **Plata por moneda, siempre.** `resumen_negocio` convierte costo y gastos a la moneda de
+  cada venta y totaliza por moneda. Ojo: el dashboard (`dashboard-stats.ts`) todavía suma
+  ARS y USD sin convertir.
 
 **Alta de un cliente (Claude, ChatGPT):** Clerk Dashboard → OAuth applications →
 crear la app con el redirect URI del cliente (Claude: `https://claude.ai/api/mcp/auth_callback`)
@@ -864,7 +876,7 @@ RESEND_API_KEY=
 *Panel del concesionario*
 - Vehículos: CRUD + publish/featured/status + imágenes (upload, delete, reorder) + **import masivo desde Excel** + acciones bulk + gastos por vehículo (`VehicleExpense`) y margen.
 - Leads, Clientes, Ventas (con legajo de documentos y presigned URLs), **Cotizaciones** (compra y venta, con numeración por tenant y PDF vía pdfmake).
-- Contabilidad, bancos y pagos.
+- Contabilidad, bancos y pagos: **solo placeholders** ("próximamente"), sin funcionalidad.
 - **Integración MercadoLibre**: OAuth, sync de publicaciones, webhooks.
 - Notificaciones in-app con polling.
 - Cotización USD: base BCRA global (`ExchangeRate`, cron de sync) + `usdSpread` por tenant.

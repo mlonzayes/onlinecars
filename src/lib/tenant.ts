@@ -175,6 +175,41 @@ function buildPublishedVehiclesWhere(
   return where;
 }
 
+/**
+ * Campos de un vehículo que pueden salir al público (sitio, API pública,
+ * sitemap, llms.txt). Es una ALLOWLIST a propósito: costo de compra, VIN,
+ * número de motor y patente son datos privados del dealer y no se traen. Un
+ * campo nuevo en `Vehicle` queda privado hasta que alguien lo sume acá.
+ */
+export const PUBLIC_VEHICLE_SELECT = {
+  id: true,
+  publicSlug: true,
+  title: true,
+  brand: true,
+  model: true,
+  year: true,
+  price: true,
+  currency: true,
+  kilometers: true,
+  fuelType: true,
+  transmission: true,
+  bodyType: true,
+  color: true,
+  doors: true,
+  engine: true,
+  description: true,
+  condition: true,
+  status: true,
+  featured: true,
+  publishedAt: true,
+  createdAt: true,
+  updatedAt: true,
+  images: {
+    orderBy: { order: "asc" },
+    select: { id: true, url: true, isPrimary: true, alt: true, order: true },
+  },
+} satisfies Prisma.VehicleSelect;
+
 export async function getPublishedVehicles(
   dealershipId: string,
   filters?: PublicVehicleFilters,
@@ -184,9 +219,7 @@ export async function getPublishedVehicles(
 
   return prisma.vehicle.findMany({
     where,
-    include: {
-      images: { orderBy: { order: "asc" } },
-    },
+    select: PUBLIC_VEHICLE_SELECT,
     orderBy: buildOrderBy(filters?.sort ?? "recent"),
     ...(pagination
       ? {

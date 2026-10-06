@@ -28,6 +28,7 @@ import { BLOCKING_SALE_STATUSES } from "@/lib/sale-guards";
 import { getPlanLimits } from "@/lib/plans";
 import { invalidateVehicleCaches } from "@/lib/cache-tags";
 import { Prisma, type Dealership } from "@prisma/client";
+import { denyApiAccess } from "@/lib/api-access";
 
 // Mapea constraints conocidas a labels legibles para el user. Cuando aparezca
 // una FK violation en delete, queremos decirle "tiene venta asociada" en vez
@@ -61,6 +62,8 @@ export const POST = withLogger(async (request, { requestId }) => {
   if (!dealership) {
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   // Plan gating server-side. La UI ya valida, pero acá es defense in depth.
   const limits = getPlanLimits(dealership);

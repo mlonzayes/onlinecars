@@ -12,6 +12,7 @@ import {
 import { sectionConfigSchemaFor } from "@/lib/sections/config-schemas";
 import { invalidateTenantHomeBundle, resolveSection } from "@/lib/tenant";
 import type { SectionType } from "@/lib/constants";
+import { denyApiAccess } from "@/lib/api-access";
 
 type RouteParams = { type: string };
 
@@ -44,6 +45,8 @@ export const PATCH = withLogger<RouteParams>(async (request, { requestId, params
       { status: 404 }
     );
   }
+  const denied = denyApiAccess(requestId, dealership, "write", ctx?.actingAsPlatform ?? false);
+  if (denied) return denied;
 
   const typeParsed = sectionTypeSchema.safeParse(params.type);
   if (!typeParsed.success) {

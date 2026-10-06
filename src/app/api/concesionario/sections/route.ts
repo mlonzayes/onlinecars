@@ -11,6 +11,7 @@ import {
 import { seedDefaultSections } from "@/lib/sections/seed";
 import type { DealershipTheme } from "@/types";
 import type { MediaPurpose, SectionType } from "@/lib/constants";
+import { denyApiAccess } from "@/lib/api-access";
 
 // GET /api/concesionario/sections
 // Retorna las secciones del dealership autenticado + todos sus medios.
@@ -35,6 +36,8 @@ export const GET = withLogger(async (_request, { requestId }) => {
       { status: 404 }
     );
   }
+  const denied = denyApiAccess(requestId, dealership, "read", ctx?.actingAsPlatform ?? false);
+  if (denied) return denied;
 
   const theme = dealership.theme as DealershipTheme | null;
 

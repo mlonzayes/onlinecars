@@ -17,6 +17,7 @@ import {
 import { blockingSaleErrorBody, findBlockingSale } from "@/lib/sale-guards";
 import { invalidateTenantHomeBundle } from "@/lib/tenant";
 import { getPlanLimits } from "@/lib/plans";
+import { denyApiAccess } from "@/lib/api-access";
 
 type VehicleParams = { id: string };
 
@@ -35,6 +36,8 @@ export const POST = withLogger<VehicleParams>(async (request, { requestId, param
     logger.warn(requestId, "vehicles.images.upload.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   const { id: vehicleId } = params;
 

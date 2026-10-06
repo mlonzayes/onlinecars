@@ -8,6 +8,7 @@ import { logger } from "@/lib/logger";
 import { detectImageMimeType } from "@/lib/validators/media";
 import { ALLOWED_TENANT_IMAGE_MIME_TYPES, type AllowedTenantImageMimeType } from "@/lib/constants";
 import { invalidateTenantHomeBundle } from "@/lib/tenant";
+import { denyApiAccess } from "@/lib/api-access";
 
 // Favicon del sitio del tenant. Espeja al handler de logo (mismo bucket público,
 // misma validación por magic-number). Se guarda en Dealership.favicon; el tenant
@@ -35,6 +36,8 @@ export const POST = withLogger(async (request, { requestId }) => {
     logger.warn(requestId, "favicon.upload.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write", ctx?.actingAsPlatform ?? false);
+  if (denied) return denied;
 
   let formData: FormData;
   try {
@@ -130,6 +133,8 @@ export const DELETE = withLogger(async (request, { requestId }) => {
     logger.warn(requestId, "favicon.delete.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write", ctx?.actingAsPlatform ?? false);
+  if (denied) return denied;
 
   if (!dealership.favicon) {
     return NextResponse.json({ error: "El concesionario no tiene ícono para eliminar" }, { status: 400 });

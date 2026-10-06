@@ -13,6 +13,7 @@ import { getCurrentDealership } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getItem } from "@/lib/mercadolibre/client";
 import { getPlanLimits } from "@/lib/plans";
+import { denyApiAccess } from "@/lib/api-access";
 
 type Params = { id: string };
 
@@ -22,6 +23,8 @@ export const POST = withLogger<Params>(async (_request, ctx) => {
   if (!dealership) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   // Plan gating — defense in depth. El sync consulta a ML; sin plan no hay
   // razón de uso legítimo. Disconnect (DELETE) sí queda abierto.

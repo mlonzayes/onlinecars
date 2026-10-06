@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { renderQuotationPdf } from "@/lib/pdf/render";
+import { denyApiAccess } from "@/lib/api-access";
 
 type QuotationParams = { id: string };
 
@@ -28,6 +29,8 @@ export const GET = withLogger<QuotationParams>(
         { status: 404 }
       );
     }
+    const denied = denyApiAccess(requestId, dealership, "read");
+    if (denied) return denied;
 
     const { id } = params;
     const quotation = await prisma.quotation.findFirst({

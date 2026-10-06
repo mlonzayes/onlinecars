@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
+import { denyApiAccess } from "@/lib/api-access";
 
 // GET /api/leads
 // Lista paginada de leads del concesionario autenticado.
@@ -27,6 +28,8 @@ export const GET = withLogger(async (request, { requestId }) => {
     logger.warn(requestId, "leads.list.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "read");
+  if (denied) return denied;
 
   const { searchParams } = new URL(request.url);
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));

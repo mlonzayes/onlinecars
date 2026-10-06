@@ -19,6 +19,7 @@ import {
   rowLabel,
 } from "@/lib/import/vehicle-import-service";
 import { assignPublicSlugs } from "@/lib/import/vehicle-import-slugs";
+import { denyApiAccess } from "@/lib/api-access";
 
 // POST /api/vehiculos/import
 //
@@ -42,6 +43,8 @@ export const POST = withLogger(async (request, { requestId }) => {
     logger.warn(requestId, "vehicles.import.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   const body: unknown = await request.json();
   const envelope = vehicleImportSchema.safeParse(body);

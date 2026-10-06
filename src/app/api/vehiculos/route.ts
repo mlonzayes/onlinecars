@@ -9,6 +9,7 @@ import { logger } from "@/lib/logger";
 import { invalidateVehicleCaches } from "@/lib/cache-tags";
 import { canSeeCosts, canEditCosts } from "@/lib/permissions";
 import { generateVehicleSlug } from "@/lib/utils/slug";
+import { denyApiAccess } from "@/lib/api-access";
 
 // Sacamos costPrice/costCurrency de una lista de vehículos si el user no tiene permiso.
 // Devolvemos `null` en vez de `undefined` para no romper el shape de la response.
@@ -35,6 +36,8 @@ export const GET = withLogger(async (request, { requestId }) => {
     logger.warn(requestId, "vehicles.list.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "read");
+  if (denied) return denied;
 
   const { searchParams } = new URL(request.url);
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
@@ -103,6 +106,8 @@ export const POST = withLogger(async (request, { requestId }) => {
     logger.warn(requestId, "vehicles.create.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   const body: unknown = await request.json();
   const parsed = vehicleCreateSchema.safeParse(body);

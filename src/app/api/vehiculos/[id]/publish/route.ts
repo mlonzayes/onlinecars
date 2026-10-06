@@ -7,6 +7,7 @@ import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { invalidateVehicleCaches } from "@/lib/cache-tags";
 import { canPublishMoreVehicles, getPlanLimits } from "@/lib/plans";
+import { denyApiAccess } from "@/lib/api-access";
 
 type VehicleParams = { id: string };
 
@@ -26,6 +27,8 @@ export const PATCH = withLogger<VehicleParams>(async (_request, { requestId, par
     logger.warn(requestId, "vehicles.publish.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   const { id } = params;
 

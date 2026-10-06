@@ -20,6 +20,7 @@ import {
   updateItemStatus,
 } from "@/lib/mercadolibre/client";
 import { getPlanLimits } from "@/lib/plans";
+import { denyApiAccess } from "@/lib/api-access";
 
 type Params = { id: string };
 
@@ -31,6 +32,8 @@ export const POST = withLogger<Params>(async (request, ctx) => {
   if (!dealership) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   // Plan gating — defense in depth. La UI ya esconde el botón pero acá lo
   // bloqueamos por si llaman al endpoint directo.
@@ -203,6 +206,8 @@ export const DELETE = withLogger<Params>(async (_request, ctx) => {
   if (!dealership) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   const vehicleId = ctx.params.id;
 
@@ -254,6 +259,8 @@ export const PATCH = withLogger<Params>(async (request, ctx) => {
   if (!dealership) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   const vehicleId = ctx.params.id;
   const body = await request.json();

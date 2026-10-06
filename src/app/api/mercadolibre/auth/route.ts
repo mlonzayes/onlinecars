@@ -15,12 +15,15 @@ import { getCurrentDealership } from "@/lib/auth";
 import { buildAuthUrl } from "@/lib/mercadolibre/client";
 import { getPlanLimits } from "@/lib/plans";
 import { signState } from "@/lib/mercadolibre/oauth-state";
+import { denyApiAccess } from "@/lib/api-access";
 
 export const GET = withLogger(async (_request, { requestId }) => {
   const dealership = await getCurrentDealership();
   if (!dealership) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   // Plan gating — defense in depth. La UI ya muestra "Mejorá tu plan" pero el
   // endpoint no debe iniciar el OAuth si el plan no permite ML.

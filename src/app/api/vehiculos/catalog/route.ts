@@ -15,6 +15,7 @@ import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { getCurrentDealership } from "@/lib/auth";
 import { searchVehicleCatalog } from "@/lib/vehicle-catalog";
+import { denyApiAccess } from "@/lib/api-access";
 
 const MAX_RESULTS = 15;
 
@@ -30,6 +31,8 @@ export const GET = withLogger(async (request, { requestId }) => {
   if (!dealership) {
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "read");
+  if (denied) return denied;
 
   const q = new URL(request.url).searchParams.get("q") ?? "";
   if (q.trim().length < 2) {

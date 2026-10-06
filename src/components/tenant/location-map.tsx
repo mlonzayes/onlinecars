@@ -28,7 +28,7 @@ export function LocationMap({ latitude, longitude, label, className }: LocationM
       <div className="flex items-center justify-between gap-3 border-t border-[var(--tenant-border)] bg-[var(--tenant-surface)] px-4 py-3">
         {label && (
           <p className="flex items-center gap-2 text-sm text-[var(--tenant-fg-muted)]">
-            <MapPin className="h-4 w-4 shrink-0 text-[var(--tenant-primary)]" />
+            <MapPin className="h-4 w-4 shrink-0 text-[var(--tenant-primary-text)]" />
             <span className="line-clamp-1">{label}</span>
           </p>
         )}
@@ -36,7 +36,7 @@ export function LocationMap({ latitude, longitude, label, className }: LocationM
           href={directionsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="ml-auto flex shrink-0 items-center gap-1.5 text-sm font-medium text-[var(--tenant-primary)] hover:underline"
+          className="ml-auto flex shrink-0 items-center gap-1.5 text-sm font-medium text-[var(--tenant-primary-text)] hover:underline"
         >
           <Navigation className="h-4 w-4" />
           Cómo llegar

@@ -109,7 +109,7 @@ export function VehicleCard({ vehicle, basePath, hideFeaturedBadge = false }: Ve
         )}
 
         {/* Title — text-sm en mobile, text-base en sm+ */}
-        <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-[var(--tenant-fg)] transition-colors group-hover:text-[var(--tenant-primary)] sm:text-base">
+        <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-[var(--tenant-fg)] transition-colors group-hover:text-[var(--tenant-primary-text)] sm:text-base">
           {vehicle.title}
         </h3>
 

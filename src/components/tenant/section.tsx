@@ -70,7 +70,7 @@ export function Section({
             )}
           >
             {eyebrow && (
-              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--tenant-primary)]">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--tenant-primary-text)]">
                 {eyebrow}
               </p>
             )}

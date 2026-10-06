@@ -47,7 +47,7 @@ export function FeaturedTabs({
       trailing={
         <Link
           href={`${basePath}/catalogo`}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--tenant-primary)] hover:underline"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--tenant-primary-text)] hover:underline"
         >
           Ver todo
           <ArrowRight className="h-4 w-4" />

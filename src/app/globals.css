@@ -93,6 +93,7 @@
   --tenant-fg: #0f172a;
   --tenant-fg-muted: #475569;
   --tenant-fg-subtle: #5b6b80;
+  --tenant-primary-text: var(--tenant-primary);
   --tenant-border: #e5e7eb;
   --tenant-border-strong: #cbd5e1;
   --tenant-primary: #2563eb;

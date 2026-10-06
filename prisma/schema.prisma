@@ -271,7 +271,7 @@ model DealershipUser {
 model DealershipInvite {
   id           String     @id @default(cuid())
   email        String?    // Opcional, solo para referencia si se usa link mágico
-  role         String     @default("seller") // admin | seller
+  role         String     @default("editor") // admin | editor | viewer (ver USER_ROLES)
   token        String     @unique
   dealershipId String
   createdAt    DateTime   @default(now())

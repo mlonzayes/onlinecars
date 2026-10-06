@@ -45,7 +45,7 @@ export const POST = withLogger(async (_req, { requestId }) => {
   const invite = await prisma.dealershipInvite.create({
     data: {
       dealershipId: dealership.id,
-      role: "seller",
+      role: "editor",
       token,
       expiresAt,
     },

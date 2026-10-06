@@ -41,7 +41,7 @@ export function WhyChooseUs() {
             key={feature.title}
             className="flex flex-col items-start rounded-xl border border-[var(--tenant-border)] bg-[var(--tenant-surface)] p-6 shadow-sm transition-shadow hover:shadow-md"
           >
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--tenant-primary)]/10 text-[var(--tenant-primary)]">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--tenant-primary)]/10 text-[var(--tenant-primary-text)]">
               <Icon className="h-6 w-6" />
             </div>
             <h3 className="text-base font-semibold text-[var(--tenant-fg)]">

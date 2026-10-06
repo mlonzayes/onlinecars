@@ -90,7 +90,7 @@ export function CarouselScroller({
   }, [autoAdvanceMs, isPaused, enableCarouselUX]);
 
   const buttonClass =
-    "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--tenant-border)] bg-[var(--tenant-surface)] text-[var(--tenant-fg)] shadow-sm transition-all hover:-translate-y-0.5 hover:border-[var(--tenant-primary)] hover:text-[var(--tenant-primary)]";
+    "inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--tenant-border)] bg-[var(--tenant-surface)] text-[var(--tenant-fg)] shadow-sm transition-all hover:-translate-y-0.5 hover:border-[var(--tenant-primary)] hover:text-[var(--tenant-primary-text)]";
 
   return (
     <div>

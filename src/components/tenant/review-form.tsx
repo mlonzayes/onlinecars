@@ -62,7 +62,7 @@ export function ReviewForm({ slug, dealershipName }: ReviewFormProps) {
         </p>
         <button
           onClick={() => setSuccess(false)}
-          className="mt-6 text-sm font-semibold text-[var(--tenant-primary)] hover:underline"
+          className="mt-6 text-sm font-semibold text-[var(--tenant-primary-text)] hover:underline"
         >
           Enviar otra opinión
         </button>

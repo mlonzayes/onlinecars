@@ -227,7 +227,7 @@ export default async function VehicleDetailPage({ params }: VehicleDetailPagePro
       {/* Back */}
       <Link
         href={basePath}
-        className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary)]"
+        className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary-text)]"
       >
         <ArrowLeft className="h-4 w-4" />
         Volver al catálogo

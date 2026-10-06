@@ -1,4 +1,5 @@
 import { resolveTemplate } from "@/lib/tenant-templates";
+import { accessibleTextColor } from "@/lib/tenant-colors";
 import { getPlanLimits } from "@/lib/plans";
 import { TenantHeader } from "./tenant-header";
 import { TenantFooter } from "./tenant-footer";
@@ -25,6 +26,15 @@ export function TenantChrome({ dealership, basePath, children }: TenantChromePro
   const primaryColor = theme?.colorPrimary ?? "#2563eb";
   const primaryDark = adjustBrightness(primaryColor, -20);
   const template = resolveTemplate(dealership.templateId);
+  // Color de marca apto para TEXTO sobre los fondos de esta plantilla (≥4,5:1).
+  // Fondos y bordes siguen usando --tenant-primary tal cual lo eligió el dealer.
+  const primaryText = accessibleTextColor(
+    primaryColor,
+    [template.tokens["--tenant-bg"], template.tokens["--tenant-surface"]].filter(
+      (c): c is string => typeof c === "string"
+    ),
+    template.tone
+  );
 
   // La barra de anuncio se muestra solo si el template la soporta Y el dealer
   // cargó un mensaje. Cuando está, empuja el header y el contenido hacia abajo.
@@ -41,6 +51,7 @@ export function TenantChrome({ dealership, basePath, children }: TenantChromePro
         {
           "--tenant-primary": primaryColor,
           "--tenant-primary-dark": primaryDark,
+          "--tenant-primary-text": primaryText,
           ...template.tokens,
         } as React.CSSProperties
       }

@@ -17,7 +17,10 @@ import {
 //     "authorization_servers": ["https://clerk.motorflowapp.com"],
 //     "bearer_methods_supported": ["header"], "resource_name": "motorflow" }
 
-export const GET = withLogger(async (request) => {
+// El segmento del recurso no se usa: hay un solo recurso protegido (/api/mcp).
+type RouteParams = { resource?: string[] };
+
+export const GET = withLogger<RouteParams>(async (request) => {
   if (!isMcpEnabled()) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
   return NextResponse.json(buildProtectedResourceMetadata(request), {
     headers: { ...METADATA_CORS_HEADERS, "Cache-Control": "public, max-age=3600" },

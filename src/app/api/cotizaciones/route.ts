@@ -15,6 +15,7 @@ import {
   decorateWithExpired,
   effectiveStatusFilter,
 } from "@/lib/quotation-status";
+import { denyApiAccess } from "@/lib/api-access";
 
 // Campos mínimos para las cards/tabla del listado — no traemos los snapshots
 // completos de cliente/vehículo, solo lo justo para mostrar y filtrar.
@@ -58,6 +59,8 @@ export const GET = withLogger(async (request, { requestId }) => {
       { status: 404 }
     );
   }
+  const denied = denyApiAccess(requestId, dealership, "read");
+  if (denied) return denied;
 
   const { searchParams } = new URL(request.url);
   const parsedQuery = quotationListQuerySchema.safeParse(
@@ -129,6 +132,8 @@ export const POST = withLogger(async (request, { requestId }) => {
       { status: 404 }
     );
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   const body: unknown = await request.json();
   const parsed = quotationCreateSchema.safeParse(body);

@@ -7,6 +7,7 @@ import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { blockingSaleErrorBody, findBlockingSale } from "@/lib/sale-guards";
 import { invalidateTenantHomeBundle } from "@/lib/tenant";
+import { denyApiAccess } from "@/lib/api-access";
 
 type Params = { id: string; imageId: string };
 
@@ -25,6 +26,8 @@ export const DELETE = withLogger<Params>(async (_request, { requestId, params })
     logger.warn(requestId, "vehicles.images.delete.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   const { id: vehicleId, imageId } = params;
 

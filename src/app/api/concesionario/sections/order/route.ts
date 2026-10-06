@@ -6,6 +6,7 @@ import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { sectionOrderSchema } from "@/lib/validators/section";
 import { invalidateTenantHomeBundle, resolveSection } from "@/lib/tenant";
+import { denyApiAccess } from "@/lib/api-access";
 
 // PUT /api/concesionario/sections/order
 // Body: { order: SectionType[] } — listado COMPLETO de las 7 secciones en el nuevo orden.
@@ -27,6 +28,8 @@ export const PUT = withLogger(async (request, { requestId }) => {
       { status: 404 }
     );
   }
+  const denied = denyApiAccess(requestId, dealership, "write", ctx?.actingAsPlatform ?? false);
+  if (denied) return denied;
 
   const body: unknown = await request.json();
   const parsed = sectionOrderSchema.safeParse(body);

@@ -11,6 +11,7 @@ import { auth } from "@clerk/nextjs/server";
 import { getCurrentDealership } from "@/lib/auth";
 import { getUnreadCount } from "@/lib/notifications";
 import { withLogger } from "@/lib/api-handler";
+import { denyApiAccess } from "@/lib/api-access";
 
 export const GET = withLogger(async () => {
   const { userId } = await auth();
@@ -22,6 +23,8 @@ export const GET = withLogger(async () => {
   if (!dealership) {
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(undefined, dealership, "read");
+  if (denied) return denied;
 
   const unread = await getUnreadCount(dealership.id);
   return NextResponse.json({ data: { unread } });

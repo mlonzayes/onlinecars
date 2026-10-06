@@ -7,6 +7,7 @@ import { logger } from "@/lib/logger";
 import { imageOrderSchema } from "@/lib/validators/vehicle-image";
 import { blockingSaleErrorBody, findBlockingSale } from "@/lib/sale-guards";
 import { invalidateTenantHomeBundle } from "@/lib/tenant";
+import { denyApiAccess } from "@/lib/api-access";
 
 type VehicleParams = { id: string };
 
@@ -25,6 +26,8 @@ export const PUT = withLogger<VehicleParams>(async (request, { requestId, params
     logger.warn(requestId, "vehicles.images.order.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   const { id: vehicleId } = params;
 

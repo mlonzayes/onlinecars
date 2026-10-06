@@ -8,6 +8,7 @@ import { logger } from "@/lib/logger";
 import { detectImageMimeType } from "@/lib/validators/media";
 import { ALLOWED_TENANT_IMAGE_MIME_TYPES, type AllowedTenantImageMimeType } from "@/lib/constants";
 import { invalidateTenantHomeBundle } from "@/lib/tenant";
+import { denyApiAccess } from "@/lib/api-access";
 
 const MAX_LOGO_BYTES = 5 * 1024 * 1024; // 5MB
 
@@ -32,6 +33,8 @@ export const POST = withLogger(async (request, { requestId }) => {
     logger.warn(requestId, "logo.upload.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write", ctx?.actingAsPlatform ?? false);
+  if (denied) return denied;
 
   let formData: FormData;
   try {
@@ -129,6 +132,8 @@ export const DELETE = withLogger(async (request, { requestId }) => {
     logger.warn(requestId, "logo.delete.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write", ctx?.actingAsPlatform ?? false);
+  if (denied) return denied;
 
   if (!dealership.logo) {
     return NextResponse.json({ error: "El concesionario no tiene logo para eliminar" }, { status: 400 });

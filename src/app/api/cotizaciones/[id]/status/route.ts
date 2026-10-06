@@ -7,6 +7,7 @@ import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { quotationStatusUpdateSchema } from "@/lib/validators/quotation";
 import { decorateWithExpired } from "@/lib/quotation-status";
+import { denyApiAccess } from "@/lib/api-access";
 
 type QuotationParams = { id: string };
 
@@ -32,6 +33,8 @@ export const PATCH = withLogger<QuotationParams>(
         { status: 404 }
       );
     }
+    const denied = denyApiAccess(requestId, dealership, "write");
+    if (denied) return denied;
 
     const { id } = params;
     const body: unknown = await request.json();

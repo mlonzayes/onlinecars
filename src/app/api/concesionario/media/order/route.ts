@@ -7,6 +7,7 @@ import { logger } from "@/lib/logger";
 import { mediaOrderSchema } from "@/lib/validators/media";
 import { invalidateTenantHomeBundle } from "@/lib/tenant";
 import type { MediaPurpose } from "@/lib/constants";
+import { denyApiAccess } from "@/lib/api-access";
 
 // PUT /api/concesionario/media/order
 // Body: { ids: string[] } — ids de gallery_image en el nuevo orden (0-based).
@@ -28,6 +29,8 @@ export const PUT = withLogger(async (request, { requestId }) => {
       { status: 404 }
     );
   }
+  const denied = denyApiAccess(requestId, dealership, "write", ctx?.actingAsPlatform ?? false);
+  if (denied) return denied;
 
   const body: unknown = await request.json();
   const parsed = mediaOrderSchema.safeParse(body);

@@ -15,6 +15,7 @@ import {
   getExtensionForDocumentMime,
   isAllowedDocumentMimeType,
 } from "@/lib/validators/sale-document";
+import { denyApiAccess } from "@/lib/api-access";
 
 type SaleParams = { id: string };
 
@@ -33,6 +34,8 @@ export const GET = withLogger<SaleParams>(async (_request, { requestId, params }
     logger.warn(requestId, "sales.documents.list.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "read");
+  if (denied) return denied;
 
   const { id: saleId } = params;
 
@@ -75,6 +78,8 @@ export const POST = withLogger<SaleParams>(async (request, { requestId, params }
     logger.warn(requestId, "sales.documents.upload.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   const { id: saleId } = params;
 

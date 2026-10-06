@@ -44,6 +44,7 @@ import {
   type MediaPurpose,
 } from "@/lib/constants";
 import { invalidateTenantHomeBundle } from "@/lib/tenant";
+import { denyApiAccess } from "@/lib/api-access";
 
 // 16 bytes alcanzan para los dos formatos: MP4 mira los bytes 4..7 ("ftyp") y
 // WebM los 0..3 (EBML).
@@ -74,6 +75,8 @@ export const POST = withLogger(async (request, { requestId }) => {
     logger.warn(requestId, "media.confirm.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write", ctx?.actingAsPlatform ?? false);
+  if (denied) return denied;
 
   const body: unknown = await request.json();
   const parsed = confirmSchema.safeParse(body);

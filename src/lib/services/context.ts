@@ -1,6 +1,6 @@
 import { getAccountBlockReason } from "@/lib/account-status";
 import { logger } from "@/lib/logger";
-import { canEditInventory } from "@/lib/permissions";
+import { canWrite } from "@/lib/permissions";
 import { ServiceError } from "./service-error";
 import type { DealershipWithUser } from "@/lib/auth";
 
@@ -37,7 +37,7 @@ export function assertAccountActive(ctx: ServiceContext, event: string): void {
 /** Cuenta activa + rol con permiso de escritura sobre el stock. */
 export function assertCanEditInventory(ctx: ServiceContext, event: string): void {
   assertAccountActive(ctx, event);
-  if (canEditInventory(ctx.dealership.currentUser)) return;
+  if (canWrite(ctx.dealership.currentUser)) return;
   logger.warn(
     ctx.requestId,
     `${event}.forbidden`,

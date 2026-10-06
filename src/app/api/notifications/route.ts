@@ -13,6 +13,7 @@ import { prisma } from "@/lib/prisma";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { getUnreadCount, resetUnreadCount } from "@/lib/notifications";
+import { denyApiAccess } from "@/lib/api-access";
 
 const MAX_ITEMS = 20;
 
@@ -26,6 +27,8 @@ export const GET = withLogger(async (_request, { requestId }) => {
   if (!dealership) {
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "read");
+  if (denied) return denied;
 
   const [items, unread] = await Promise.all([
     prisma.notification.findMany({
@@ -56,6 +59,8 @@ export const PATCH = withLogger(async (_request, { requestId }) => {
   if (!dealership) {
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "read");
+  if (denied) return denied;
 
   const result = await prisma.notification.updateMany({
     where: { dealershipId: dealership.id, readAt: null },

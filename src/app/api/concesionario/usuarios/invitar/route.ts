@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getPlanLimits } from "@/lib/plans";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
+import { denyApiAccess } from "@/lib/api-access";
 
 export const POST = withLogger(async (_req, { requestId }) => {
   const { userId } = await auth();
@@ -18,6 +19,8 @@ export const POST = withLogger(async (_req, { requestId }) => {
     logger.warn(requestId, "invite.create.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   if (dealership.currentUser.role !== "admin") {
     logger.warn(requestId, "invite.create.forbidden", { userId });

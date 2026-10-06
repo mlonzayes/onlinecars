@@ -4,10 +4,17 @@ import { useState } from "react";
 import Image from "next/image";
 import { Car, ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import type { VehicleImage } from "@prisma/client";
+
+// Solo lo que la galería renderiza: este es un Client Component y todo lo que
+// recibe viaja al navegador (antes llegaba la fila entera, con la key de storage).
+export interface VehicleGalleryImage {
+  id: string;
+  url: string;
+  alt: string | null;
+}
 
 interface VehicleGalleryProps {
-  images: VehicleImage[];
+  images: VehicleGalleryImage[];
   title: string;
 }
 

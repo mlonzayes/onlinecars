@@ -6,6 +6,7 @@ import { z } from "zod";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { invalidateTenantHomeBundle } from "@/lib/tenant";
+import { denyApiAccess } from "@/lib/api-access";
 
 // IMPORTANTE: customDomain quedó deprecado. El dominio personalizado ahora vive
 // en Dealership.website (columna directa) y se edita vía PUT /api/concesionario
@@ -43,6 +44,8 @@ export const PATCH = withLogger(async (request, { requestId }) => {
     logger.warn(requestId, "dealership.theme.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write", ctx?.actingAsPlatform ?? false);
+  if (denied) return denied;
 
   const body: unknown = await request.json();
   const parsed = themeUpdateSchema.safeParse(body);

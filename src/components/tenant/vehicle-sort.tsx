@@ -26,10 +26,11 @@ export function VehicleSort() {
 
   return (
     <div className="flex min-w-0 flex-1 items-center gap-2 sm:flex-none">
-      {/* En mobile ocultamos el label para no robarle ancho al select. */}
+      {/* En mobile el label es sr-only (no `hidden`): no le roba ancho al select
+          pero los lectores de pantalla lo siguen anunciando. */}
       <label
         htmlFor="sort-select"
-        className="hidden shrink-0 text-sm font-medium text-[var(--tenant-fg-muted)] sm:inline"
+        className="sr-only shrink-0 text-sm font-medium text-[var(--tenant-fg-muted)] sm:not-sr-only"
       >
         Ordenar por:
       </label>

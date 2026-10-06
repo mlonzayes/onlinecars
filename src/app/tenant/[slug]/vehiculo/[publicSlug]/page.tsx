@@ -303,7 +303,7 @@ export default async function VehicleDetailPage({ params }: VehicleDetailPagePro
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-6 py-3.5 text-base font-bold text-white shadow-lg transition-all hover:bg-[#20bd5a] hover:shadow-xl active:scale-[0.98]"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#15803d] px-6 py-3.5 text-base font-bold text-white shadow-lg transition-all hover:bg-[#166534] hover:shadow-xl active:scale-[0.98]"
               >
                 <MessageCircle className="h-5 w-5" />
                 Consultar por WhatsApp

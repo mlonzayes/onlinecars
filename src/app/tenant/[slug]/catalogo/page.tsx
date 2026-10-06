@@ -157,6 +157,9 @@ export default async function TenantCatalogPage({ params, searchParams }: Tenant
               </div>
             ) : (
               <>
+                {/* h2 solo para lectores de pantalla: las cards usan h3 y sin este
+                    nivel el documento saltaba de h1 a h3 (Lighthouse a11y). */}
+                <h2 className="sr-only">Vehículos disponibles</h2>
                 <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3">
                   {vehicles.map((vehicle) => (
                     <VehicleCard key={vehicle.id} vehicle={vehicle} basePath={basePath} />

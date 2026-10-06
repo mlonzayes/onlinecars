@@ -126,7 +126,7 @@ src/
 │   │   ├── terminos/ · privacidad/  # Legales
 │   ├── dashboard/                   # Panel del concesionario — gateado por NEXT_PUBLIC_ENABLE_LOGIN
 │   │   ├── vehiculos/ leads/ clientes/ ventas/ cotizaciones/
-│   │   ├── sitio-web/               # Secciones, branding, plantilla, redes, Meta Pixel
+│   │   ├── sitio-web/               # Secciones, branding, plantilla, redes, Meta Pixel, Clarity
 │   │   ├── configuracion/           # Settings (solapas por ?tab=)
 │   │   ├── vendedores/ portales/    # Usuarios del tenant · integración MercadoLibre
 │   │   └── contabilidad/ bancos/ pagos/
@@ -136,7 +136,7 @@ src/
 │   ├── invite/ · cuenta-pausada/    # Alta por invitación · cuenta suspendida
 │   ├── vista-previa/                # Preview del sitio propio sin publicarlo
 │   ├── tenant/[slug]/               # Sitio público del concesionario (target del rewrite)
-│   │   ├── layout.tsx               # generateMetadata por tenant + Meta Pixel DEL DEALER
+│   │   ├── layout.tsx               # generateMetadata por tenant + Meta Pixel y Clarity DEL DEALER
 │   │   ├── page.tsx                 # Home (secciones configurables) + JsonLd AutoDealer
 │   │   ├── catalogo/ · cotizar/ · opinion/
 │   │   ├── vehiculo/[publicSlug]/   # Ficha pública + JsonLd Car/Offer
@@ -832,6 +832,7 @@ RESEND_API_KEY=
 - **Plantillas visuales** (`templateId`) con tokens + fuente por plantilla.
 - Branding: logo y favicon propios, con fallback favicon→logo.
 - **Meta Pixel del dealer** (gateado por plan) + Conversions API.
+- **Microsoft Clarity del dealer** (`clarityProjectId`, gateado por plan) con eventos `lead_*` en el form de consulta.
 - **SEO por tenant**: `generateMetadata` + `sitemap.xml` + `robots.txt` + JSON-LD (`AutoDealer`/`Car`).
 - `/vista-previa` para ver el sitio propio antes de publicarlo.
 - **Cache-aside Upstash** del dealership y del bundle del home, con invalidación activa.

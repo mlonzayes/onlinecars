@@ -18,6 +18,17 @@ export function isValidClarityProjectId(value: string | null | undefined): value
   return /^[a-z0-9]{6,20}$/i.test(value.trim());
 }
 
+/**
+ * Proyecto de Clarity del sitio público de un concesionario, ya validado.
+ * El gating por plan NO se decide acá: lo chequea quien monta el script.
+ */
+export function getTenantClarityId(dealership: {
+  clarityProjectId?: string | null;
+}): string | null {
+  const id = dealership.clarityProjectId?.trim();
+  return isValidClarityProjectId(id) ? id : null;
+}
+
 /** Project id de la web principal, ya validado. `null` = Clarity apagado. */
 export function getMainSiteClarityId(): string | null {
   return isValidClarityProjectId(CLARITY_PROJECT_ID) ? CLARITY_PROJECT_ID : null;

@@ -170,6 +170,11 @@ export const PUT = withLogger(async (request, { requestId }) => {
     if (updateData.metaTrackingEnabled === true) updateData.metaTrackingEnabled = false;
   }
 
+  // Clarity: mismo criterio. Sin plan, el id no se guarda.
+  if (!limits.allowClarity) {
+    delete updateData.clarityProjectId;
+  }
+
   // Dominios custom en STANDBY (Fase 2). Mientras CUSTOM_DOMAINS_ENABLED sea
   // false: ignoramos el campo website por completo — no se guarda ni se toca
   // Vercel. La UI lo muestra como "Próximamente".

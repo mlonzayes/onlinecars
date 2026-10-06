@@ -26,6 +26,11 @@ export const CLARITY_EVENTS = {
   contactSent: "contact_sent",
   contactFailed: "contact_failed",
   contactValidationError: "contact_validation_error",
+  // Sitio del tenant (van al proyecto de Clarity DEL DEALER)
+  leadSubmitted: "lead_submitted",
+  leadSent: "lead_sent",
+  leadFailed: "lead_failed",
+  leadValidationError: "lead_validation_error",
 } as const;
 
 export type ClarityEventName = (typeof CLARITY_EVENTS)[keyof typeof CLARITY_EVENTS];

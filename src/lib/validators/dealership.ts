@@ -136,6 +136,16 @@ export const dealershipUpdateSchema = dealershipCreateSchema.partial().omit({ sl
     .optional()
     .or(z.literal("").transform(() => null)),
   metaTrackingEnabled: z.boolean().optional(),
+  // --- Microsoft Clarity del sitio público ---
+  // Gating por plan en el handler (allowClarity). Alfanumérico corto: validamos
+  // el shape porque se interpola en un script inline del sitio.
+  clarityProjectId: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9]{6,20}$/i, "El ID del proyecto son letras y números (ej: abc123xyz0)")
+    .nullable()
+    .optional()
+    .or(z.literal("").transform(() => null)),
 });
 
 export type DealershipCreateInput = z.infer<typeof dealershipCreateSchema>;

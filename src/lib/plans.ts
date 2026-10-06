@@ -25,6 +25,10 @@ export interface PlanLimits {
   // ese dealer no está en el plan base. Sin esto no puede optimizar campañas ni
   // armar públicos similares con sus propios visitantes.
   allowMetaPixel: boolean;
+  // Microsoft Clarity (heatmaps + grabaciones) en el sitio público del tenant.
+  // Mismo escalón que el pixel: es para el dealer que pauta y quiere ver dónde
+  // se le traban los visitantes que no consultan.
+  allowClarity: boolean;
 }
 
 // Nota sobre clientes (CRM): NO hay límite por diseño.
@@ -43,6 +47,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowWhatsappFab: false,
     showPoweredBy: true,
     allowMetaPixel: false,
+    allowClarity: false,
   },
   base: {
     maxVehicles: 30,
@@ -53,6 +58,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowWhatsappFab: false, // Gancho para upgrade
     showPoweredBy: true, // Badge "Powered by motorflow" en el footer del tenant
     allowMetaPixel: false, // Gancho para upgrade: el que pauta necesita medir
+    allowClarity: false,
   },
   media: {
     maxVehicles: 100,
@@ -63,6 +69,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowWhatsappFab: true,
     showPoweredBy: false,
     allowMetaPixel: true, // Pixel + CAPI habilitados a partir de este plan
+    allowClarity: true,
   },
   premium: {
     maxVehicles: Infinity,
@@ -73,6 +80,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowWhatsappFab: true,
     showPoweredBy: false,
     allowMetaPixel: true,
+    allowClarity: true,
   },
   enterprise: {
     maxVehicles: Infinity,
@@ -83,6 +91,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowWhatsappFab: true,
     showPoweredBy: false,
     allowMetaPixel: true,
+    allowClarity: true,
   },
 };
 
@@ -99,6 +108,13 @@ export function getPlanLimits(dealership: Pick<Dealership, "plan">): PlanLimits 
  */
 export function canUseML(dealership: Pick<Dealership, "plan">): boolean {
   return getPlanLimits(dealership).allowMLIntegration;
+}
+
+/**
+ * Verifica si el concesionario puede conectar Microsoft Clarity en su sitio.
+ */
+export function canUseClarity(dealership: Pick<Dealership, "plan">): boolean {
+  return getPlanLimits(dealership).allowClarity;
 }
 
 /**

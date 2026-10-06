@@ -217,8 +217,17 @@ Se chequea en **tres** lugares, y ninguno sobra:
 ## Microsoft Clarity (heatmaps + grabaciones)
 
 Complementa a Meta: Meta dice **cuántos** convierten, Clarity muestra **dónde se
-traban** los que no. Solo en la **web principal** — mismo criterio que el pixel:
-se monta en `(marketing)/layout.tsx`, nunca en el root ni en el tenant.
+traban** los que no. Mismas dos superficies que el pixel, sin mezclarse nunca:
+
+| Superficie | Proyecto de Clarity | Config | Dónde se monta |
+|---|---|---|---|
+| Web principal | Nuestro | `NEXT_PUBLIC_CLARITY_PROJECT_ID` | `(marketing)/layout.tsx` |
+| Sitio del tenant | Del dealer | `Dealership.clarityProjectId` (lo carga en Sitio web) | `tenant/[slug]/layout.tsx` |
+
+Nunca en el root layout ni en `<TenantChrome>` (lo reusa `/vista-previa`).
+El del tenant se gatea por plan (`allowClarity`, Media+) en la UI, en el
+`PUT /api/concesionario` y **al leer** en el layout — mismo triple chequeo que
+el pixel. El id es público; su presencia es el interruptor (no hay toggle).
 
 | Archivo | Rol |
 |---|---|
@@ -234,5 +243,6 @@ Reglas:
    en el panel.
 3. **No bajar el masking a "Relaxed"** en el panel de Clarity: con "Balanced"
    (default) lo que se tipea en los inputs no queda grabado.
-4. **Evento nuevo → agregarlo a `CLARITY_EVENTS`**, no un string suelto. Un typo
+4. **Eventos `contact_*` = web principal, `lead_*` = sitio del tenant.**
+5. **Evento nuevo → agregarlo a `CLARITY_EVENTS`**, no un string suelto. Un typo
    crea otro evento en el panel y parte los datos.

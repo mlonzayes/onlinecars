@@ -8,7 +8,9 @@ import { optimizedImageUrl } from "@/lib/image-url";
 import { TenantChrome } from "@/components/tenant/tenant-chrome";
 import { MetaPixel } from "@/components/meta/meta-pixel";
 import { getTenantPixelId } from "@/lib/meta/config";
-import { canUseMetaPixel } from "@/lib/plans";
+import { canUseClarity, canUseMetaPixel } from "@/lib/plans";
+import { MicrosoftClarity } from "@/components/clarity/microsoft-clarity";
+import { getTenantClarityId } from "@/lib/clarity/config";
 
 // ISR: el sitio del tenant se cachea en el edge de Vercel y se regenera en
 // background. Sin esto cada visita renderizaba de cero (TTFB ~800 ms).
@@ -130,10 +132,14 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   // estuviera adentro, cada vez que el dealer previsualiza su sitio le
   // ensuciaría las métricas con visitas propias.
   const tenantPixelId = canUseMetaPixel(dealership) ? getTenantPixelId(dealership) : null;
+  // Clarity del dealer: mismo doble chequeo (config + plan) y mismo motivo para
+  // no ir en <TenantChrome> — no grabar al dealer previsualizando su sitio.
+  const tenantClarityId = canUseClarity(dealership) ? getTenantClarityId(dealership) : null;
 
   return (
     <>
       {tenantPixelId && <MetaPixel pixelId={tenantPixelId} />}
+      {tenantClarityId && <MicrosoftClarity projectId={tenantClarityId} />}
       <TenantChrome dealership={dealership} basePath={basePath}>
         {children}
       </TenantChrome>

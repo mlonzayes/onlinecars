@@ -25,7 +25,9 @@ interface FeaturedTabsProps {
 export function FeaturedTabs({
   vehicles,
   basePath,
-  limit = 8,
+  // 6 y no 8: con 4 carruseles en el home eran 30+ cards (~1.700 nodos de DOM
+  // para hidratar). El resto del stock queda a un clic en "Ver todo".
+  limit = 6,
   autoAdvanceMs = 4000,
 }: FeaturedTabsProps) {
   const visible = vehicles.slice(0, limit);

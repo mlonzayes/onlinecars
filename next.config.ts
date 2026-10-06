@@ -82,13 +82,6 @@ if (process.env.NODE_ENV === "production") {
 }
 
 const nextConfig: NextConfig = {
-  experimental: {
-    // Inlinea el CSS en el HTML en vez de servirlo como <link> bloqueante. En
-    // el sitio del tenant el primer pintado esperaba 3 archivos de CSS; inline
-    // llega con el HTML (que además sale de la cache ISR). Experimental en
-    // Next 15: si rompe estilos en alguna ruta, sacarlo es volver a esta línea.
-    inlineCss: true,
-  },
   // pdfmake/pdfkit cargan archivos auxiliares (font metrics .afm, datos de
   // PNG/JPEG decoders, etc) con paths relativos a sus __dirname. Si webpack
   // los bundlea, esos paths apuntan a .next/server/vendor-chunks/ donde no

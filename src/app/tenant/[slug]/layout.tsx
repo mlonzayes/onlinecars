@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getTenantBasePath, getTenantPublicUrl } from "@/lib/tenant";
 import { getTenantDealership } from "@/lib/tenant-render";
+import { optimizedImageUrl } from "@/lib/image-url";
 import { TenantChrome } from "@/components/tenant/tenant-chrome";
 import { MetaPixel } from "@/components/meta/meta-pixel";
 import { getTenantPixelId } from "@/lib/meta/config";
@@ -48,8 +49,14 @@ export async function generateMetadata({
   // no devolvemos `icons` y el favicon del root (motorflow) toma por default —
   // preferible a un favicon roto.
   const iconUrl = dealership.favicon ?? dealership.logo;
+  // Pasados por el optimizador: un logo de 1,5 MB servido crudo como favicon
+  // se bajaba entero (dos veces: icon + apple) para mostrarse a 32 px.
   const icons = iconUrl
-    ? { icon: iconUrl, shortcut: iconUrl, apple: iconUrl }
+    ? {
+        icon: optimizedImageUrl(iconUrl, 64),
+        shortcut: optimizedImageUrl(iconUrl, 64),
+        apple: optimizedImageUrl(iconUrl, 256),
+      }
     : undefined;
 
   // metadataBase del ROOT apunta a motorflowapp.com. Servido desde

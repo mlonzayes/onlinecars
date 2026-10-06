@@ -58,6 +58,8 @@ export function TenantFooter({
                   src={logo}
                   alt={`Logo de ${name}`}
                   fill
+                  // Sin sizes, next/image asume 100vw y genera hasta 1920 px.
+                  sizes="200px"
                   className="object-contain object-left"
                 />
               </div>
@@ -95,7 +97,7 @@ export function TenantFooter({
               <li>
                 <Link
                   href={basePath || "/"}
-                  className="text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary)]"
+                  className="text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary-text)]"
                 >
                   Inicio
                 </Link>
@@ -103,7 +105,7 @@ export function TenantFooter({
               <li>
                 <Link
                   href={`${basePath}/catalogo`}
-                  className="text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary)]"
+                  className="text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary-text)]"
                 >
                   Catálogo
                 </Link>
@@ -111,7 +113,7 @@ export function TenantFooter({
               <li>
                 <Link
                   href={`${basePath}/cotizar`}
-                  className="text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary)]"
+                  className="text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary-text)]"
                 >
                   Vender mi auto
                 </Link>
@@ -119,7 +121,7 @@ export function TenantFooter({
               <li>
                 <Link
                   href={`${basePath}#opiniones`}
-                  className="text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary)]"
+                  className="text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary-text)]"
                 >
                   Opiniones
                 </Link>
@@ -127,7 +129,7 @@ export function TenantFooter({
               <li>
                 <Link
                   href={`${basePath}#contacto`}
-                  className="text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary)]"
+                  className="text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary-text)]"
                 >
                   Contacto
                 </Link>
@@ -145,7 +147,7 @@ export function TenantFooter({
                 <li>
                   <a
                     href={`tel:${phone}`}
-                    className="flex items-center gap-2 text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary)]"
+                    className="flex items-center gap-2 text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary-text)]"
                   >
                     <Phone className="h-4 w-4 shrink-0" />
                     {phone}
@@ -156,7 +158,7 @@ export function TenantFooter({
                 <li>
                   <a
                     href={`mailto:${email}`}
-                    className="flex items-center gap-2 text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary)]"
+                    className="flex items-center gap-2 text-sm text-[var(--tenant-fg-muted)] transition-colors hover:text-[var(--tenant-primary-text)]"
                   >
                     <Mail className="h-4 w-4 shrink-0" />
                     {email}
@@ -190,7 +192,7 @@ export function TenantFooter({
               Potenciado por{" "}
               <a
                 href="https://motorflowapp.com"
-                className="font-medium text-[var(--tenant-primary)] hover:underline"
+                className="font-medium text-[var(--tenant-primary-text)] hover:underline"
                 target="_blank"
                 rel="noopener noreferrer"
               >

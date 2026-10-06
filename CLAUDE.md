@@ -324,9 +324,9 @@ Deja que el dealer opere el panel desde Claude o ChatGPT ("cargame este auto",
   `eliminar_gasto`), negocio (`resumen_negocio`, `stock_inmovilizado`, `cotizacion_dolar`),
   `listar_leads`/`ver_lead`, `listar_ventas`/`ver_venta`, `listar_cotizaciones`,
   `listar_opiniones` y `estado_mercadolibre`. Una tool por archivo temático en `src/lib/mcp/tools/`.
-- **Plata por moneda, siempre.** `resumen_negocio` convierte costo y gastos a la moneda de
-  cada venta y totaliza por moneda. Ojo: el dashboard (`dashboard-stats.ts`) todavía suma
-  ARS y USD sin convertir.
+- **Nunca sumar ARS con USD sin convertir.** `resumen_negocio` convierte costo y gastos a
+  la moneda de cada venta y totaliza por moneda; el dashboard (`dashboard-financials.ts`)
+  pasa todo a pesos con la cotización del dealer. Los dos usan la cotización de hoy.
 
 **Alta de un cliente (Claude, ChatGPT):** Clerk Dashboard → OAuth applications →
 crear la app con el redirect URI del cliente (Claude: `https://claude.ai/api/mcp/auth_callback`)

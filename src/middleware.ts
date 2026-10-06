@@ -37,6 +37,12 @@ const isPublicRoute = createRouteMatcher([
   "/tenant(.*)",
   "/api/public/(.*)",
   "/api/webhooks/(.*)",
+  // MCP: la auth la hace el handler con el token OAuth (Bearer), no la sesión.
+  // Con auth.protect() acá, Clerk respondería 404 y el cliente nunca recibiría
+  // el 401 con WWW-Authenticate que arranca el login.
+  "/api/mcp",
+  "/.well-known/oauth-protected-resource(.*)",
+  "/.well-known/oauth-authorization-server",
 ]);
 
 export default clerkMiddleware(async (auth, req: NextRequest) => {

@@ -37,6 +37,16 @@ export const waitlistLimiter = new Ratelimit({
   analytics: false,
 });
 
+// MCP: anti-abuso por usuario (key = clerkUserId), independiente del cupo
+// diario del plan. Una conversación normal hace pocas llamadas por minuto; un
+// loop de la IA o un script, cientos.
+export const mcpLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(30, "1 m"),
+  prefix: "rl:mcp",
+  analytics: false,
+});
+
 // Extrae la IP del cliente. En Vercel el header confiable es x-forwarded-for
 // (la primera IP del array — el resto son proxies intermedios). En local
 // puede venir vacío o como ::1.

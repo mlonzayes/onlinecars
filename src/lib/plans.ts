@@ -25,6 +25,10 @@ export interface PlanLimits {
   // ese dealer no está en el plan base. Sin esto no puede optimizar campañas ni
   // armar públicos similares con sus propios visitantes.
   allowMetaPixel: boolean;
+  // Llamadas a tools del MCP (Claude/ChatGPT operando el panel) por día. En los
+  // planes de entrada alcanza para probarlo; de Media para arriba no hay tope
+  // diario, solo el rate limit anti-abuso por minuto.
+  mcpDailyCalls: number;
 }
 
 // Nota sobre clientes (CRM): NO hay límite por diseño.
@@ -43,6 +47,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowWhatsappFab: false,
     showPoweredBy: true,
     allowMetaPixel: false,
+    mcpDailyCalls: 20,
   },
   base: {
     maxVehicles: 30,
@@ -53,6 +58,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowWhatsappFab: false, // Gancho para upgrade
     showPoweredBy: true, // Badge "Powered by motorflow" en el footer del tenant
     allowMetaPixel: false, // Gancho para upgrade: el que pauta necesita medir
+    mcpDailyCalls: 20,
   },
   media: {
     maxVehicles: 100,
@@ -63,6 +69,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowWhatsappFab: true,
     showPoweredBy: false,
     allowMetaPixel: true, // Pixel + CAPI habilitados a partir de este plan
+    mcpDailyCalls: Infinity,
   },
   premium: {
     maxVehicles: Infinity,
@@ -73,6 +80,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowWhatsappFab: true,
     showPoweredBy: false,
     allowMetaPixel: true,
+    mcpDailyCalls: Infinity,
   },
   enterprise: {
     maxVehicles: Infinity,
@@ -83,6 +91,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowWhatsappFab: true,
     showPoweredBy: false,
     allowMetaPixel: true,
+    mcpDailyCalls: Infinity,
   },
 };
 
@@ -106,6 +115,13 @@ export function canUseML(dealership: Pick<Dealership, "plan">): boolean {
  */
 export function canUseMetaPixel(dealership: Pick<Dealership, "plan">): boolean {
   return getPlanLimits(dealership).allowMetaPixel;
+}
+
+/**
+ * Cupo diario de llamadas a tools del MCP. `Infinity` = sin tope diario.
+ */
+export function getMcpDailyCalls(dealership: Pick<Dealership, "plan">): number {
+  return getPlanLimits(dealership).mcpDailyCalls;
 }
 
 /**

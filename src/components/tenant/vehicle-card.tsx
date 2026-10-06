@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { VehicleBadge, type VehiclePriceTag } from "./vehicle-badge";
-import { Car, Cog, Fuel, Gauge, Star } from "lucide-react";
+import { Car, Star } from "lucide-react";
+import { VehicleIcon } from "./vehicle-icon";
 import {
   VEHICLE_BODY_TYPE_LABELS,
   type VehicleBodyType,
@@ -116,19 +117,19 @@ export function VehicleCard({ vehicle, basePath, hideFeaturedBadge = false }: Ve
         <div className="mt-1.5 flex flex-wrap gap-x-2 gap-y-0.5 text-[11px] text-[var(--tenant-fg-muted)] sm:gap-x-3 sm:text-xs">
           {vehicle.kilometers != null && (
             <span className="flex items-center gap-1">
-              <Gauge className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+              <VehicleIcon name="gauge" className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               {formatKm(vehicle.kilometers)}
             </span>
           )}
           {vehicle.fuelType && (
             <span className="hidden items-center gap-1 sm:flex">
-              <Fuel className="h-3.5 w-3.5" />
+              <VehicleIcon name="fuel" className="h-3.5 w-3.5" />
               {vehicle.fuelType.charAt(0).toUpperCase() + vehicle.fuelType.slice(1)}
             </span>
           )}
           {vehicle.transmission && (
             <span className="hidden items-center gap-1 sm:flex">
-              <Cog className="h-3.5 w-3.5" />
+              <VehicleIcon name="cog" className="h-3.5 w-3.5" />
               {TRANSMISSION_SHORT[vehicle.transmission] ?? vehicle.transmission}
             </span>
           )}

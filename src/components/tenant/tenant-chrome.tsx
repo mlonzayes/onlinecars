@@ -4,6 +4,7 @@ import { TenantHeader } from "./tenant-header";
 import { TenantFooter } from "./tenant-footer";
 import { TenantAnnouncementBar } from "./tenant-announcement-bar";
 import { WhatsAppFab } from "./whatsapp-fab";
+import { VehicleIconSprite } from "./vehicle-icon-sprite";
 import { Toaster } from "@/components/ui/sonner";
 import type { Dealership } from "@prisma/client";
 import type { DealershipTheme, SocialLinks } from "@/types";
@@ -44,6 +45,7 @@ export function TenantChrome({ dealership, basePath, children }: TenantChromePro
         } as React.CSSProperties
       }
     >
+      <VehicleIconSprite />
       {showBanner && <TenantAnnouncementBar text={announcement!} />}
       <TenantHeader
         name={dealership.name}

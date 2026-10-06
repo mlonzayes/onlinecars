@@ -60,8 +60,8 @@ export function registerVehicleTools(server: McpServer, ctx: McpContext): void {
     {
       title: "Cargar vehículo",
       description:
-        "Carga un vehículo nuevo al stock como BORRADOR: no aparece en el sitio hasta que el usuario lo publique " +
-        "desde el panel. Antes de crearlo, confirmá con el usuario marca, modelo, año, precio y moneda. " +
+        "Carga un vehículo nuevo al stock como BORRADOR: no aparece en el sitio hasta publicarlo " +
+        "(con publicar_vehiculo o desde el panel). Antes de crearlo, confirmá con el usuario marca, modelo, año, precio y moneda. " +
         "Las fotos se suben desde el link del panel que devuelve esta tool.",
       inputSchema: createVehicleToolSchema,
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
@@ -76,7 +76,7 @@ export function registerVehicleTools(server: McpServer, ctx: McpContext): void {
           unlimitedStock: false,
         });
         return {
-          mensaje: "Vehículo cargado como borrador. Subí las fotos y publicalo desde el panel.",
+          mensaje: "Vehículo cargado como borrador. Subí las fotos desde el panel y después publicalo.",
           vehiculo: toVehicleView(ctx, vehicle),
           linkFotos: panelVehicleUrl(ctx, vehicle.id),
         };

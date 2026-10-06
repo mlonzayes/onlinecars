@@ -308,7 +308,8 @@ Deja que el dealer opere el panel desde Claude o ChatGPT ("cargame este auto",
 - **Tools = servicios.** Nunca Prisma directo en una tool: los permisos, el guard de
   venta, el límite del plan y la invalidación de cache viven en el servicio.
 - **Lo que ve la IA se arma campo por campo** (`vehicle-view.ts`), nunca un spread del
-  modelo. Los vehículos se crean como borrador; publicar queda en el panel.
+  modelo. Los vehículos se crean como borrador; `publicar_vehiculo` los publica
+  (con el límite del plan) solo cuando el usuario lo pide.
 - **Cupo:** `mcpDailyCalls` por plan (20/día en trial y base), en la zona horaria del
   dealer, contando solo llamadas exitosas. Más `mcpLimiter` (30/min por usuario).
   Los dos son fail-open.

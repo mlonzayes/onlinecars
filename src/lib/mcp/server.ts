@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { McpContext } from "./context";
 import { registerVehicleTools } from "./tools/vehicles";
 import { registerExpenseTools } from "./tools/expenses";
+import { registerPublishTools } from "./tools/publish";
 
 // Contexto que el cliente (Claude, ChatGPT) recibe al conectarse. Son las reglas
 // de juego que valen para todas las tools.
@@ -11,7 +12,7 @@ const INSTRUCTIONS = [
   "Nunca inventes datos de un vehículo: si falta algo importante (precio, moneda, año), preguntalo antes de cargar.",
   "Las descripciones públicas se escriben solo con hechos que dio el usuario. Inventar equipamiento o historial es un problema legal para el concesionario.",
   "Los montos van como número sin puntos ni símbolos. Si no se aclara la moneda de un gasto, es ARS.",
-  "Los vehículos se crean como borrador. Para publicarlos y subir fotos, compartí el link al panel que devuelve la tool.",
+  "Los vehículos se crean como borrador. Publicalos con publicar_vehiculo solo cuando el usuario lo pida; las fotos se suben desde el link al panel.",
   "Antes de borrar algo, pedí confirmación explícita.",
 ].join("\n");
 
@@ -26,6 +27,7 @@ export function createMcpServer(ctx: McpContext): McpServer {
     { instructions: INSTRUCTIONS, capabilities: { tools: {} } }
   );
   registerVehicleTools(server, ctx);
+  registerPublishTools(server, ctx);
   registerExpenseTools(server, ctx);
   return server;
 }

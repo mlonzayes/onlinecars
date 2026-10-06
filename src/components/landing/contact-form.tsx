@@ -6,6 +6,7 @@ import { PiPaperPlaneTilt, PiCircleNotch, PiCheckCircle } from "react-icons/pi";
 import { HONEYPOT_FIELD, HONEYPOT_STYLE } from "@/lib/honeypot";
 import { trackMetaEventWithId } from "@/lib/meta/client";
 import { META_EVENT_ID_FIELD } from "@/lib/meta/events";
+import { CLARITY_EVENTS, setClarityTag, trackClarityEvent } from "@/lib/clarity/client";
 
 // Planes válidos — coinciden con el Zod del endpoint (/api/public/contact).
 const PLAN_KEYS = ["base", "media", "premium", "enterprise", "no_se"] as const;
@@ -37,10 +38,12 @@ export function LandingContactForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name.trim()) {
+      trackClarityEvent(CLARITY_EVENTS.contactValidationError);
       toast.error("Ingresá tu nombre");
       return;
     }
     if (!form.email.trim()) {
+      trackClarityEvent(CLARITY_EVENTS.contactValidationError);
       toast.error("Ingresá tu email");
       return;
     }
@@ -48,6 +51,9 @@ export function LandingContactForm() {
     setLoading(true);
     try {
       const intent = plan ? "plan" : "otro";
+      setClarityTag("contact_intent", intent);
+      if (plan) setClarityTag("plan", plan);
+      trackClarityEvent(CLARITY_EVENTS.contactSubmitted);
 
       // Conversión Lead por el pixel del browser. El eventId que devuelve viaja
       // en el payload para que el server mande el MISMO evento por la
@@ -79,9 +85,11 @@ export function LandingContactForm() {
 
       if (!res.ok) throw new Error("Error al enviar la consulta");
 
+      trackClarityEvent(CLARITY_EVENTS.contactSent);
       setSent(true);
       toast.success("¡Consulta enviada! Te contactamos pronto.");
     } catch {
+      trackClarityEvent(CLARITY_EVENTS.contactFailed);
       toast.error("No se pudo enviar la consulta. Intentá de nuevo.");
     } finally {
       setLoading(false);

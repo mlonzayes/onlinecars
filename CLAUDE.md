@@ -149,6 +149,7 @@ src/
 │   ├── tenant/                      # Sitio público + tenant/premium/
 │   ├── admin/                       # Panel super-admin
 │   ├── meta/                        # Meta Pixel + tracking de eventos
+│   ├── clarity/                     # Microsoft Clarity (web principal)
 │   ├── seo/                         # JsonLd
 │   └── legal/
 ├── lib/
@@ -158,6 +159,7 @@ src/
 │   ├── tenant.ts tenant-templates.ts tenant-defaults.ts tenant-format.ts
 │   ├── plans.ts                         # PLAN_LIMITS + gating por plan
 │   ├── meta/                            # Pixel + Conversions API (ver rules/tracking.md)
+│   ├── clarity/                         # Microsoft Clarity: config + eventos custom
 │   ├── storage/                         # Abstracción local | s3
 │   ├── table/                           # Filtros/orden URL-based (ver rules/table-filters.md)
 │   ├── sections/ pdf/ mercadolibre/ import/
@@ -767,6 +769,10 @@ NEXT_PUBLIC_META_PIXEL_ID=          # Su PRESENCIA es el interruptor del trackin
 META_CAPI_ACCESS_TOKEN=             # Conversions API (server-side). SECRETO.
 META_CAPI_TEST_EVENT_CODE=          # ⚠️ VACÍO EN PRODUCCIÓN o los eventos no cuentan
 
+# Microsoft Clarity — heatmaps + grabaciones de la WEB PRINCIPAL. Su presencia es
+# el interruptor. Ver .claude/rules/tracking.md.
+NEXT_PUBLIC_CLARITY_PROJECT_ID=
+
 # Notificaciones internas al equipo
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
@@ -802,6 +808,7 @@ RESEND_API_KEY=
 - Landing completa en el route group `(marketing)`: hero, problema/solución, showcase, servicios, beneficios, testimonios, pricing, blog, FAQ y form de contacto (`POST /api/public/contact` → notifica por Telegram). **No hay waitlist activa.**
 - Páginas `/precios`, `/blog` (+ `[slug]`), `/terminos`, `/privacidad`.
 - **Meta Pixel + Conversions API** con deduplicación por `eventId` (ver `.claude/rules/tracking.md`).
+- **Microsoft Clarity** (heatmaps + grabaciones) en el route group `(marketing)`, con eventos custom en el form de contacto.
 - FAB de WhatsApp desde `SITE_WHATSAPP_URL` de `lib/seo.ts`.
 
 *Auth y cuentas*

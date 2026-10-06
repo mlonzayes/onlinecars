@@ -211,3 +211,28 @@ Se chequea en **tres** lugares, y ninguno sobra:
 - [ ] Los datos personales pasan por `buildHashedUserData`
 - [ ] No se loggea PII
 - [ ] Si es del tenant: chequea plan **y** credenciales antes de mandar
+
+---
+
+## Microsoft Clarity (heatmaps + grabaciones)
+
+Complementa a Meta: Meta dice **cuántos** convierten, Clarity muestra **dónde se
+traban** los que no. Solo en la **web principal** — mismo criterio que el pixel:
+se monta en `(marketing)/layout.tsx`, nunca en el root ni en el tenant.
+
+| Archivo | Rol |
+|---|---|
+| [src/lib/clarity/config.ts](../../src/lib/clarity/config.ts) | `NEXT_PUBLIC_CLARITY_PROJECT_ID` validado. Su presencia es el interruptor. |
+| [src/lib/clarity/client.ts](../../src/lib/clarity/client.ts) | `trackClarityEvent` + `setClarityTag`. Lista cerrada `CLARITY_EVENTS`. |
+| [src/components/clarity/microsoft-clarity.tsx](../../src/components/clarity/microsoft-clarity.tsx) | Inyecta el script. Server Component: Clarity detecta solo las navegaciones del App Router. |
+
+Reglas:
+
+1. **Los eventos de Clarity NO son conversiones.** Sirven para filtrar
+   grabaciones. Una conversión sigue yendo por Meta con `eventId` compartido.
+2. **Nada de PII en `setClarityTag` ni en los nombres de evento.** Se ven en claro
+   en el panel.
+3. **No bajar el masking a "Relaxed"** en el panel de Clarity: con "Balanced"
+   (default) lo que se tipea en los inputs no queda grabado.
+4. **Evento nuevo → agregarlo a `CLARITY_EVENTS`**, no un string suelto. Un typo
+   crea otro evento en el panel y parte los datos.

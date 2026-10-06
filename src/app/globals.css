@@ -294,6 +294,20 @@
   }
 }
 
+/* Revelado al hacer scroll del sitio del tenant (useRevealOnScroll). Las
+   clases las pone el JS SOLO a lo que arranca fuera del viewport, así que sin
+   JS todo queda visible. Opacity + transform: compositable, no toca layout. */
+.reveal-target {
+  transition:
+    opacity 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.reveal-pending {
+  opacity: 0;
+  transform: translate3d(0, 16px, 0);
+}
+
 /* Hero shot: arranca grisado y se prende a color a medida que scrolleás.
    Solo desktop (lg+). Scroll-driven CSS, sin JS → no afecta el LCP (la imagen
    pinta igual, solo desaturada). @supports: si el navegador no soporta

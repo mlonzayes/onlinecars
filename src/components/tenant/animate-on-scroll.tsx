@@ -1,14 +1,7 @@
 "use client";
 
 import { createElement, useRef } from "react";
-import {
-  DEFAULT_START,
-  DURATION,
-  EASE,
-  Y_OFFSET,
-  gsap,
-  useIsomorphicLayoutEffect,
-} from "@/lib/gsap";
+import { useRevealOnScroll } from "@/hooks/use-reveal-on-scroll";
 
 type AnimatePreset = "fadeUp" | "stagger";
 
@@ -30,7 +23,6 @@ interface AnimateOnScrollProps {
   children: React.ReactNode;
   preset?: AnimatePreset;
   staggerDelay?: number;
-  start?: string;
   className?: string;
   as?: keyof JSX.IntrinsicElements;
 }
@@ -38,75 +30,20 @@ interface AnimateOnScrollProps {
 // Wrapper generico para animar bloques al entrar al viewport.
 // - "fadeUp": anima el wrapper como una unidad.
 // - "stagger": anima los hijos directos (uno detras de otro).
-// Respeta prefers-reduced-motion via gsap.matchMedia y limpia con ctx.revert().
+// Sin GSAP: IntersectionObserver + CSS (ver useRevealOnScroll).
 export function AnimateOnScroll({
   children,
   preset = "fadeUp",
   staggerDelay = 0.06,
-  start = DEFAULT_START,
   className,
   as = "div",
 }: AnimateOnScrollProps) {
   const ref = useRef<HTMLElement | null>(null);
 
-  useIsomorphicLayoutEffect(() => {
-    const node = ref.current;
-    if (!node) return;
-
-    const ctx = gsap.context(() => {
-      const mm = gsap.matchMedia();
-
-      mm.add("(prefers-reduced-motion: no-preference)", () => {
-        if (preset === "fadeUp") {
-          gsap.fromTo(
-            node,
-            { autoAlpha: 0, y: Y_OFFSET },
-            {
-              autoAlpha: 1,
-              y: 0,
-              duration: DURATION,
-              ease: EASE,
-              scrollTrigger: {
-                trigger: node,
-                start,
-                once: true,
-              },
-            }
-          );
-        } else {
-          // stagger: animamos los items reales. Si el unico hijo directo es un
-          // wrapper (ej: CategoriesGrid renderiza un <div className="grid">),
-          // entramos un nivel para alcanzar las cards.
-          const targets = resolveStaggerTargets(node);
-          if (targets.length === 0) return;
-          gsap.set(targets, { autoAlpha: 0, y: Y_OFFSET });
-          gsap.to(targets, {
-            autoAlpha: 1,
-            y: 0,
-            duration: DURATION,
-            ease: EASE,
-            stagger: staggerDelay,
-            scrollTrigger: {
-              trigger: node,
-              start,
-              once: true,
-            },
-          });
-        }
-      });
-
-      mm.add("(prefers-reduced-motion: reduce)", () => {
-        if (preset === "fadeUp") {
-          gsap.set(node, { autoAlpha: 1, y: 0 });
-        } else {
-          const targets = resolveStaggerTargets(node);
-          gsap.set(targets, { autoAlpha: 1, y: 0 });
-        }
-      });
-    }, node);
-
-    return () => ctx.revert();
-  }, [preset, staggerDelay, start]);
+  useRevealOnScroll(ref, {
+    stagger: preset === "stagger" ? staggerDelay : 0,
+    getTargets: preset === "stagger" ? resolveStaggerTargets : undefined,
+  });
 
   return createElement(
     as,

@@ -29,6 +29,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { getUserRoleLabel } from "@/lib/constants";
 import type { DealershipWithUser } from "@/lib/auth";
 
 interface NavItem {
@@ -163,7 +164,7 @@ export function DashboardSidebar({ dealership }: DashboardSidebarProps) {
           <div className="flex flex-col min-w-0">
             <span className="text-xs font-medium truncate">{dealership.name}</span>
             <span className="text-xs text-muted-foreground truncate">
-              {dealership.currentUser.role}
+              {getUserRoleLabel(dealership.currentUser.role)}
             </span>
           </div>
         </div>

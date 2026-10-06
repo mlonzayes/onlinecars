@@ -8,6 +8,7 @@ import { Users, Link as LinkIcon, Trash2, Copy, Check, Loader2 } from "lucide-re
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { getUserRoleLabel } from "@/lib/constants";
 
 interface UsersTabProps {
   users: Array<{ id: string; email: string; role: string }>;
@@ -145,7 +146,7 @@ export function UsersTab({
                     <LinkIcon className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium">Link para nuevo {invite.role}</p>
+                    <p className="text-sm font-medium">Link de invitación · {getUserRoleLabel(invite.role)}</p>
                     <p className="text-xs text-muted-foreground">Creado el {new Date(invite.createdAt).toLocaleDateString()}</p>
                   </div>
                 </div>
@@ -176,7 +177,7 @@ export function UsersTab({
                   <p className="font-medium">{user.email || "Usuario sin email público"}</p>
                 </div>
                 <Badge variant={user.role === "admin" ? "default" : "secondary"}>
-                  {user.role}
+                  {getUserRoleLabel(user.role)}
                 </Badge>
               </div>
             ))}

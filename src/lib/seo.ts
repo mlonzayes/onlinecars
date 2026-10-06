@@ -76,4 +76,12 @@ export const AI_TRAINING_CRAWLERS = [
   "MistralAI-Training",
   "Diffbot",
   "omgili",
+  // Sumados de la lista que bloqueaba el robots gestionado de Cloudflare
+  // (crawlers de IA / I+D). Baiduspider y PetalBot NO van: son buscadores.
+  "Claude-Web",
+  "GoogleOther",
+  "Google-CloudVertexBot",
+  "Cotoyogi",
+  "KimiBot",
+  "ICC-Crawler",
 ] as const;

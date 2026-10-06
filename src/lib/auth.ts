@@ -11,8 +11,13 @@ export const getCurrentDealership = cache(async (): Promise<DealershipWithUser |
   const { userId } = await auth();
   if (!userId) return null;
 
+  // Un usuario puede pertenecer a más de un concesionario (ej: lo invitaron a
+  // otro). Sin orden, Postgres devuelve cualquiera y el panel podía alternar
+  // entre cuentas de una request a otra. Hasta que haya selector de cuenta,
+  // manda el vínculo más antiguo: el concesionario con el que se registró.
   const dealershipUser = await prisma.dealershipUser.findFirst({
     where: { clerkUserId: userId },
+    orderBy: { createdAt: "asc" },
     include: { dealership: true },
   });
 

@@ -49,6 +49,13 @@ export function Section({
     <section
       id={id}
       className={cn(
+        // content-visibility: el browser no calcula layout ni pinta la sección
+        // hasta que se acerca al viewport. El home tiene ~1.700 nodos y casi
+        // todos arrancan abajo del hero. contain-intrinsic-size reserva alto
+        // estimado (y después recuerda el real) para que el scroll no salte.
+        // Ojo: aplica containment — un `position: fixed` adentro quedaría
+        // atrapado en la sección. Los fixed (header, FAB) viven en el chrome.
+        "[content-visibility:auto] [contain-intrinsic-size:auto_800px]",
         background === "muted" ? "bg-[var(--tenant-bg)]" : "bg-[var(--tenant-surface)]",
         PADDING_CLASSES[padding],
         className

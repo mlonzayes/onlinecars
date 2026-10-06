@@ -82,6 +82,11 @@ if (process.env.NODE_ENV === "production") {
 }
 
 const nextConfig: NextConfig = {
+  // Metadata en el <head> para TODOS, no solo para bots. Next 15 por default la
+  // streamea al <body> para navegadores, y Lighthouse/PageSpeed (y algunas
+  // previews de links) no encuentran la meta description. Google no se veía
+  // afectado (es bot), pero el SEO de Lighthouse marcaba 92.
+  htmlLimitedBots: /.*/,
   // pdfmake/pdfkit cargan archivos auxiliares (font metrics .afm, datos de
   // PNG/JPEG decoders, etc) con paths relativos a sus __dirname. Si webpack
   // los bundlea, esos paths apuntan a .next/server/vendor-chunks/ donde no

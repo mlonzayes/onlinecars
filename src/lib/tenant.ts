@@ -257,10 +257,9 @@ export async function getPublishedVehicleBySlug(
       dealershipId,
       publishedAt: { not: null },
     },
-    include: {
-      images: { orderBy: { order: "asc" } },
-      dealership: true,
-    },
+    // Solo campos públicos y sin el dealership: la página ya lo tiene de
+    // getTenantDealership, y la fila completa trae secretos (metaCapiToken).
+    select: PUBLIC_VEHICLE_SELECT,
   });
 }
 

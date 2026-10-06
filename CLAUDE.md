@@ -155,6 +155,7 @@ src/
 │   ├── prisma.ts redis.ts logger.ts api-handler.ts utils.ts
 │   ├── auth.ts permissions.ts super-admin.ts admin-context.ts account-status.ts
 │   ├── services/                        # Lógica de negocio compartida por canales (ver abajo)
+│   ├── mcp/                             # Servidor MCP: OAuth, cupo diario, tools (ver sección MCP)
 │   ├── rate-limit.ts honeypot.ts        # Protección de endpoints públicos
 │   ├── tenant.ts tenant-templates.ts tenant-defaults.ts tenant-format.ts
 │   ├── plans.ts                         # PLAN_LIMITS + gating por plan
@@ -198,7 +199,10 @@ src/
 ├── dashboard/reviews/[id]
 ├── admin/{dealerships/[id],dealerships/[id]/pagos,impersonation}
 ├── cron/{expire-trials,sync-exchange-rate}
+├── mcp                           # Servidor MCP para Claude/ChatGPT (OAuth de Clerk) — ver sección MCP
 └── webhooks/clerk
+
+/.well-known/oauth-protected-resource[/api/mcp] · /.well-known/oauth-authorization-server   # metadata OAuth del MCP
 ```
 
 **Pendientes conocidos:**
@@ -288,8 +292,33 @@ de los handlers todavía tiene la lógica inline.
   `ServiceError` para errores de negocio. No conoce HTTP.
 - El handler valida con Zod, arma el contexto con `getDashboardContext()` y envuelve
   la llamada en `withServiceErrors()`, que traduce el error a JSON + status.
-- El MCP (en camino) usa los mismos servicios con `source: "mcp"`. **Canal nuevo →
-  reusar el servicio, nunca reimplementar los chequeos.**
+- El MCP usa los mismos servicios con `source: "mcp"`. **Canal nuevo → reusar el
+  servicio, nunca reimplementar los chequeos.** Gastos también está migrado.
+
+#### MCP (`/api/mcp` + `src/lib/mcp/`)
+
+Deja que el dealer opere el panel desde Claude o ChatGPT ("cargame este auto",
+"cargale 150.000 de detailing al Corolla", "¿cuánto le gané?").
+
+- **Auth: OAuth de Clerk, sin Dynamic Client Registration.** Cada cliente usa una
+  OAuth app creada a mano en Clerk; solo los client IDs de `MCP_OAUTH_CLIENT_IDS`
+  entran. Esa env var es el interruptor: vacía (o login apagado) → 404.
+- **Stateless:** un `McpServer` por request. Las tools cierran sobre el contexto ya
+  autenticado (`McpContext`), así que no pueden operar sobre otro tenant.
+- **Tools = servicios.** Nunca Prisma directo en una tool: los permisos, el guard de
+  venta, el límite del plan y la invalidación de cache viven en el servicio.
+- **Lo que ve la IA se arma campo por campo** (`vehicle-view.ts`), nunca un spread del
+  modelo. Los vehículos se crean como borrador; publicar queda en el panel.
+- **Cupo:** `mcpDailyCalls` por plan (20/día en trial y base), en la zona horaria del
+  dealer, contando solo llamadas exitosas. Más `mcpLimiter` (30/min por usuario).
+  Los dos son fail-open.
+- **Errores:** `ServiceError` vuelve como resultado con `isError` y el mensaje en
+  español, para que la IA se lo explique al usuario. Lo inesperado solo muestra el `requestId`.
+
+**Alta de un cliente (Claude, ChatGPT):** Clerk Dashboard → OAuth applications →
+crear la app con el redirect URI del cliente (Claude: `https://claude.ai/api/mcp/auth_callback`)
+→ sumar su client ID a `MCP_OAUTH_CLIENT_IDS` → en el cliente, conector personalizado con
+URL `https://<dominio-del-panel>/api/mcp` y el client ID/secret en la configuración avanzada.
 
 #### Wrapper `withLogger` (convención del proyecto)
 
@@ -806,6 +835,10 @@ VERCEL_TEAM_ID=
 # Cron (/api/cron/*)
 CRON_SECRET=
 
+# MCP (/api/mcp) — client IDs de las OAuth apps de Clerk habilitadas, separados
+# por coma. Su PRESENCIA es el interruptor: vacía = el MCP no existe (404).
+MCP_OAUTH_CLIENT_IDS=
+
 # Email (Resend) — dependencia instalada, SIN uso en el código
 RESEND_API_KEY=
 ```
@@ -849,6 +882,7 @@ RESEND_API_KEY=
 - Listado de cuentas, trials por vencer, registro de pagos, `/admin/sitios` (toggle de publicación, plantilla, preview cross-tenant) y modo plataforma para editar el sitio de un cliente.
 
 *Plataforma*
+- **Servidor MCP** (`/api/mcp`) para operar el panel desde Claude/ChatGPT: vehículos y gastos, con OAuth de Clerk y cupo por plan.
 - Middleware de subdomain routing (rewrite a `/tenant/{slug}`, con `url.search` incluido).
 - Storage S3-compatible (Contabo) con dos buckets — público (imágenes) + privado (documentos, presigned 5 min).
 - Logging con `withLogger` + `request_id` propagado.

@@ -24,11 +24,17 @@ import type { SectionType } from "./constants";
  */
 
 // Fuentes — declaradas al top-level porque next/font lo requiere.
+// `preload: false` en todas: next/font precarga CADA fuente declarada en el
+// módulo, o sea las de las 4 plantillas en cada sitio (7 archivos, ~150 KB)
+// aunque el dealer use una sola. Esas descargas competían con el CSS, que es lo
+// que bloquea el primer pintado. Sin preload, el browser baja solo la fuente que
+// la plantilla aplica, y `display: swap` pinta el texto con el fallback mientras.
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-tenant",
   display: "swap",
+  preload: false,
 });
 
 const spaceGrotesk = Space_Grotesk({
@@ -36,6 +42,7 @@ const spaceGrotesk = Space_Grotesk({
   weight: ["400", "500", "600", "700"],
   variable: "--font-tenant",
   display: "swap",
+  preload: false,
 });
 
 // Unbounded: display geométrica, muy llamativa. La usa el template "impacto".
@@ -44,6 +51,7 @@ const unbounded = Unbounded({
   weight: ["400", "600", "700", "800"],
   variable: "--font-tenant",
   display: "swap",
+  preload: false,
 });
 
 // DM Sans: la misma familia que usa el panel, pero expuesta como --font-tenant.
@@ -55,6 +63,7 @@ const dmSans = DM_Sans({
   weight: ["300", "400", "500", "700"],
   variable: "--font-tenant",
   display: "swap",
+  preload: false,
 });
 
 /**

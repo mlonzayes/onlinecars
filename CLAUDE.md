@@ -683,7 +683,7 @@ Todas las constantes de los string-enums viven en [src/lib/constants.ts](src/lib
 
 - **Rate limiting** en `/api/public/*` y en el form de contacto con `@upstash/ratelimit` (sliding window). Ver convención en la sección "Rate limiting + honeypot" más arriba.
 - **Cache del sitio del tenant** — ya está armado, no reinventarlo:
-  - **Páginas → ISR de Vercel**, no Redis. Leen la DB con `getTenantDealership` / `getTenantHomeBundle` de [src/lib/tenant-render.ts](src/lib/tenant-render.ts) (deduplicados por render con `cache()` de React). El bundle del home sale **serializado** (Decimal → string, Date → ISO) para pasarlo a Client Components.
+  - **Páginas → ISR de Vercel**, no Redis. Leen con `getTenantDealership` / `getTenantHomeBundle` / `getTenantCatalog` de [src/lib/tenant-render.ts](src/lib/tenant-render.ts): `unstable_cache` con tag `tenant-site:{slug}` (así el catálogo, que es dinámico, no despierta Neon en cada pedido) + `cache()` de React por render. Los sitios publicados se **pregeneran en el build** (`generateStaticParams` del layout) para que un deploy no deje la cache vacía. El bundle del home sale **serializado** (Decimal → string, Date → ISO) para pasarlo a Client Components.
   - **Handlers dinámicos** (API públicos, robots/sitemap/llms) → `getDealershipBySlug` con cache-aside Redis en `tenant:{slug}:dealership` ([src/lib/tenant.ts](src/lib/tenant.ts)).
   - TTL 30 min en los dos, pero es red de seguridad: la fuente de verdad es la **invalidación activa**.
 
@@ -691,11 +691,10 @@ Todas las constantes de los string-enums viven en [src/lib/constants.ts](src/lib
 
 1. **TODO handler que mute algo visible en el home llama a `invalidateTenantHomeBundle(slug)`** — vehículos, imágenes, reviews, theme, secciones, media, datos del dealership. Se olvida uno y el dealer ve su sitio viejo 30 minutos y abre un ticket.
 2. **Fail-open en lectura y en escritura.** Si Redis se cae, se loggea (`tenant.home.cache_read_failed`) y se va a la DB. Nunca tira.
-3. **Las páginas del tenant son ISR** (`revalidate = 1800` + `generateStaticParams` vacío en `tenant/[slug]/layout.tsx`). `invalidateTenantHomeBundle` hace `revalidatePath("/tenant/{slug}", "layout")`, así que la regla 1 cubre el HTML cacheado en Vercel. El catálogo es la excepción (`force-dynamic` por los filtros).
+3. **Las páginas del tenant son ISR** (`revalidate = 1800` + `generateStaticParams` vacío en `tenant/[slug]/layout.tsx`). `invalidateTenantHomeBundle` hace `revalidatePath("/tenant/{slug}", "layout")` + `revalidateTag("tenant-site:{slug}")`, así que la regla 1 cubre el HTML cacheado en Vercel y los datos de `unstable_cache`. El catálogo es la excepción (`force-dynamic` por los filtros).
 4. **⚠️ Nada de Redis ni APIs dinámicas en el render de las páginas del tenant.** El cliente de Upstash hace `fetch` con `cache: "no-store"`, y en un render ISR eso tira "Dynamic server usage" → **500 en producción** (ya pasó: el build pasa igual, solo explota en runtime). Tampoco `headers()`, `cookies()` ni `searchParams`. En páginas, `getTenantDealership`, nunca `getDealershipBySlug`.
 5. **El bundle enumera sus campos uno por uno a propósito.** No lo conviertas en un spread del `Dealership`: hay secretos ahí (ver `metaCapiToken`) que no deben viajar al cliente.
 
-**Pendiente:** cachear también el listado paginado de `/catalogo` (hoy va directo a DB en cada filtro).
 
 ## SEO — sitio del tenant
 
@@ -844,7 +843,6 @@ RESEND_API_KEY=
 - CSP (Content-Security-Policy) — iteración aparte, con Clerk-tuning en modo report-only primero.
 - Email transaccional con Resend (dependencia instalada, sin uso).
 - Testing (Vitest + RTL) — no hay NADA configurado.
-- Cache del listado paginado de `/catalogo`.
 - Routing de dominios custom en el middleware (`CUSTOM_DOMAINS_ENABLED = false`).
 
 ## Reglas para Claude

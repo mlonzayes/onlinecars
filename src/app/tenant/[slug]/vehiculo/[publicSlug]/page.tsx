@@ -145,7 +145,8 @@ export default async function VehicleDetailPage({ params }: VehicleDetailPagePro
             TRANSMISSION_LABELS[vehicle.transmission] ?? vehicle.transmission,
         }
       : {}),
-    ...(vehicle.vin ? { vehicleIdentificationNumber: vehicle.vin } : {}),
+    // El VIN NO va: es un dato privado del dealer (identifica la unidad para
+    // trámites) y Google no lo necesita para el rich result.
     offers: {
       "@type": "Offer",
       price: vehicle.price.toString(),

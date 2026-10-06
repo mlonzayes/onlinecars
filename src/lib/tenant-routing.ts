@@ -33,3 +33,11 @@ export function getTenantPathPrefix(slug: string): string {
 export function getTenantBasePath(slug: string): string {
   return isTenantSubdomainRouting() ? "" : getTenantPathPrefix(slug);
 }
+
+/**
+ * Tag de `unstable_cache` de los datos del sitio público de un tenant
+ * (dealership, catálogo). Lo invalida invalidateTenantHomeBundle().
+ */
+export function tenantSiteTag(slug: string): string {
+  return `tenant-site:${slug}`;
+}

@@ -28,7 +28,7 @@ export function FinancingSection({ section, basePath }: FinancingSectionProps) {
         preset="fadeUp"
         className="mx-auto max-w-3xl rounded-3xl border border-[var(--tenant-border)] bg-[var(--tenant-bg)] p-8 text-center sm:p-12"
       >
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--tenant-primary)]/10 text-[var(--tenant-primary)]">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--tenant-primary)]/10 text-[var(--tenant-primary-text)]">
           <Banknote className="h-7 w-7" />
         </div>
 

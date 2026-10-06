@@ -74,9 +74,9 @@ function BrandCard({ brand, basePath }: BrandCardProps) {
           />
         </div>
       ) : (
-        <Car className="h-10 w-10 flex-1 text-[var(--tenant-fg-subtle)] transition-colors group-hover:text-[var(--tenant-primary)]" />
+        <Car className="h-10 w-10 flex-1 text-[var(--tenant-fg-subtle)] transition-colors group-hover:text-[var(--tenant-primary-text)]" />
       )}
-      <span className="text-xs font-semibold text-[var(--tenant-fg-muted)] group-hover:text-[var(--tenant-primary)] sm:text-sm">
+      <span className="text-xs font-semibold text-[var(--tenant-fg-muted)] group-hover:text-[var(--tenant-primary-text)] sm:text-sm">
         {brand.name}
       </span>
     </Link>

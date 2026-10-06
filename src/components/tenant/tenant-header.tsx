@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Car, Menu, X } from "lucide-react";
@@ -96,10 +97,16 @@ export function TenantHeader({ name, logo, basePath, withBanner = false, solid =
           className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
         >
           {logo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            // next/image y no <img>: hay logos subidos de 1,5 MB y acá se
+            // muestran a 48 px de alto. width/height dan la proporción máxima
+            // (4:1); h-12 w-auto respeta la real del archivo.
+            <Image
               src={logo}
               alt={name}
+              width={192}
+              height={48}
+              sizes="192px"
+              priority
               className="h-12 w-auto object-contain"
             />
           ) : (
@@ -121,8 +128,8 @@ export function TenantHeader({ name, logo, basePath, withBanner = false, solid =
               key={item.href}
               href={item.href}
               className={cn(
-                "transition-colors hover:text-[var(--tenant-primary)]",
-                isActive(item.href) && "text-[var(--tenant-primary)]"
+                "transition-colors hover:text-[var(--tenant-primary-text)]",
+                isActive(item.href) && "text-[var(--tenant-primary-text)]"
               )}
             >
               {item.label}
@@ -162,7 +169,7 @@ export function TenantHeader({ name, logo, basePath, withBanner = false, solid =
                 href={item.href}
                 className={cn(
                   "rounded-lg px-3 py-2.5 text-base font-medium text-[var(--tenant-fg)] hover:bg-[var(--tenant-surface-hover)]",
-                  isActive(item.href) && "bg-[var(--tenant-surface-hover)] text-[var(--tenant-primary)]"
+                  isActive(item.href) && "bg-[var(--tenant-surface-hover)] text-[var(--tenant-primary-text)]"
                 )}
               >
                 {item.label}

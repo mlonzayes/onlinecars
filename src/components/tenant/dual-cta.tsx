@@ -33,7 +33,7 @@ export function DualCTA({ basePath }: DualCTAProps) {
 
         {/* Decoración: ícono grande detrás del contenido */}
         <Search
-          className="pointer-events-none absolute -right-6 -bottom-6 h-44 w-44 text-[var(--tenant-primary)] opacity-10 sm:h-52 sm:w-52"
+          className="pointer-events-none absolute -right-6 -bottom-6 h-44 w-44 text-[var(--tenant-primary-text)] opacity-10 sm:h-52 sm:w-52"
           strokeWidth={1.5}
         />
       </div>

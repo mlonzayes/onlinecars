@@ -93,7 +93,7 @@ export function CatalogPagination({
         <Link
           href={buildHref(basePath, preservedQuery, prevPage)}
           aria-label="Página anterior"
-          className={`${itemBaseClass} border-[var(--tenant-border-strong)] bg-[var(--tenant-surface)] text-[var(--tenant-fg)] hover:border-[var(--tenant-primary)] hover:text-[var(--tenant-primary)]`}
+          className={`${itemBaseClass} border-[var(--tenant-border-strong)] bg-[var(--tenant-surface)] text-[var(--tenant-fg)] hover:border-[var(--tenant-primary)] hover:text-[var(--tenant-primary-text)]`}
           rel="prev"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -136,7 +136,7 @@ export function CatalogPagination({
             key={item}
             href={buildHref(basePath, preservedQuery, item)}
             aria-label={`Ir a la página ${item}`}
-            className={`${itemBaseClass} border-[var(--tenant-border-strong)] bg-[var(--tenant-surface)] text-[var(--tenant-fg)] hover:border-[var(--tenant-primary)] hover:text-[var(--tenant-primary)]`}
+            className={`${itemBaseClass} border-[var(--tenant-border-strong)] bg-[var(--tenant-surface)] text-[var(--tenant-fg)] hover:border-[var(--tenant-primary)] hover:text-[var(--tenant-primary-text)]`}
           >
             {item}
           </Link>
@@ -148,7 +148,7 @@ export function CatalogPagination({
         <Link
           href={buildHref(basePath, preservedQuery, nextPage)}
           aria-label="Página siguiente"
-          className={`${itemBaseClass} border-[var(--tenant-border-strong)] bg-[var(--tenant-surface)] text-[var(--tenant-fg)] hover:border-[var(--tenant-primary)] hover:text-[var(--tenant-primary)]`}
+          className={`${itemBaseClass} border-[var(--tenant-border-strong)] bg-[var(--tenant-surface)] text-[var(--tenant-fg)] hover:border-[var(--tenant-primary)] hover:text-[var(--tenant-primary-text)]`}
           rel="next"
         >
           <ChevronRight className="h-4 w-4" />

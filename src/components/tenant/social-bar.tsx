@@ -46,7 +46,7 @@ function SocialLink({ href, label, children }: SocialLinkProps) {
       rel="noopener noreferrer"
       aria-label={label}
       title={label}
-      className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--tenant-border)] bg-[var(--tenant-surface)] text-[var(--tenant-fg-muted)] transition-all hover:scale-105 hover:border-[var(--tenant-primary)] hover:text-[var(--tenant-primary)]"
+      className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--tenant-border)] bg-[var(--tenant-surface)] text-[var(--tenant-fg-muted)] transition-all hover:scale-105 hover:border-[var(--tenant-primary)] hover:text-[var(--tenant-primary-text)]"
     >
       {children}
     </a>

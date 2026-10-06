@@ -92,7 +92,7 @@ export function SpotlightSection({
       <div className="absolute inset-x-0 bottom-0">
         <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8 lg:pb-20">
           <ClipReveal>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--tenant-primary)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--tenant-primary-text)]">
               {eyebrow}
             </p>
 

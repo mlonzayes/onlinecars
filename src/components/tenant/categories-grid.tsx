@@ -37,7 +37,7 @@ export function CategoriesGrid({ basePath }: CategoriesGridProps) {
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--tenant-surface-hover)] text-[var(--tenant-fg-muted)] transition-colors group-hover:bg-[var(--tenant-primary)] group-hover:text-white">
               <Icon className="h-6 w-6" />
             </div>
-            <span className="text-sm font-semibold text-[var(--tenant-fg)] group-hover:text-[var(--tenant-primary)]">
+            <span className="text-sm font-semibold text-[var(--tenant-fg)] group-hover:text-[var(--tenant-primary-text)]">
               {VEHICLE_BODY_TYPE_LABELS[type]}
             </span>
           </Link>

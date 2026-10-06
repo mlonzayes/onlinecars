@@ -83,7 +83,7 @@ export function StickySpecsSection({
         {/* Columna specs */}
         <div>
           <ClipReveal>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--tenant-primary)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--tenant-primary-text)]">
               {eyebrow}
             </p>
             <h2 className="mt-3 text-[var(--tenant-fg)]">{vehicle.title}</h2>

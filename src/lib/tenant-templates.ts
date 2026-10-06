@@ -136,8 +136,8 @@ export const TENANT_TEMPLATES = {
       "--tenant-surface-hover": "#f3f4f6", // gray-100
       // Foreground
       "--tenant-fg": "#0f172a", // slate-900 — texto principal
-      "--tenant-fg-muted": "#64748b", // slate-500 — texto secundario
-      "--tenant-fg-subtle": "#94a3b8", // slate-400 — eyebrows, labels
+      "--tenant-fg-muted": "#475569", // slate-600 — texto secundario
+      "--tenant-fg-subtle": "#5b6b80", // entre slate-500/600 — eyebrows, labels (≥4.5:1 WCAG)
       // Borders
       "--tenant-border": "#e5e7eb", // gray-200 — bordes default
       "--tenant-border-strong": "#cbd5e1", // slate-300 — bordes acento
@@ -163,7 +163,7 @@ export const TENANT_TEMPLATES = {
       // Foreground
       "--tenant-fg": "#f8fafc", // slate-50 — texto principal
       "--tenant-fg-muted": "#94a3b8", // slate-400 — texto secundario
-      "--tenant-fg-subtle": "#64748b", // slate-500 — eyebrows, labels
+      "--tenant-fg-subtle": "#8391a7", // entre slate-400/500 — eyebrows, labels (≥4.5:1 WCAG)
       // Borders — más visibles sobre dark, sutiles
       "--tenant-border": "#1f2937", // gray-800
       "--tenant-border-strong": "#374151", // gray-700
@@ -191,7 +191,7 @@ export const TENANT_TEMPLATES = {
       // Foreground — casi negro, alto contraste
       "--tenant-fg": "#0a0a0a", // neutral-950
       "--tenant-fg-muted": "#525252", // neutral-600
-      "--tenant-fg-subtle": "#737373", // neutral-500
+      "--tenant-fg-subtle": "#666666", // ≥4.5:1 WCAG sobre neutral-100
       // Borders — marcados, para el look boxy
       "--tenant-border": "#e5e5e5", // neutral-200
       "--tenant-border-strong": "#171717", // neutral-900
@@ -233,7 +233,7 @@ export const TENANT_TEMPLATES = {
       // Foreground
       "--tenant-fg": "#fafafa", // neutral-50
       "--tenant-fg-muted": "#a1a1aa", // zinc-400
-      "--tenant-fg-subtle": "#71717a", // zinc-500
+      "--tenant-fg-subtle": "#8a8a93", // entre zinc-400/500 (≥4.5:1 WCAG)
       // Borders — hairline apenas perceptible. Sobre negro, un borde marcado
       // recorta las cards y rompe la continuidad editorial.
       "--tenant-border": "#1f2124",

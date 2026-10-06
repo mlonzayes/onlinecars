@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { applySpread, getCurrentUsdRate } from "@/lib/exchange-rate";
+import { computeFinancials } from "@/lib/dashboard-financials";
 
 export interface SalesByMonthPoint {
   /** Clave YYYY-MM (sirve para ordenar). */
@@ -45,6 +47,8 @@ export interface FinancialSummary {
   salesCount: number;
   /** Cuántas de esas ventas tienen el costo cargado. */
   salesWithCost: number;
+  /** Ventas que no se pudieron pasar a pesos (USD sin cotización disponible). */
+  unconvertedSales: number;
 }
 
 // Ganancia neta por mes (sensible — admin only).
@@ -85,6 +89,15 @@ function monthKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+// Cotización de trabajo del dealer (BCRA + su spread), o null si no hay dato.
+async function getDealerUsdToArsRate(dealershipId: string): Promise<number | null> {
+  const [base, dealership] = await Promise.all([
+    getCurrentUsdRate(),
+    prisma.dealership.findUnique({ where: { id: dealershipId }, select: { usdSpread: true } }),
+  ]);
+  return base ? applySpread(base, Number(dealership?.usdSpread ?? 0)).effective : null;
+}
+
 export async function getDashboardStats(dealershipId: string): Promise<DashboardStats> {
   // Inicio del mes hace 5 meses (incluyendo el actual = 6 meses totales).
   const sixMonthsAgo = new Date();
@@ -102,6 +115,7 @@ export async function getDashboardStats(dealershipId: string): Promise<Dashboard
     completedSales,
     stockByBrandRaw,
     availablePublished,
+    usdToArsRate,
   ] = await Promise.all([
     prisma.sale.findMany({
       where: {
@@ -111,9 +125,14 @@ export async function getDashboardStats(dealershipId: string): Promise<Dashboard
       },
       select: {
         salePrice: true,
+        currency: true,
         createdAt: true,
         vehicle: {
-          select: { costPrice: true, expenses: { select: { amount: true } } },
+          select: {
+            costPrice: true,
+            costCurrency: true,
+            expenses: { select: { amount: true, currency: true } },
+          },
         },
       },
     }),
@@ -143,6 +162,7 @@ export async function getDashboardStats(dealershipId: string): Promise<Dashboard
       where: { dealershipId, status: "available", publishedAt: { not: null } },
       select: { publishedAt: true },
     }),
+    getDealerUsdToArsRate(dealershipId),
   ]);
 
   // Agrupar ventas por mes en memoria. Inicializamos los 6 slots en 0
@@ -168,38 +188,13 @@ export async function getDashboardStats(dealershipId: string): Promise<Dashboard
   }));
   const netMap = new Map(netMonths.map((m) => [m.month, m]));
 
-  // En la misma pasada acumulamos el resumen financiero.
-  // Nota: sumamos importes sin convertir moneda (igual que salesByMonth). Si el
-  // dealer mezcla ARS y USD, los totales no son exactos — pendiente FX.
-  let grossRevenue = 0;
-  let totalCost = 0;
-  let revenueWithCost = 0;
-  let salesWithCost = 0;
-  for (const s of salesRaw) {
-    const price = s.salePrice.toNumber();
-    grossRevenue += price;
-
-    const key = monthKey(s.createdAt);
+  // Plata: todo se convierte a pesos ANTES de sumar (ver dashboard-financials.ts).
+  const fin = computeFinancials(salesRaw, usdToArsRate, monthKey);
+  for (const [key, totals] of fin.byMonth) {
     const slot = monthMap.get(key);
-    if (slot) slot.total += price;
-
-    // Margen/neta SOLO sobre ventas con costo cargado. Si costPrice es null la
-    // venta no entra al cálculo (NO se asume costo 0 — eso inflaba el margen).
-    // El costo total incluye los gastos de reacondicionamiento del vehículo.
-    // Nota: se suman sin convertir moneda, igual que el resto del dashboard (FX pendiente).
-    const costDecimal = s.vehicle?.costPrice ?? null;
-    if (costDecimal !== null) {
-      const expensesSum = (s.vehicle?.expenses ?? []).reduce(
-        (sum, e) => sum + e.amount.toNumber(),
-        0,
-      );
-      const cost = costDecimal.toNumber() + expensesSum;
-      totalCost += cost;
-      revenueWithCost += price;
-      salesWithCost += 1;
-      const netSlot = netMap.get(key);
-      if (netSlot) netSlot.net += price - cost;
-    }
+    if (slot) slot.total += totals.total;
+    const netSlot = netMap.get(key);
+    if (netSlot) netSlot.net += totals.net;
   }
 
   // Stock por marca: top 6 + "Otras" agrupando el resto.
@@ -238,12 +233,13 @@ export async function getDashboardStats(dealershipId: string): Promise<Dashboard
     })),
     funnel: { totalLeads, contacted, qualified, completedSales },
     financials: {
-      grossRevenue,
-      totalCost,
-      netProfit: revenueWithCost - totalCost,
-      revenueWithCost,
+      grossRevenue: fin.grossRevenue,
+      totalCost: fin.totalCost,
+      netProfit: fin.revenueWithCost - fin.totalCost,
+      revenueWithCost: fin.revenueWithCost,
       salesCount: salesRaw.length,
-      salesWithCost,
+      salesWithCost: fin.salesWithCost,
+      unconvertedSales: fin.unconvertedSales,
     },
     netProfitByMonth: netMonths,
     stockByBrand,

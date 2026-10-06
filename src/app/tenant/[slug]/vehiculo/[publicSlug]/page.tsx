@@ -61,6 +61,12 @@ export async function generateMetadata({ params }: VehicleDetailPageProps): Prom
       url: canonical,
       images: vehicle.images[0]?.url ? [vehicle.images[0].url] : [],
     },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: vehicle.images[0]?.url ? [vehicle.images[0].url] : [],
+    },
   };
 }
 

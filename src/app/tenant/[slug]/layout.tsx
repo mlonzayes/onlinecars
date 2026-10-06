@@ -37,8 +37,10 @@ export async function generateMetadata({
   if (!dealership) return { title: "No encontrado" };
 
   const title = `${dealership.name} — Vehículos`;
+  // `||` y no `??`: el panel guarda la descripción vacía como "", y con `??`
+  // la home salía SIN meta description (Lighthouse SEO la marca).
   const description =
-    dealership.description ??
+    dealership.description?.trim() ||
     `Explorá los vehículos de ${dealership.name}. Encontrá tu próximo auto.`;
 
   // Favicon dinámico por tenant: preferimos el ícono dedicado (favicon) que el
@@ -59,7 +61,10 @@ export async function generateMetadata({
   const base = getTenantPublicUrl(dealership);
 
   return {
-    title,
+    // absolute + template "%s": sin esto el template del ROOT (`%s | MotorFlow`)
+    // se aplicaba a todas las páginas del dealer, home incluida. Las hijas ya
+    // arman su título completo con el nombre del concesionario.
+    title: { absolute: title, template: "%s" },
     description,
     icons,
     metadataBase: new URL(base),
@@ -71,6 +76,14 @@ export async function generateMetadata({
       description,
       type: "website",
       url: base,
+      ...(dealership.logo ? { images: [dealership.logo] } : {}),
+    },
+    // Override explícito: si no, se heredan el título y la descripción de
+    // MotorFlow del root layout, y al compartir el sitio en X se ve el nuestro.
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
       ...(dealership.logo ? { images: [dealership.logo] } : {}),
     },
   };

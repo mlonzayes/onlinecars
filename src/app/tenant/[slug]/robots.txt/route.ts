@@ -1,4 +1,5 @@
 import { getDealershipBySlug, getTenantPublicUrl } from "@/lib/tenant";
+import { AI_TRAINING_CRAWLERS } from "@/lib/seo";
 
 // robots.txt por tenant. Se sirve en {slug}.motorflowapp.com/robots.txt.
 // Si el sitio está publicado: permite indexar y apunta a su sitemap.
@@ -20,7 +21,9 @@ export async function GET(_req: Request, { params }: RouteParams) {
   }
 
   const base = getTenantPublicUrl(dealership);
-  const body = `User-agent: *\nAllow: /\nSitemap: ${base}/sitemap.xml\n`;
+  // Crawlers de entrenamiento de IA bloqueados (ver AI_TRAINING_CRAWLERS).
+  const aiBlock = AI_TRAINING_CRAWLERS.map((ua) => `User-agent: ${ua}`).join("\n");
+  const body = `User-agent: *\nAllow: /\n\n${aiBlock}\nDisallow: /\n\nSitemap: ${base}/sitemap.xml\n`;
 
   return new Response(body, {
     headers: {

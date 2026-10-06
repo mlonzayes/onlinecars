@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { SITE_URL } from "@/lib/seo";
+import { AI_TRAINING_CRAWLERS, SITE_URL } from "@/lib/seo";
 
 // robots.txt del dominio principal. Permite indexar el marketing, bloquea las
 // rutas privadas/funcionales, y apunta al sitemap.
@@ -22,6 +22,7 @@ export default function robots(): MetadataRoute.Robots {
           "/admin",
         ],
       },
+      { userAgent: [...AI_TRAINING_CRAWLERS], disallow: "/" },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
     host: SITE_URL,

@@ -52,3 +52,28 @@ export function getPrimaryCta(): { href: string; label: string } {
     ? { href: "/sign-up", label: "Crear mi cuenta" }
     : { href: "#contacto", label: "Quiero mi sitio" };
 }
+
+/**
+ * Crawlers que juntan contenido para ENTRENAR modelos de IA. Se bloquean en los
+ * robots.txt (marketing y tenants). Los de búsqueda/respuesta con cita
+ * (OAI-SearchBot, ChatGPT-User, PerplexityBot, Googlebot) siguen habilitados:
+ * para eso existe el llms.txt.
+ *
+ * Reemplaza al "Managed robots.txt" de Cloudflare, que agregaba una directiva
+ * no estándar (`Content-Signal`) que Lighthouse marca como robots.txt inválido.
+ */
+export const AI_TRAINING_CRAWLERS = [
+  "GPTBot",
+  "ClaudeBot",
+  "anthropic-ai",
+  "Google-Extended",
+  "Applebot-Extended",
+  "CCBot",
+  "Bytespider",
+  "Amazonbot",
+  "meta-externalagent",
+  "cohere-ai",
+  "MistralAI-Training",
+  "Diffbot",
+  "omgili",
+] as const;

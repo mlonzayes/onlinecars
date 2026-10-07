@@ -1,4 +1,5 @@
 import Script from "next/script";
+import { buildDeferredScriptLoader } from "@/lib/deferred-script";
 
 interface MicrosoftClarityProps {
   /** Ya validado por `isValidClarityProjectId` en el server que monta el componente. */
@@ -21,13 +22,12 @@ export function MicrosoftClarity({ projectId }: MicrosoftClarityProps) {
     <Script
       id="microsoft-clarity"
       // afterInteractive: no compite con el render inicial (mismo criterio que el pixel).
+      // Stub con cola ya; `clarity.js` diferido — ver lib/deferred-script.ts.
       strategy="afterInteractive"
       dangerouslySetInnerHTML={{
         __html: `
-(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-})(window,document,"clarity","script","${projectId}");
+window.clarity=window.clarity||function(){(window.clarity.q=window.clarity.q||[]).push(arguments)};
+${buildDeferredScriptLoader(`https://www.clarity.ms/tag/${projectId}`)}
         `.trim(),
       }}
     />

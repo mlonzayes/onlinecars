@@ -150,6 +150,14 @@ te sube el costo por lead. La CAPI no la bloquea nadie.
    campaña, públicos similares y las columnas de conversión del Ads Manager. Un
    evento con nombre inventado no te da nada de eso.
 
+10. **`fbevents.js` y `clarity.js` se cargan DIFERIDOS.** El snippet define el
+    stub con cola (`fbq` / `clarity`) al instante, pero el script pesado se
+    inyecta en la primera interacción o a los 5 s
+    ([src/lib/deferred-script.ts](../../src/lib/deferred-script.ts)). Sumaban
+    ~800 ms de main thread bloqueado en mobile. Los eventos se encolan y salen
+    con su `eventID` original al cargar: la deduplicación no cambia. No volver
+    al snippet oficial entero.
+
 ---
 
 ## Seguridad del token del tenant

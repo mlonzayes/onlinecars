@@ -3,6 +3,7 @@
 import Script from "next/script";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { buildDeferredScriptLoader } from "@/lib/deferred-script";
 
 interface MetaPixelProps {
   /** Ya validado por `isValidMetaPixelId` en el server que monta el componente. */
@@ -46,15 +47,18 @@ export function MetaPixel({ pixelId }: MetaPixelProps) {
         // afterInteractive y no beforeInteractive: el pixel no debe competir por
         // ancho de banda con el render inicial. Un LCP peor te sube el CPC más
         // de lo que te aporta medir 200ms antes.
+        //
+        // El snippet oficial, partido en dos: el stub con cola se define ya
+        // (fbq existe y encola) y `fbevents.js` se carga diferido — ver
+        // lib/deferred-script.ts.
         dangerouslySetInnerHTML={{
           __html: `
-!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+!function(f){if(f.fbq)return;var n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
-document,'script','https://connect.facebook.net/en_US/fbevents.js');
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[]}(window);
 fbq('init', '${pixelId}');
 fbq('track', 'PageView');
+${buildDeferredScriptLoader("https://connect.facebook.net/en_US/fbevents.js")}
           `.trim(),
         }}
       />

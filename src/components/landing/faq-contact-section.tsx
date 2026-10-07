@@ -41,6 +41,11 @@ export function getFaqs(): Faq[] {
         "El mismo día. Creás tu cuenta, completás los datos del concesionario y en minutos tenés el sitio listo para cargar stock.",
     },
     {
+      question: "¿Mi sitio es compatible con ChatGPT o Claude?",
+      answer:
+        "Sí. Tu sitio publica tu stock en formatos que leen los asistentes de IA (un resumen llms.txt y datos estructurados schema.org en cada vehículo) y deja entrar a los buscadores de IA como ChatGPT, Claude y Perplexity. Así, cuando alguien les pregunta por un auto, tu catálogo puede aparecer en la respuesta. Lo que recomienda cada asistente lo decide él: no se puede garantizar.",
+    },
+    {
       question: "¿Necesito conocimientos técnicos?",
       answer:
         "No. El alta y la carga de vehículos se hace desde un panel pensado para no-técnicos. Si querés un dominio propio, te ayudamos con la configuración.",

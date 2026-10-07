@@ -45,6 +45,10 @@ dominio propio o en un subdominio (\`{concesionaria}.motorflowapp.com\`). Incluy
 catálogo de vehículos, captación de consultas y un panel para gestionar stock,
 clientes, ventas y cotizaciones. No cobramos comisión por venta.
 
+Cada sitio está preparado para asistentes de IA como ChatGPT y Claude: publica
+su propio llms.txt con el stock y los precios, y datos estructurados schema.org
+(AutoDealer, Car, Offer) en la home y en la ficha de cada vehículo.
+
 Está disponible para concesionarias de ${countries}. Cada una configura su país, su moneda y su formato regional.
 
 ## Páginas principales

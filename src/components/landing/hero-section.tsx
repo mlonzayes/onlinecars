@@ -5,7 +5,7 @@ import { getPrimaryCta } from "@/lib/seo";
 
 const CHECKS = [
   "Sin comisiones por venta",
-  "Tu marca, tu dominio",
+  "Compatible con ChatGPT y Claude",
   "Listo en el día",
 ];
 
@@ -42,14 +42,15 @@ export function HeroSection() {
             tracking-tight es obligatorio acá — las letras light a este tamaño
             se ven desparramadas sin cerrar el interletrado. */}
         <h1 className="text-5xl font-light leading-[1.05] tracking-tight text-gray-900 sm:text-[3.5rem] lg:text-[4rem]">
-          Vendé más vehículos desde tu{" "}
-          <span className="font-normal text-blue-600">propio sitio.</span>
+          Vendé autos de manera{" "}
+          <span className="font-normal text-blue-600">inteligente.</span>
         </h1>
 
         <p className="mx-auto mt-5 max-w-xl text-base font-light leading-relaxed text-gray-600">
-          Tu sitio web profesional, tu catálogo siempre actualizado y las
-          consultas que llegan directo a vos. Sin comisiones por venta y sin
-          depender de los portales.
+          Tu sitio web propio, tu stock siempre actualizado y las consultas
+          directo a vos. Preparado para que asistentes de IA como ChatGPT y
+          Claude encuentren tus autos. Sin comisiones y sin depender de los
+          portales.
         </p>
 
         <div className="mt-8 flex flex-wrap justify-center gap-3">

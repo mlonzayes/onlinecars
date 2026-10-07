@@ -4,6 +4,7 @@ import { HeroSection } from "@/components/landing/hero-section";
 import { ProblemSection } from "@/components/landing/problem-section";
 import { ProductShowcase } from "@/components/landing/product-showcase";
 import { DifferentiatorsSection } from "@/components/landing/differentiators-section";
+import { AiReadySection } from "@/components/landing/ai-ready-section";
 import { GuaranteesSection } from "@/components/landing/guarantees-section";
 import { PricingCards } from "@/components/landing/pricing-cards";
 import { PricingDisclaimer } from "@/components/landing/pricing-disclaimer";
@@ -15,7 +16,7 @@ import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, SITE_EMAIL, SITE_PHONE } from "@
 import { COUNTRIES, COUNTRY_LABELS } from "@/lib/constants";
 
 /**
- * Landing de motorflow — 7 secciones.
+ * Landing de motorflow — 8 secciones.
  *
  * Pasó de 14 a 7 en el rediseño. Lo que se sacó NO fue por largo, fue por
  * repetido: Solution, Services y Benefits decían lo mismo que el showcase con
@@ -111,6 +112,10 @@ export default function HomePage() {
 
         {/* 4. Diferenciadores — 3, no 12 (absorbe Beneficios + Servicios) */}
         <DifferentiatorsSection />
+
+        {/* 4b. IA — compatibilidad con ChatGPT/Claude: es parte del slogan
+            ("de manera inteligente"), así que tiene que estar respaldado. */}
+        <AiReadySection />
 
         {/* 5. Garantías — quita riesgo JUSTO antes del precio (reemplaza testimonios) */}
         <GuaranteesSection />

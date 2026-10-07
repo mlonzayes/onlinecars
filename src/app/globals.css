@@ -353,3 +353,23 @@
   .mobile-menu-items > :nth-child(4) { animation-delay: 0.26s; }
   .mobile-menu-items > :nth-child(5) { animation-delay: 0.32s; }
 }
+
+/* Línea del roadmap de /precios (RoadmapTimeline): crece de arriba hacia abajo
+   a medida que el timeline cruza el viewport. Scroll-driven CSS, sin JS (antes
+   un ScrollTrigger con scrub). Sin soporte de view-timeline o con
+   reduced-motion, la línea queda completa. */
+@keyframes roadmapLineDraw {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .roadmap-line {
+      animation: roadmapLineDraw linear both;
+      animation-timeline: view();
+      animation-range: entry 25% cover 75%;
+    }
+  }
+}

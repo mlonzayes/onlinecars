@@ -150,6 +150,7 @@ src/
 │   ├── admin/                       # Panel super-admin
 │   ├── meta/                        # Meta Pixel + tracking de eventos
 │   ├── clarity/                     # Microsoft Clarity (web principal)
+│   ├── gtm/                         # Google Tag Manager / GA4 (web principal)
 │   ├── seo/                         # JsonLd
 │   └── legal/
 ├── lib/
@@ -773,6 +774,10 @@ META_CAPI_TEST_EVENT_CODE=          # ⚠️ VACÍO EN PRODUCCIÓN o los eventos
 # el interruptor. Ver .claude/rules/tracking.md.
 NEXT_PUBLIC_CLARITY_PROJECT_ID=
 
+# Google Tag Manager de la WEB PRINCIPAL (GA4 se configura dentro del
+# contenedor). Su presencia es el interruptor. Ej: GTM-XXXXXXX
+NEXT_PUBLIC_GTM_ID=
+
 # Notificaciones internas al equipo
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
@@ -809,6 +814,7 @@ RESEND_API_KEY=
 - Páginas `/precios`, `/blog` (+ `[slug]`), `/terminos`, `/privacidad`.
 - **Meta Pixel + Conversions API** con deduplicación por `eventId` (ver `.claude/rules/tracking.md`).
 - **Microsoft Clarity** (heatmaps + grabaciones) en el route group `(marketing)`, con eventos custom en el form de contacto.
+- **Google Tag Manager** (`NEXT_PUBLIC_GTM_ID`) en el route group `(marketing)`; GA4 se configura dentro del contenedor.
 - FAB de WhatsApp desde `SITE_WHATSAPP_URL` de `lib/seo.ts`.
 
 *Auth y cuentas*

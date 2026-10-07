@@ -9,9 +9,7 @@ import {
   PiMagicWand,
   PiLightning,
 } from "react-icons/pi";
-import { ScrollReveal } from "./scroll-reveal";
-import { TextReveal } from "./text-reveal";
-import { FloatingOrbs } from "./floating-orbs";
+import { FadeIn } from "./fade-in";
 import { RoadmapTimeline } from "./roadmap-timeline";
 import { type RoadmapItemProps } from "./roadmap-item";
 
@@ -71,25 +69,26 @@ const SERVICES: RoadmapItemProps[] = [
 export function ServicesSection() {
   return (
     <section id="servicios" className="relative overflow-hidden bg-gray-50 px-4 py-14 sm:py-16">
-      <FloatingOrbs
-        orbs={[
-          { top: "5%", left: "75%", size: 320, color: "bg-blue-200/25", duration: 20 },
-          { top: "70%", left: "5%", size: 260, color: "bg-indigo-200/20", duration: 24, delay: 2 },
-        ]}
-      />
+      {/* Orbes decorativos con los glows CSS del hero (antes FloatingOrbs con
+          GSAP). Solo transform, y solo animan desde sm (ver globals.css). */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="hero-glow absolute left-[75%] top-[5%] h-80 w-80 rounded-full bg-blue-200/25 blur-3xl" />
+        <div
+          className="hero-glow-alt absolute left-[5%] top-[70%] h-64 w-64 rounded-full bg-indigo-200/20 blur-3xl"
+          style={{ animationDelay: "-4s" }}
+        />
+      </div>
 
       <div className="relative mx-auto max-w-5xl">
-        <div className="text-center">
+        <FadeIn className="text-center">
           <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl">
-            <TextReveal stagger={0.04}>Lo que ya tenés y lo que se viene</TextReveal>
+            Lo que ya tenés y lo que se viene
           </h2>
-          <ScrollReveal y={15} blur={3} delay={0.2}>
-            <p className="mx-auto mt-2 max-w-xl text-sm text-gray-500 sm:text-base">
-              Todo lo que podés hacer hoy con motorflow, y las funciones nuevas
-              que estamos sumando para los próximos meses.
-            </p>
-          </ScrollReveal>
-        </div>
+          <p className="mx-auto mt-2 max-w-xl text-sm text-gray-500 sm:text-base">
+            Todo lo que podés hacer hoy con motorflow, y las funciones nuevas
+            que estamos sumando para los próximos meses.
+          </p>
+        </FadeIn>
 
         <RoadmapTimeline items={SERVICES} />
       </div>

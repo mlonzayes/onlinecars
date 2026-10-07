@@ -14,9 +14,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn, formatCurrency } from "@/lib/utils";
 import { computeVehicleMargin, convertAmount } from "@/lib/margin";
+import { EXPENSE_DESCRIPTION_MAX } from "@/lib/validators/vehicle-expense";
 import {
   CURRENCIES,
   VEHICLE_EXPENSE_CATEGORIES,
@@ -149,7 +151,7 @@ export function VehicleExpenses({
       </CardHeader>
       <CardContent className="space-y-4">
         {canEdit && (
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1.2fr_1fr_auto_1.2fr_auto] sm:items-end">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1.2fr_1fr_auto] sm:items-end">
             <div className="flex flex-col gap-1">
               <Label htmlFor="exp-cat" className="text-xs">Categoría</Label>
               <select id="exp-cat" className={SELECT_CLASS} value={category} onChange={(e) => setCategory(e.target.value)}>
@@ -174,11 +176,11 @@ export function VehicleExpenses({
                 ))}
               </select>
             </div>
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="exp-desc" className="text-xs">Descripción</Label>
-              <Input id="exp-desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Opcional" />
+            <div className="flex flex-col gap-1 sm:col-span-3">
+              <Label htmlFor="exp-desc" className="text-xs">Detalle</Label>
+              <Textarea id="exp-desc" rows={2} maxLength={EXPENSE_DESCRIPTION_MAX} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Proveedor, qué se hizo, garantía…" />
             </div>
-            <Button onClick={handleAdd} disabled={loading}>{loading ? "..." : "Agregar"}</Button>
+            <Button onClick={handleAdd} disabled={loading} className="sm:col-span-3 sm:justify-self-end">{loading ? "..." : "Agregar"}</Button>
           </div>
         )}
 
@@ -190,7 +192,7 @@ export function VehicleExpenses({
               <li key={e.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
                 <div className="min-w-0">
                   <span className="font-medium">{VEHICLE_EXPENSE_CATEGORY_LABELS[e.category as keyof typeof VEHICLE_EXPENSE_CATEGORY_LABELS] ?? e.category}</span>
-                  {e.description && <span className="text-muted-foreground"> · {e.description}</span>}
+                  {e.description && <span className="whitespace-pre-line text-muted-foreground"> · {e.description}</span>}
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <span className="font-medium tabular-nums">{formatCurrency(Number(e.amount), e.currency)}</span>

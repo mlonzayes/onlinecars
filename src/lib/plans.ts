@@ -25,6 +25,10 @@ export interface PlanLimits {
   // ese dealer no está en el plan base. Sin esto no puede optimizar campañas ni
   // armar públicos similares con sus propios visitantes.
   allowMetaPixel: boolean;
+  // Llamadas a tools del MCP (Claude/ChatGPT operando el panel) por día. En los
+  // planes de entrada alcanza para probarlo; de Media para arriba no hay tope
+  // diario, solo el rate limit anti-abuso por minuto.
+  mcpDailyCalls: number;
   // Microsoft Clarity (heatmaps + grabaciones) en el sitio público del tenant.
   // Mismo escalón que el pixel: es para el dealer que pauta y quiere ver dónde
   // se le traban los visitantes que no consultan.
@@ -47,6 +51,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowWhatsappFab: false,
     showPoweredBy: true,
     allowMetaPixel: false,
+    mcpDailyCalls: 20,
     allowClarity: false,
   },
   base: {
@@ -58,6 +63,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowWhatsappFab: false, // Gancho para upgrade
     showPoweredBy: true, // Badge "Powered by motorflow" en el footer del tenant
     allowMetaPixel: false, // Gancho para upgrade: el que pauta necesita medir
+    mcpDailyCalls: 20,
     allowClarity: false,
   },
   media: {
@@ -69,6 +75,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowWhatsappFab: true,
     showPoweredBy: false,
     allowMetaPixel: true, // Pixel + CAPI habilitados a partir de este plan
+    mcpDailyCalls: Infinity,
     allowClarity: true,
   },
   premium: {
@@ -80,6 +87,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowWhatsappFab: true,
     showPoweredBy: false,
     allowMetaPixel: true,
+    mcpDailyCalls: Infinity,
     allowClarity: true,
   },
   enterprise: {
@@ -91,6 +99,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowWhatsappFab: true,
     showPoweredBy: false,
     allowMetaPixel: true,
+    mcpDailyCalls: Infinity,
     allowClarity: true,
   },
 };
@@ -122,6 +131,13 @@ export function canUseClarity(dealership: Pick<Dealership, "plan">): boolean {
  */
 export function canUseMetaPixel(dealership: Pick<Dealership, "plan">): boolean {
   return getPlanLimits(dealership).allowMetaPixel;
+}
+
+/**
+ * Cupo diario de llamadas a tools del MCP. `Infinity` = sin tope diario.
+ */
+export function getMcpDailyCalls(dealership: Pick<Dealership, "plan">): number {
+  return getPlanLimits(dealership).mcpDailyCalls;
 }
 
 /**

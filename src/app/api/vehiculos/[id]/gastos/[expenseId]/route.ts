@@ -5,55 +5,18 @@
  * DELETE response: { "data": { "id": "cmx..." } }
  */
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { getCurrentDealership } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { withLogger } from "@/lib/api-handler";
-import { logger } from "@/lib/logger";
-import { canEditCosts } from "@/lib/permissions";
-import { invalidateDashboardHomeData } from "@/lib/dashboard-cache";
-import { denyApiAccess } from "@/lib/api-access";
+import { getDashboardContext, withServiceErrors } from "@/lib/services/dashboard-context";
+import { deleteExpense } from "@/lib/services/expenses";
 
 type RouteParams = { id: string; expenseId: string };
 
 export const DELETE = withLogger<RouteParams>(async (_request, { requestId, params }) => {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const ctx = await getDashboardContext(requestId, "vehiculos.expenses.delete");
+  if (ctx instanceof NextResponse) return ctx;
 
-  const dealership = await getCurrentDealership();
-  if (!dealership) {
-    return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
-  }
-  const denied = denyApiAccess(requestId, dealership, "write");
-  if (denied) return denied;
-  if (!canEditCosts(dealership.currentUser)) {
-    return NextResponse.json(
-      { error: "Solo un administrador puede eliminar gastos" },
-      { status: 403 }
-    );
-  }
-
-  // deleteMany filtrando por tenant + vehículo: si el gasto no es de este dealer,
-  // count = 0 y devolvemos 404 sin filtrar de qué tenant era.
-  const result = await prisma.vehicleExpense.deleteMany({
-    where: {
-      id: params.expenseId,
-      vehicleId: params.id,
-      dealershipId: dealership.id,
-    },
+  return withServiceErrors(async () => {
+    await deleteExpense(ctx, params.id, params.expenseId);
+    return NextResponse.json({ data: { id: params.expenseId } });
   });
-
-  if (result.count === 0) {
-    return NextResponse.json({ error: "Gasto no encontrado" }, { status: 404 });
-  }
-
-  // Recalcular el dashboard: el gasto borrado puede cambiar la ganancia neta.
-  await invalidateDashboardHomeData(dealership.id);
-
-  logger.info(requestId, "vehiculos.expenses.deleted", {
-    vehicleId: params.id,
-    expenseId: params.expenseId,
-  });
-
-  return NextResponse.json({ data: { id: params.expenseId } });
 });

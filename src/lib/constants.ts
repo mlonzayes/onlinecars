@@ -73,6 +73,17 @@ export type Currency = (typeof CURRENCIES)[number];
 export const USER_ROLES = ["admin", "editor", "viewer"] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
+// "editor" es el vendedor invitado: carga y edita stock, no toca costos ni config.
+export const USER_ROLE_LABELS: Record<UserRole, string> = {
+  admin: "Administrador",
+  editor: "Vendedor",
+  viewer: "Solo lectura",
+};
+
+export function getUserRoleLabel(role: string): string {
+  return USER_ROLE_LABELS[role as UserRole] ?? role;
+}
+
 export const PROVINCIAS_ARGENTINA = [
   "Buenos Aires",
   "CABA",

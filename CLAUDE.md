@@ -39,16 +39,19 @@ Este archivo es el mapa general. Los patrones con miga viven en archivos aparte
 |---|---|
 | [api-conventions.md](.claude/rules/api-conventions.md) | Endpoints nuevos: auth, multi-tenancy, formato de respuesta |
 | [code-styles.md](.claude/rules/code-styles.md) | TypeScript, React, imports, tamaño de archivos |
-| [frontend-design.md](.claude/rules/frontend-design.md) | Cualquier UI nueva |
+| [frontend-design.md](.claude/rules/frontend-design.md) | Cualquier UI nueva (mínimos + índice de los skills de diseño) |
 | [table-filters.md](.claude/rules/table-filters.md) | Listados del panel con filtros/orden/paginación |
 | [tracking.md](.claude/rules/tracking.md) | Meta Pixel, Conversions API, cualquier evento de analítica |
 | [testing.md](.claude/rules/testing.md) | **Aspiracional** — no hay testing configurado todavía |
 
-También hay una **skill** en `.claude/skills/`:
+También hay **skills** en `.claude/skills/`:
 
 | Skill | Cuándo se dispara |
 |---|---|
 | [seo-web](.claude/skills/seo-web/SKILL.md) | Crear/rediseñar/auditar una página del marketing o del tenant, escribir una nota de blog, o tocar metadata, sitemap, robots o JSON-LD |
+| [frontend-design](.claude/skills/frontend-design/SKILL.md) | UI nueva o rediseño: plan de diseño por superficie (marketing / tenant / panel) antes de codear. Basada en el skill oficial de Anthropic |
+| [redesign-audit](.claude/skills/redesign-audit/SKILL.md) | Pulir una pantalla existente: checklist de lo genérico/sin terminar + arreglos puntuales |
+| [ux-review](.claude/skills/ux-review/SKILL.md) | Heurísticas de Nielsen + carga cognitiva en forms y puntos de conversión |
 
 > **Mantenimiento de este archivo.** Ya se desincronizó una vez y mandó a buscar
 > endpoints que no existían. Si agregás un módulo, un modelo o una env var,

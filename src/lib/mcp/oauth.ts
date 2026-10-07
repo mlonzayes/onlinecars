@@ -81,13 +81,27 @@ export interface McpTokenInfo {
   clientId: string;
 }
 
+export type McpTokenRejection = "missing_token" | "invalid_token" | "client_not_allowed";
+
+export type McpTokenResult =
+  | { ok: true; token: McpTokenInfo }
+  | { ok: false; reason: McpTokenRejection; clientId?: string };
+
 /**
  * Valida el access token OAuth (emitido por Clerk) del header Authorization.
- * Devuelve null si falta, es inválido o es de una OAuth app no habilitada.
+ * Si lo rechaza devuelve el motivo para loggearlo (el client ID es público; el
+ * token nunca se loggea).
  */
-export async function verifyMcpToken(): Promise<McpTokenInfo | null> {
+export async function verifyMcpToken(request: Request): Promise<McpTokenResult> {
+  if (!request.headers.get("authorization")?.startsWith("Bearer ")) {
+    return { ok: false, reason: "missing_token" };
+  }
   const authObject = await auth({ acceptsToken: "oauth_token" });
-  if (!authObject.isAuthenticated || !authObject.userId || !authObject.clientId) return null;
-  if (!getAllowedClientIds().has(authObject.clientId)) return null;
-  return { userId: authObject.userId, clientId: authObject.clientId };
+  if (!authObject.isAuthenticated || !authObject.userId || !authObject.clientId) {
+    return { ok: false, reason: "invalid_token" };
+  }
+  if (!getAllowedClientIds().has(authObject.clientId)) {
+    return { ok: false, reason: "client_not_allowed", clientId: authObject.clientId };
+  }
+  return { ok: true, token: { userId: authObject.userId, clientId: authObject.clientId } };
 }

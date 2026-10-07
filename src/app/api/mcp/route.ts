@@ -26,11 +26,15 @@ export const runtime = "nodejs";
 const handler = withLogger(async (request, { requestId }) => {
   if (!isMcpEnabled()) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 
-  const token = await verifyMcpToken();
-  if (!token) {
-    logger.warn(requestId, "mcp.unauthorized");
+  const verification = await verifyMcpToken(request);
+  if (!verification.ok) {
+    logger.warn(requestId, "mcp.unauthorized", {
+      reason: verification.reason,
+      clientId: verification.clientId,
+    });
     return unauthorizedResponse(request);
   }
+  const { token } = verification;
 
   const rl = await applyRateLimit(mcpLimiter, token.userId, requestId, { channel: "mcp" });
   if (!rl.ok) {

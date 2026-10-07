@@ -3,7 +3,6 @@ import { MetaPixel } from "@/components/meta/meta-pixel";
 import { getMainSitePixelId } from "@/lib/meta/config";
 import { MicrosoftClarity } from "@/components/clarity/microsoft-clarity";
 import { getMainSiteClarityId } from "@/lib/clarity/config";
-import { AppClerkProvider } from "@/components/auth/app-clerk-provider";
 
 // Outfit (display de titulares, geométrica y redonda): se carga SOLO en
 // marketing para que el panel y los sitios de los tenants no la descarguen.
@@ -31,6 +30,10 @@ const outfit = localFont({
  * NUESTRO funnel, no el de los concesionarios.
  *
  * ⚠️ Página de marketing nueva → va DENTRO de este grupo, o no se mide.
+ *
+ * SIN ClerkProvider a propósito: ninguna página de acá usa componentes de Clerk
+ * en el cliente, y montarlo bajaba ~350 KB de JS en la landing (el navbar
+ * detecta la sesión con `useSessionHint`, sin Clerk).
  */
 export default function MarketingLayout({
   children,
@@ -41,12 +44,12 @@ export default function MarketingLayout({
   const clarityId = getMainSiteClarityId();
 
   return (
-    <AppClerkProvider>
+    <>
       {pixelId && <MetaPixel pixelId={pixelId} />}
       {clarityId && <MicrosoftClarity projectId={clarityId} />}
       {/* "light": la web de marketing es siempre clara, aunque el sistema del
           visitante esté en modo oscuro (ver @custom-variant dark en globals.css). */}
       <div className={`light bg-paper text-ink ${outfit.variable}`}>{children}</div>
-    </AppClerkProvider>
+    </>
   );
 }

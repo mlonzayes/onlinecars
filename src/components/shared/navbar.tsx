@@ -1,8 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { auth } from "@clerk/nextjs/server";
 import { MobileMenu } from "./mobile-menu";
 import { MARKETING_NAV_LINKS } from "./marketing-nav-links";
+import { NavbarAuthLink } from "./navbar-auth-link";
 
 const PRIMARY =
   "inline-flex items-center rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-deep";
@@ -12,15 +12,13 @@ const PRIMARY =
  * Mide h-16: el hero compensa con -mt-16 para quedar debajo de ella.
  * Los links se muestran desde lg; abajo de eso va el menú mobile (en tablet
  * no entraban los 5 links + 2 botones sin pisarse).
+ *
+ * Sin `auth()` a propósito: leer la sesión en el server vuelve dinámica TODA la
+ * web de marketing (sin cache de CDN, TTFB alto). La sesión se detecta en el
+ * cliente con `useSessionHint` (ver NavbarAuthLink).
  */
-export async function Navbar() {
+export function Navbar() {
   const isLoginEnabled = process.env.NEXT_PUBLIC_ENABLE_LOGIN === "true";
-
-  let isSignedIn = false;
-  if (isLoginEnabled) {
-    const { userId } = await auth();
-    isSignedIn = !!userId;
-  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-ink/5 bg-paper/80 backdrop-blur-md">
@@ -44,23 +42,7 @@ export async function Navbar() {
         </div>
 
         <div className="hidden items-center gap-5 lg:flex">
-          {isLoginEnabled && isSignedIn && (
-            <Link href="/dashboard" className={PRIMARY}>
-              Ir al panel
-            </Link>
-          )}
-          {/* Con self-serve abierto, la primaria es el registro (misma acción
-              que el hero). "Ingresar" queda como link para quien ya tiene cuenta. */}
-          {isLoginEnabled && !isSignedIn && (
-            <>
-              <Link href="/sign-in" className="text-sm font-light text-ink-soft transition hover:text-ink">
-                Ingresar
-              </Link>
-              <Link href="/sign-up" className={PRIMARY}>
-                Probar gratis
-              </Link>
-            </>
-          )}
+          {isLoginEnabled && <NavbarAuthLink primaryClassName={PRIMARY} />}
           {!isLoginEnabled && (
             <Link href="/#contacto" className={PRIMARY}>
               Contacto
@@ -68,7 +50,7 @@ export async function Navbar() {
           )}
         </div>
 
-        <MobileMenu isLoginEnabled={isLoginEnabled} isSignedIn={isSignedIn} />
+        <MobileMenu isLoginEnabled={isLoginEnabled} />
       </nav>
     </header>
   );

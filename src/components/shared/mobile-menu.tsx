@@ -8,14 +8,15 @@ import gsap from "gsap";
 import { PiList, PiX } from "react-icons/pi";
 import { WhatsAppIcon } from "@/components/tenant/social-icons";
 import { SITE_WHATSAPP_URL } from "@/lib/seo";
+import { useSessionHint } from "@/hooks/use-session-hint";
 import { MARKETING_NAV_LINKS } from "./marketing-nav-links";
 
 interface MobileMenuProps {
   isLoginEnabled: boolean;
-  isSignedIn: boolean;
 }
 
-export function MobileMenu({ isLoginEnabled, isSignedIn }: MobileMenuProps) {
+export function MobileMenu({ isLoginEnabled }: MobileMenuProps) {
+  const isSignedIn = useSessionHint();
   const [isOpen, setIsOpen] = useState(false);
   const primary = !isLoginEnabled
     ? { href: "/#contacto", label: "Contacto" }

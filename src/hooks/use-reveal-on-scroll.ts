@@ -10,6 +10,8 @@ const ROOT_MARGIN = "0px 0px -15% 0px";
 interface RevealOptions {
   /** Delay entre items, en segundos. 0 = todos juntos. */
   stagger?: number;
+  /** Delay antes del primer item, en segundos. */
+  delay?: number;
   /** Resuelve los elementos a animar; por default, el nodo mismo. */
   getTargets?: (node: HTMLElement) => HTMLElement[];
 }
@@ -28,7 +30,7 @@ interface RevealOptions {
  */
 export function useRevealOnScroll(
   ref: RefObject<HTMLElement | null>,
-  { stagger = 0, getTargets }: RevealOptions = {}
+  { stagger = 0, delay = 0, getTargets }: RevealOptions = {}
 ) {
   useEffect(() => {
     const node = ref.current;
@@ -52,7 +54,7 @@ export function useRevealOnScroll(
           }
           targets.forEach((el, i) => {
             el.classList.add("reveal-target", "reveal-pending");
-            el.style.transitionDelay = `${i * stagger}s`;
+            el.style.transitionDelay = `${delay + i * stagger}s`;
           });
           return;
         }
@@ -61,7 +63,7 @@ export function useRevealOnScroll(
         targets.forEach((el) => el.classList.remove("reveal-pending"));
         // Al terminar, devolvemos el control de `transition` al componente
         // (ej: el hover de las cards tiene su propia transición).
-        const total = REVEAL_DURATION_MS + targets.length * stagger * 1000;
+        const total = REVEAL_DURATION_MS + (delay + targets.length * stagger) * 1000;
         cleanupTimer = window.setTimeout(() => {
           targets.forEach((el) => {
             el.classList.remove("reveal-target");
@@ -82,5 +84,5 @@ export function useRevealOnScroll(
         el.style.transitionDelay = "";
       });
     };
-  }, [ref, stagger, getTargets]);
+  }, [ref, stagger, delay, getTargets]);
 }

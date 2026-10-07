@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
-import gsap from "gsap";
 import { PiList, PiX, PiEnvelope, PiGauge, PiUserPlus } from "react-icons/pi";
 import { WhatsAppIcon } from "@/components/tenant/social-icons";
 import { SITE_WHATSAPP_URL } from "@/lib/seo";
@@ -23,43 +22,29 @@ const LINKS = [
   { href: "/blog", label: "Blog" },
 ];
 
+// Entrada en stagger de los items (antes GSAP: 0.4s, 0.06s entre items, 0.08s de arranque).
+const ITEM_ENTER =
+  "animate-in fade-in slide-in-from-bottom-6 fill-mode-both duration-400 ease-out motion-reduce:animate-none";
+
+function itemDelay(index: number): React.CSSProperties {
+  return { animationDelay: `${80 + index * 60}ms` };
+}
+
 export function MobileMenu({ isLoginEnabled }: MobileMenuProps) {
   const isSignedIn = useSessionHint();
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const itemsRef = useRef<HTMLDivElement>(null);
 
   // El portal necesita document.body — solo disponible en cliente.
   useEffect(() => setMounted(true), []);
 
-  // Al abrir: lock del scroll del body + animación de entrada (overlay + stagger).
+  // Al abrir: lock del scroll del body. La animación de entrada es CSS
+  // (tw-animate-css), sin GSAP en el bundle inicial de la landing.
   useEffect(() => {
     if (!isOpen) return;
-
     document.body.style.overflow = "hidden";
-
-    let ctx: gsap.Context | undefined;
-    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      ctx = gsap.context(() => {
-        gsap.fromTo(
-          overlayRef.current,
-          { opacity: 0 },
-          { opacity: 1, duration: 0.25, ease: "power2.out" }
-        );
-        if (itemsRef.current) {
-          gsap.fromTo(
-            Array.from(itemsRef.current.children),
-            { opacity: 0, y: 24 },
-            { opacity: 1, y: 0, duration: 0.4, stagger: 0.06, delay: 0.08, ease: "power3.out" }
-          );
-        }
-      });
-    }
-
     return () => {
       document.body.style.overflow = "";
-      ctx?.revert();
     };
   }, [isOpen]);
 
@@ -89,7 +74,7 @@ export function MobileMenu({ isLoginEnabled }: MobileMenuProps) {
       {mounted &&
         isOpen &&
         createPortal(
-          <div ref={overlayRef} className="fixed inset-0 z-[100] flex flex-col bg-white">
+          <div className="fixed inset-0 z-[100] flex flex-col bg-white animate-in fade-in duration-250 motion-reduce:animate-none">
             {/* Header del menú: marca + cerrar */}
             <div className="flex h-16 shrink-0 items-center justify-between px-5">
               <Image src="/logo/motorflow_light.png" alt="motorflow" width={150} height={150} />
@@ -104,24 +89,26 @@ export function MobileMenu({ isLoginEnabled }: MobileMenuProps) {
             </div>
 
             {/* Links + acciones */}
-            <div ref={itemsRef} className="flex flex-1 flex-col px-6 pt-4">
-              {LINKS.map((l) => (
+            <div className="flex flex-1 flex-col px-6 pt-4">
+              {LINKS.map((l, i) => (
                 <Link
                   key={l.href}
                   href={l.href}
                   onClick={() => setIsOpen(false)}
-                  className="border-b border-gray-100 py-5 text-2xl font-light text-gray-900 transition hover:text-blue-600"
+                  className={`border-b border-gray-100 py-5 text-2xl font-light text-gray-900 transition hover:text-blue-600 ${ITEM_ENTER}`}
+                  style={itemDelay(i)}
                 >
                   {l.label}
                 </Link>
               ))}
 
-              <div className="mt-8 flex flex-col gap-3">
+              <div className={`mt-8 flex flex-col gap-3 ${ITEM_ENTER}`} style={itemDelay(LINKS.length)}>
                 {/* Login — secundario (outline) */}
                 {isLoginEnabled &&
                   (isSignedIn ? (
                     <Link
                       href="/dashboard"
+                      prefetch={false}
                       onClick={() => setIsOpen(false)}
                       className="inline-flex items-center justify-center gap-2 rounded-full border border-gray-300 px-6 py-3.5 text-sm font-medium text-gray-900 transition hover:border-gray-900"
                     >
@@ -131,6 +118,7 @@ export function MobileMenu({ isLoginEnabled }: MobileMenuProps) {
                   ) : (
                     <Link
                       href="/sign-up"
+                      prefetch={false}
                       onClick={() => setIsOpen(false)}
                       className="inline-flex items-center justify-center gap-2 rounded-full border border-gray-300 px-6 py-3.5 text-sm font-medium text-gray-900 transition hover:border-gray-900"
                     >

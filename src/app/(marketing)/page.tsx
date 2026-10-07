@@ -1,10 +1,9 @@
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
 import { HeroSection } from "@/components/landing/hero-section";
-import { ProblemSection } from "@/components/landing/problem-section";
 import { ProductShowcase } from "@/components/landing/product-showcase";
+import { AiAssistantSection } from "@/components/landing/ai-assistant-section";
 import { DifferentiatorsSection } from "@/components/landing/differentiators-section";
-import { GuaranteesSection } from "@/components/landing/guarantees-section";
 import { PricingCards } from "@/components/landing/pricing-cards";
 import { PricingDisclaimer } from "@/components/landing/pricing-disclaimer";
 import { FaqContactSection, getFaqs } from "@/components/landing/faq-contact-section";
@@ -15,9 +14,12 @@ import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, SITE_EMAIL, SITE_PHONE } from "@
 import { COUNTRIES, COUNTRY_LABELS } from "@/lib/constants";
 
 /**
- * Landing de motorflow — 7 secciones.
+ * Landing de motorflow — hero, producto, IA, por qué, precios y FAQ + contacto.
  *
- * Pasó de 14 a 7 en el rediseño. Lo que se sacó NO fue por largo, fue por
+ * Pasó de 14 a 7 en un primer rediseño y de 7 a 5 en el segundo: se fue la
+ * sección del Problema (fotos generadas con IA que no sumaban y un argumento
+ * que el hero ya plantea) y las Garantías se fundieron en "Por qué motorflow".
+ * En el primero, lo que se sacó NO fue por largo, fue por
  * repetido: Solution, Services y Benefits decían lo mismo que el showcase con
  * otras palabras (el argumento "sitio propio" aparecía 4 veces, "MercadoLibre"
  * 5). Repetir un argumento cuatro veces no lo refuerza — hace que dejen de
@@ -103,19 +105,16 @@ export default function HomePage() {
         {/* 1. Hero — promesa + screenshot (LCP) */}
         <HeroSection />
 
-        {/* 2. Problema — tensión: dependencia de ML, invisibilidad, caos operativo */}
-        <ProblemSection />
-
-        {/* 3. Producto en acción — el screenshot ES el argumento (absorbe Solución) */}
+        {/* 2. Producto en acción — el screenshot ES el argumento */}
         <ProductShowcase />
 
-        {/* 4. Diferenciadores — 3, no 12 (absorbe Beneficios + Servicios) */}
+        {/* 3. IA — operar el panel desde Claude o ChatGPT (servidor MCP) */}
+        <AiAssistantSection />
+
+        {/* 4. Por qué motorflow — 3 razones + garantías, justo antes del precio */}
         <DifferentiatorsSection />
 
-        {/* 5. Garantías — quita riesgo JUSTO antes del precio (reemplaza testimonios) */}
-        <GuaranteesSection />
-
-        {/* 6. Precios — filtra y califica el lead */}
+        {/* 5. Precios — filtra y califica el lead */}
         <section id="planes" className="bg-white px-4 py-16 sm:py-20">
           <div className="mx-auto max-w-6xl">
             <div className="text-center">
@@ -138,7 +137,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 7. FAQ + Contacto — objeciones y conversión, sin corte entre medio */}
+        {/* 6. FAQ + Contacto — objeciones y conversión, sin corte entre medio */}
         <FaqContactSection />
       </main>
 

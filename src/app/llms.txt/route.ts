@@ -45,6 +45,10 @@ dominio propio o en un subdominio (\`{concesionaria}.motorflowapp.com\`). Incluy
 catálogo de vehículos, captación de consultas y un panel para gestionar stock,
 clientes, ventas y cotizaciones. No cobramos comisión por venta.
 
+El panel se puede operar desde Claude o ChatGPT (servidor MCP): cargar y
+publicar vehículos, imputar gastos, ver la ganancia real por unidad y consultar
+leads, ventas y stock inmovilizado, con los permisos del usuario.
+
 Está disponible para concesionarias de ${countries}. Cada una configura su país, su moneda y su formato regional.
 
 ## Páginas principales

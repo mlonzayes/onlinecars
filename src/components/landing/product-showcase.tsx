@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { PiCheck } from "react-icons/pi";
-import { FadeIn } from "./fade-in";
 
 /**
  * "Producto en acción" — absorbe a la vieja SolutionSection.
@@ -9,9 +8,11 @@ import { FadeIn } from "./fade-in";
  * 6 screenshots (Showcase). El screenshot ES el argumento: mostrar la pantalla
  * convence en 2 segundos lo que una lista de features no logra en 30.
  *
- * De 6 pantallas quedan 4 — las que responden una objeción de compra concreta.
- * Clientes y Cotizaciones se fueron a /precios: son buenas features, pero no
- * son las que deciden el alta.
+ * De 6 pantallas quedan 3 — las que responden una objeción de compra concreta.
+ * Clientes, Cotizaciones y Ventas se fueron a /precios: son buenas features,
+ * pero no son las que deciden el alta ("gestiona todo" lo cubre Por qué motorflow).
+ *
+ * Server Component puro: el revelado al scrollear es CSS (`.reveal-on-view`).
  */
 const SCREENS = [
   {
@@ -38,14 +39,6 @@ const SCREENS = [
     desc: "Conectás tu cuenta y tu stock queda sincronizado. Publicás una vez y aparecés en los dos lados.",
     points: ["Sincronización automática", "Una sola carga", "Sin perder tu reputación"],
   },
-  {
-    src: "/mockups/ventas.png",
-    label: "Leads y ventas",
-    title: "Del primer contacto al legajo, sin papeles",
-    // Objeción: "¿esto es una web linda o gestiona de verdad?"
-    desc: "Las consultas entran a tu panel y las seguís hasta el cierre, con el legajo digital de cada operación.",
-    points: ["Leads y clientes", "Legajo digital", "Documentos seguros"],
-  },
 ];
 
 export function ProductShowcase() {
@@ -67,9 +60,9 @@ export function ProductShowcase() {
         {/* Filas alternadas: imagen grande + texto, intercalando el lado. */}
         <div className="mt-14 space-y-14 sm:space-y-20">
           {SCREENS.map((s, i) => (
-            <FadeIn
+            <div
               key={s.label}
-              className={`flex flex-col items-center gap-8 lg:gap-14 ${
+              className={`reveal-on-view flex flex-col items-center gap-8 lg:gap-14 ${
                 i % 2 === 1 ? "lg:flex-row-reverse" : "lg:flex-row"
               }`}
             >
@@ -81,7 +74,6 @@ export function ProductShowcase() {
                     width={1344}
                     height={590}
                     sizes="(max-width: 1024px) 100vw, 600px"
-                    quality={90}
                     className="w-full"
                   />
                 </div>
@@ -109,7 +101,7 @@ export function ProductShowcase() {
                   ))}
                 </ul>
               </div>
-            </FadeIn>
+            </div>
           ))}
         </div>
       </div>

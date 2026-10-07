@@ -234,34 +234,36 @@
   letter-spacing: -0.01em;
 }
 
-/* Glows decorativos del hero de la landing. Animan solo el transform (barato,
-   GPU) y solo si el usuario no pidió menos movimiento. */
-@keyframes heroFloat {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(28px, -36px, 0) scale(1.15);
+/* Fondo del hero de la landing: gradiente base + 3 "glows" como gradientes
+   radiales estáticos. Reemplaza 4 divs con blur-3xl animados en loop, que
+   repintaban sin parar en mobile. */
+.landing-hero-bg {
+  background:
+    radial-gradient(ellipse 32rem 24rem at 8% 6%, rgb(59 130 246 / 0.35), transparent 70%),
+    radial-gradient(ellipse 36rem 26rem at 95% 10%, rgb(56 189 248 / 0.4), transparent 70%),
+    radial-gradient(ellipse 40rem 18rem at 35% 40%, rgb(103 232 249 / 0.35), transparent 70%),
+    linear-gradient(to bottom, var(--color-blue-200), var(--color-blue-50), white);
+}
+
+/* Revelado al scrollear de la LANDING, sin una línea de JS: scroll-driven
+   animation (`animation-timeline: view()`), corre en el compositor. Antes era
+   GSAP + ScrollTrigger y después un componente cliente por bloque; ahora las
+   secciones son Server Components puros. Donde el browser no lo soporta
+   (Safari viejo, Firefox sin flag) el contenido simplemente se ve, sin animar. */
+@keyframes revealOnView {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
   }
 }
 
-@keyframes heroFloatAlt {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1.08);
-  }
-  50% {
-    transform: translate3d(-32px, 28px, 0) scale(0.92);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .hero-glow {
-    animation: heroFloat 15s ease-in-out infinite;
-  }
-  .hero-glow-alt {
-    animation: heroFloatAlt 18s ease-in-out infinite;
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal-on-view {
+      animation: revealOnView linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
   }
 }
 

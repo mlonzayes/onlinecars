@@ -41,6 +41,11 @@ export function getFaqs(): Faq[] {
         "El mismo día. Creás tu cuenta, completás los datos del concesionario y en minutos tenés el sitio listo para cargar stock.",
     },
     {
+      question: "¿Puedo manejar el concesionario desde ChatGPT o Claude?",
+      answer:
+        "Sí. Conectás tu cuenta de motorflow a Claude o ChatGPT y le pedís en tus palabras que cargue o publique un auto, impute un gasto o te diga cuánto ganaste. Trabaja con tus permisos y no publica nada sin que se lo pidas.",
+    },
+    {
       question: "¿Necesito conocimientos técnicos?",
       answer:
         "No. El alta y la carga de vehículos se hace desde un panel pensado para no-técnicos. Si querés un dominio propio, te ayudamos con la configuración.",

@@ -9,6 +9,7 @@ import { TemplateSelector } from "@/components/dashboard/settings/template-selec
 import { WhatsappFabCard } from "@/components/dashboard/settings/whatsapp-fab-card";
 import { SocialLinksForm } from "@/components/dashboard/settings/social-links-form";
 import { MetaPixelCard } from "@/components/dashboard/settings/meta-pixel-card";
+import { ClarityCard } from "@/components/dashboard/settings/clarity-card";
 import { SectionsBuilderClient } from "@/components/dashboard/sections-builder/sections-builder-client";
 import { getPlanLimits } from "@/lib/plans";
 import { getSectionsPageData } from "./sections-page-data";
@@ -112,6 +113,12 @@ export default async function SitioWebPage() {
         testEventCode={dealership.metaTestEventCode}
         enabled={dealership.metaTrackingEnabled}
         allowMetaPixel={limits.allowMetaPixel}
+        currentPlan={dealership.plan}
+      />
+
+      <ClarityCard
+        projectId={dealership.clarityProjectId}
+        allowClarity={limits.allowClarity}
         currentPlan={dealership.plan}
       />
 

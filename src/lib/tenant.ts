@@ -1,4 +1,4 @@
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { prisma } from "./prisma";
 import type { Dealership, DealershipMedia, DealershipSection } from "@prisma/client";
 import { redis } from "./redis";
@@ -8,7 +8,7 @@ import { SECTION_TYPES, type Country, type MediaPurpose, type SectionType } from
 import { DEFAULT_SECTION_COPY, DEFAULT_SECTION_CONFIG } from "./tenant-defaults";
 import type { SectionConfigByType } from "./sections/config-types";
 import { seedDefaultSections } from "./sections/seed";
-import { getTenantPathPrefix } from "./tenant-routing";
+import { getTenantPathPrefix, tenantSiteTag } from "./tenant-routing";
 
 // El basePath de los links vive en tenant-routing.ts (lo usa también el
 // middleware, que no puede importar Prisma). Se re-exporta por compatibilidad.
@@ -708,6 +708,8 @@ export async function invalidateTenantHomeBundle(slug: string): Promise<void> {
   // try/catch: fuera de un request (scripts, tests) revalidatePath tira.
   try {
     revalidatePath(getTenantPathPrefix(slug), "layout");
+    // Dealership + catálogo cacheados con unstable_cache (ver tenant-render.ts).
+    revalidateTag(tenantSiteTag(slug));
   } catch (error) {
     logger.warn(undefined, "tenant.isr.revalidate_failed", {
       slug,

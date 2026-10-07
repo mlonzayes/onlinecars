@@ -1,12 +1,16 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 import { getTenantBasePath, getTenantPublicUrl } from "@/lib/tenant";
 import { getTenantDealership } from "@/lib/tenant-render";
 import { optimizedImageUrl } from "@/lib/image-url";
 import { TenantChrome } from "@/components/tenant/tenant-chrome";
 import { MetaPixel } from "@/components/meta/meta-pixel";
 import { getTenantPixelId } from "@/lib/meta/config";
-import { canUseMetaPixel } from "@/lib/plans";
+import { canUseClarity, canUseMetaPixel } from "@/lib/plans";
+import { MicrosoftClarity } from "@/components/clarity/microsoft-clarity";
+import { getTenantClarityId } from "@/lib/clarity/config";
 
 // ISR: el sitio del tenant se cachea en el edge de Vercel y se regenera en
 // background. Sin esto cada visita renderizaba de cero (TTFB ~800 ms).
@@ -15,11 +19,24 @@ import { canUseMetaPixel } from "@/lib/plans";
 // red de seguridad, igual que el TTL del cache de Redis (TENANT_HOME_TTL_SECONDS).
 export const revalidate = 1800;
 
-// Lista vacía = no se prerenderiza nada en el build, pero cada slug que se
-// visita queda cacheado (sin generateStaticParams, Next trata el segmento
-// dinámico como 100% dinámico y no cachea nada).
-export function generateStaticParams(): { slug: string }[] {
-  return [];
+// Pregenera en el build los sitios publicados. Sin esto, cada deploy vaciaba la
+// cache y el primer visitante pagaba todo en frío (función + despertar Neon +
+// render): ~3 s. Si la DB no responde en el build, lista vacía: los sitios se
+// generan a demanda como antes y el deploy no se rompe por eso.
+// Los slugs que no estén acá (sitios nuevos) igual se cachean al primer visitante.
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
+  try {
+    const sites = await prisma.dealership.findMany({
+      where: { active: true, siteEnabled: true },
+      select: { slug: true },
+    });
+    return sites.map(({ slug }) => ({ slug }));
+  } catch (error) {
+    logger.warn(undefined, "tenant.prerender.slugs_failed", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return [];
+  }
 }
 
 interface TenantLayoutProps {
@@ -115,10 +132,14 @@ export default async function TenantLayout({ children, params }: TenantLayoutPro
   // estuviera adentro, cada vez que el dealer previsualiza su sitio le
   // ensuciaría las métricas con visitas propias.
   const tenantPixelId = canUseMetaPixel(dealership) ? getTenantPixelId(dealership) : null;
+  // Clarity del dealer: mismo doble chequeo (config + plan) y mismo motivo para
+  // no ir en <TenantChrome> — no grabar al dealer previsualizando su sitio.
+  const tenantClarityId = canUseClarity(dealership) ? getTenantClarityId(dealership) : null;
 
   return (
     <>
       {tenantPixelId && <MetaPixel pixelId={tenantPixelId} />}
+      {tenantClarityId && <MicrosoftClarity projectId={tenantClarityId} />}
       <TenantChrome dealership={dealership} basePath={basePath}>
         {children}
       </TenantChrome>

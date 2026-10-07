@@ -6,6 +6,7 @@ import { Send, Loader2 } from "lucide-react";
 import { HONEYPOT_FIELD, HONEYPOT_STYLE } from "@/lib/honeypot";
 import { trackMetaEventWithId } from "@/lib/meta/client";
 import { META_EVENT_ID_FIELD } from "@/lib/meta/events";
+import { CLARITY_EVENTS, trackClarityEvent } from "@/lib/clarity/client";
 
 interface TenantContactFormProps {
   slug: string;
@@ -32,11 +33,13 @@ export function TenantContactForm({ slug, vehicleId, vehicleTitle }: TenantConta
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name.trim()) {
+      trackClarityEvent(CLARITY_EVENTS.leadValidationError);
       toast.error("Ingresá tu nombre");
       return;
     }
 
     setLoading(true);
+    trackClarityEvent(CLARITY_EVENTS.leadSubmitted);
 
     try {
       // Lead al pixel DEL CONCESIONARIO. Si el dealer no configuró el suyo,
@@ -62,9 +65,11 @@ export function TenantContactForm({ slug, vehicleId, vehicleTitle }: TenantConta
         throw new Error("Error al enviar la consulta");
       }
 
+      trackClarityEvent(CLARITY_EVENTS.leadSent);
       setSent(true);
       toast.success("¡Consulta enviada! Te contactaremos pronto.");
     } catch {
+      trackClarityEvent(CLARITY_EVENTS.leadFailed);
       toast.error("No se pudo enviar la consulta. Intentá de nuevo.");
     } finally {
       setLoading(false);

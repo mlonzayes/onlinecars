@@ -122,6 +122,11 @@ model Dealership {
   // Interruptor del tracking del tenant. Default false: nadie empieza a mandarle
   // datos a Meta sin activarlo a mano.
   metaTrackingEnabled  Boolean  @default(false)
+  // --- Microsoft Clarity (heatmaps + grabaciones) del sitio público ---
+  // Proyecto de Clarity DEL DEALER: los datos van a su cuenta, no a la nuestra.
+  // Gateado por plan (allowClarity). Es PÚBLICO (va en el HTML). Su presencia
+  // es el interruptor: null = no se monta nada.
+  clarityProjectId     String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

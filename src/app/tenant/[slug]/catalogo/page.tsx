@@ -2,13 +2,11 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { Search } from "lucide-react";
 import {
-  getPublishedVehicles,
-  countPublishedVehicles,
-  getAvailableBrands,
   getTenantBasePath,
   getTenantPublicUrl,
+  type PublicVehicleFilters,
 } from "@/lib/tenant";
-import { getTenantDealership } from "@/lib/tenant-render";
+import { getTenantCatalog, getTenantDealership } from "@/lib/tenant-render";
 import { VehicleCard } from "@/components/tenant/vehicle-card";
 import {
   VehicleFilters,
@@ -67,7 +65,7 @@ export default async function TenantCatalogPage({ params, searchParams }: Tenant
     condition: sp.condition,
     bodyType: sp.bodyType,
     sort: sp.sort,
-  } as Parameters<typeof getPublishedVehicles>[1];
+  } as PublicVehicleFilters;
 
   // Página actual desde la URL. Si viene cualquier basura (NaN, negativo)
   // caemos en página 1 silenciosamente — no queremos romper el catálogo
@@ -76,14 +74,15 @@ export default async function TenantCatalogPage({ params, searchParams }: Tenant
   const pageParam = Number(sp.page);
   const requestedPage = Number.isFinite(pageParam) && pageParam > 0 ? Math.floor(pageParam) : 1;
 
-  const [vehicles, totalCount, brands] = await Promise.all([
-    getPublishedVehicles(dealership.id, filters, {
-      page: requestedPage,
-      limit: VEHICLES_PER_PAGE,
-    }),
-    countPublishedVehicles(dealership.id, filters),
-    getAvailableBrands(dealership.id),
-  ]);
+  // Cacheado por combinación de filtros (ver getTenantCatalog): filtrar y
+  // paginar no despierta la base en cada pedido.
+  const { vehicles, totalCount, brands } = await getTenantCatalog(
+    slug,
+    dealership.id,
+    filters,
+    requestedPage,
+    VEHICLES_PER_PAGE
+  );
 
   const totalPages = Math.max(1, Math.ceil(totalCount / VEHICLES_PER_PAGE));
   const currentPage = Math.min(requestedPage, totalPages);

@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { gsap } from "gsap";
+import { useState } from "react";
 import { PiCaretDown } from "react-icons/pi";
 
 export interface FaqItemProps {
@@ -13,25 +12,6 @@ export interface FaqItemProps {
 
 export function FaqItem({ question, answer, defaultOpen = false }: FaqItemProps) {
   const [open, setOpen] = useState(defaultOpen);
-  // react-icons no acepta ref nativo en sus componentes (tipo IconBaseProps
-  // no declara ref). Animamos el <span> wrapper que contiene el SVG.
-  const caretRef = useRef<HTMLSpanElement>(null);
-
-  useEffect(() => {
-    const caret = caretRef.current;
-    if (!caret) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      gsap.set(caret, { rotate: open ? 180 : 0 });
-      return;
-    }
-
-    gsap.to(caret, {
-      rotate: open ? 180 : 0,
-      duration: 0.5,
-      ease: open ? "back.out(1.8)" : "back.in(1.4)",
-    });
-  }, [open]);
-
   return (
     <div
       className={`overflow-hidden rounded-lg border bg-white transition-colors ${
@@ -47,7 +27,12 @@ export function FaqItem({ question, answer, defaultOpen = false }: FaqItemProps)
         className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-gray-50/80"
       >
         <span className="text-sm font-semibold text-gray-900 sm:text-base">{question}</span>
-        <span ref={caretRef} className="inline-flex shrink-0">
+        {/* Rotación en CSS (sin GSAP): la curva con overshoot imita el "back" que tenía. */}
+        <span
+          className={`inline-flex shrink-0 transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:transition-none ${
+            open ? "rotate-180" : "rotate-0"
+          }`}
+        >
           <PiCaretDown
             className={`h-4 w-4 ${open ? "text-blue-600" : "text-gray-400"}`}
           />

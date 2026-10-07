@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import { Providers } from "./providers";
 import { cn } from "@/lib/utils";
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/lib/seo";
@@ -7,9 +7,11 @@ import "./globals.css";
 
 // DM Sans: geométrica humanista, pesos 300-700. Base weight 300 (light) da el
 // aspecto "fino" sin perder legibilidad. Reemplaza Manrope que es demasiado genérica.
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+// Self-hosted en src/fonts (variable, subset latin): next/font/google rompía el
+// build de Vercel cuando Google devolvía URLs de fuente sin extensión.
+const dmSans = localFont({
+  src: "../fonts/dm-sans-latin-var.woff2",
+  weight: "300 700",
   variable: "--font-sans",
   display: "swap",
 });

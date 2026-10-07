@@ -1,4 +1,4 @@
-import { DM_Sans, Poppins, Space_Grotesk, Unbounded } from "next/font/google";
+import localFont from "next/font/local";
 import type { SectionType } from "./constants";
 
 /**
@@ -29,26 +29,32 @@ import type { SectionType } from "./constants";
 // aunque el dealer use una sola. Esas descargas competían con el CSS, que es lo
 // que bloquea el primer pintado. Sin preload, el browser baja solo la fuente que
 // la plantilla aplica, y `display: swap` pinta el texto con el fallback mientras.
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+// Archivos self-hosted en src/fonts (subset latin): next/font/google rompía el
+// build de Vercel cuando Google devolvía URLs de fuente sin extensión.
+const poppins = localFont({
+  src: [
+    { path: "../fonts/poppins-latin-400.woff2", weight: "400" },
+    { path: "../fonts/poppins-latin-500.woff2", weight: "500" },
+    { path: "../fonts/poppins-latin-600.woff2", weight: "600" },
+    { path: "../fonts/poppins-latin-700.woff2", weight: "700" },
+  ],
   variable: "--font-tenant",
   display: "swap",
   preload: false,
 });
 
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+const spaceGrotesk = localFont({
+  src: "../fonts/space-grotesk-latin-var.woff2",
+  weight: "400 700",
   variable: "--font-tenant",
   display: "swap",
   preload: false,
 });
 
 // Unbounded: display geométrica, muy llamativa. La usa el template "impacto".
-const unbounded = Unbounded({
-  subsets: ["latin"],
-  weight: ["400", "600", "700", "800"],
+const unbounded = localFont({
+  src: "../fonts/unbounded-latin-var.woff2",
+  weight: "400 800",
   variable: "--font-tenant",
   display: "swap",
   preload: false,
@@ -58,9 +64,9 @@ const unbounded = Unbounded({
 // La usa "prestige". El look premium NO sale de la fuente sino del contraste de
 // pesos (300 para body, 700 para títulos) + tracking negativo — ver la escala
 // tipográfica scopeada en globals.css.
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "700"],
+const dmSans = localFont({
+  src: "../fonts/dm-sans-latin-var.woff2",
+  weight: "300 700",
   variable: "--font-tenant",
   display: "swap",
   preload: false,

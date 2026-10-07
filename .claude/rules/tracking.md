@@ -246,3 +246,25 @@ Reglas:
 4. **Eventos `contact_*` = web principal, `lead_*` = sitio del tenant.**
 5. **Evento nuevo → agregarlo a `CLARITY_EVENTS`**, no un string suelto. Un typo
    crea otro evento en el panel y parte los datos.
+
+---
+
+## Google Analytics 4 (solo web principal)
+
+Mide el tráfico de `motorflowapp.com` y es la propiedad que se conecta con
+Clarity (Configuración → Google Analytics en el panel de Clarity).
+
+| Archivo | Rol |
+|---|---|
+| [src/lib/google-analytics/config.ts](../../src/lib/google-analytics/config.ts) | `NEXT_PUBLIC_GA_MEASUREMENT_ID` validado (`G-XXXXXXXXXX`). Su presencia es el interruptor. |
+| [src/components/google-analytics/google-analytics.tsx](../../src/components/google-analytics/google-analytics.tsx) | Inyecta `gtag.js`. Server Component. |
+
+Reglas:
+
+1. **Solo en `(marketing)/layout.tsx`.** Los concesionarios NO tienen GA4 propio
+   todavía; nunca montarlo en el root layout ni en el del tenant.
+2. **Page views por "medición mejorada".** GA4 cuenta las navegaciones del App
+   Router con "Cambios de página según el historial del navegador" (activo por
+   default en el flujo web). Si se apaga en GA4, se pierden.
+3. **Las conversiones siguen yendo por Meta.** GA4 no reemplaza la deduplicación
+   pixel + CAPI.

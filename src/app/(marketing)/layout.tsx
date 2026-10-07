@@ -3,6 +3,8 @@ import { MetaPixel } from "@/components/meta/meta-pixel";
 import { getMainSitePixelId } from "@/lib/meta/config";
 import { MicrosoftClarity } from "@/components/clarity/microsoft-clarity";
 import { getMainSiteClarityId } from "@/lib/clarity/config";
+import { GoogleAnalytics } from "@/components/google-analytics/google-analytics";
+import { getMainSiteGaId } from "@/lib/google-analytics/config";
 
 // Outfit (display de titulares, geométrica y redonda): se carga SOLO en
 // marketing para que el panel y los sitios de los tenants no la descarguen.
@@ -27,7 +29,7 @@ const outfit = localFont({
  * Cada tenant monta SU propio pixel en `app/tenant/[slug]/layout.tsx`.
  *
  * Microsoft Clarity (heatmaps + grabaciones) vive acá por la misma razón: mide
- * NUESTRO funnel, no el de los concesionarios.
+ * NUESTRO funnel, no el de los concesionarios. Google Analytics 4, también.
  *
  * ⚠️ Página de marketing nueva → va DENTRO de este grupo, o no se mide.
  *
@@ -42,11 +44,13 @@ export default function MarketingLayout({
 }) {
   const pixelId = getMainSitePixelId();
   const clarityId = getMainSiteClarityId();
+  const gaId = getMainSiteGaId();
 
   return (
     <>
       {pixelId && <MetaPixel pixelId={pixelId} />}
       {clarityId && <MicrosoftClarity projectId={clarityId} />}
+      {gaId && <GoogleAnalytics measurementId={gaId} />}
       {/* "light": la web de marketing es siempre clara, aunque el sistema del
           visitante esté en modo oscuro (ver @custom-variant dark en globals.css). */}
       <div className={`light bg-paper text-ink ${outfit.variable}`}>{children}</div>

@@ -62,6 +62,9 @@ function buildDirectives(isDev: boolean): Directives {
   // Pixel de la web principal y el del dealer usan los mismos dominios.
   const meta = ["https://connect.facebook.net", "https://www.facebook.com"];
   const clarity = ["https://www.clarity.ms", "https://*.clarity.ms", "https://c.bing.com"];
+  // GA4 de la web principal: gtag.js sale de googletagmanager y manda los hits
+  // a *.google-analytics.com (region1, analytics, etc.).
+  const ga = ["https://www.googletagmanager.com", "https://*.google-analytics.com"];
 
   return {
     "default-src": ["'self'"],
@@ -78,9 +81,10 @@ function buildDirectives(isDev: boolean): Directives {
       "https://connect.facebook.net",
       "https://www.clarity.ms",
       "https://*.clarity.ms",
+      "https://www.googletagmanager.com",
     ],
     "style-src": ["'self'", "'unsafe-inline'"],
-    "img-src": ["'self'", "data:", "blob:", "https://img.clerk.com", ...meta, ...clarity, ...storage],
+    "img-src": ["'self'", "data:", "blob:", "https://img.clerk.com", ...meta, ...clarity, ...ga, ...storage],
     "media-src": ["'self'", "blob:", ...storage],
     "font-src": ["'self'", "data:"],
     "connect-src": [
@@ -90,6 +94,7 @@ function buildDirectives(isDev: boolean): Directives {
       turnstile,
       ...meta,
       ...clarity,
+      ...ga,
       ...storage,
       ...(isDev ? ["ws:"] : []),
     ],

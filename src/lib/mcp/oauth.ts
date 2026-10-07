@@ -11,6 +11,12 @@ import { NextResponse } from "next/server";
 export const MCP_PATH = "/api/mcp";
 export const PROTECTED_RESOURCE_METADATA_PATH = "/.well-known/oauth-protected-resource";
 
+// Scopes que pide el cliente. Si no los declaramos, Claude pide TODOS los que
+// anuncia Clerk (incluido private_metadata) y Clerk responde invalid_scope
+// porque la OAuth app solo tiene habilitados estos. Tienen que coincidir con
+// los scopes de cada OAuth app en Clerk.
+export const MCP_OAUTH_SCOPES = ["profile", "email", "offline_access"] as const;
+
 export const METADATA_CORS_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
@@ -51,6 +57,7 @@ export function buildProtectedResourceMetadata(request: Request) {
     resource: getMcpResourceUrl(request),
     authorization_servers: [getClerkIssuerUrl()],
     bearer_methods_supported: ["header"],
+    scopes_supported: MCP_OAUTH_SCOPES,
     resource_name: "motorflow",
   };
 }
@@ -63,7 +70,7 @@ export function unauthorizedResponse(request: Request, error = "invalid_token"):
     {
       status: 401,
       headers: {
-        "WWW-Authenticate": `Bearer error="${error}", resource_metadata="${metadataUrl}"`,
+        "WWW-Authenticate": `Bearer error="${error}", resource_metadata="${metadataUrl}", scope="${MCP_OAUTH_SCOPES.join(" ")}"`,
       },
     }
   );

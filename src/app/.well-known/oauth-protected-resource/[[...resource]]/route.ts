@@ -15,7 +15,8 @@ import {
 // Response 200:
 //   { "resource": "https://app.motorflowapp.com/api/mcp",
 //     "authorization_servers": ["https://clerk.motorflowapp.com"],
-//     "bearer_methods_supported": ["header"], "resource_name": "motorflow" }
+//     "bearer_methods_supported": ["header"],
+//     "scopes_supported": ["profile", "email", "offline_access"], "resource_name": "motorflow" }
 
 // El segmento del recurso no se usa: hay un solo recurso protegido (/api/mcp).
 type RouteParams = { resource?: string[] };

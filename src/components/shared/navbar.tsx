@@ -1,17 +1,14 @@
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
-import { PiUserPlus, PiGauge, PiEnvelope } from "react-icons/pi";
+import { PiEnvelope } from "react-icons/pi";
 import Image from "next/image";
 import { MobileMenu } from "./mobile-menu";
+import { NavbarAuthLink } from "./navbar-auth-link";
 
-export async function Navbar() {
+// Sin `auth()` a propósito: leer la sesión en el server vuelve dinámica TODA la
+// web de marketing (sin cache de CDN, TTFB alto). La sesión se detecta en el
+// cliente con `useSessionHint` — ver ese hook.
+export function Navbar() {
   const isLoginEnabled = process.env.NEXT_PUBLIC_ENABLE_LOGIN === "true";
-
-  let isSignedIn = false;
-  if (isLoginEnabled) {
-    const { userId } = await auth();
-    isSignedIn = !!userId;
-  }
 
   return (
     <header className="sticky top-0 z-50 w-full bg-transparent px-4 pt-3 pointer-events-none">
@@ -54,26 +51,7 @@ export async function Navbar() {
         </div>
 
         <div className="hidden md:flex items-center gap-1.5">
-          {/* Login — acción SECUNDARIA: ghost neutro para no competir con la primaria. */}
-          {isLoginEnabled && (
-            isSignedIn ? (
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
-              >
-                <PiGauge className="size-3.5" />
-                <span>Ir al panel</span>
-              </Link>
-            ) : (
-              <Link
-                href="/sign-up"
-                className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900"
-              >
-                <PiUserPlus className="size-3.5" />
-                <span>Registrarse</span>
-              </Link>
-            )
-          )}
+          {isLoginEnabled && <NavbarAuthLink />}
 
           {/* Contacto — acción PRIMARIA: el único botón sólido azul de la barra. */}
           <Link
@@ -85,7 +63,7 @@ export async function Navbar() {
           </Link>
         </div>
         
-        <MobileMenu isLoginEnabled={isLoginEnabled} isSignedIn={isSignedIn} />
+        <MobileMenu isLoginEnabled={isLoginEnabled} />
       </nav>
     </header>
   );

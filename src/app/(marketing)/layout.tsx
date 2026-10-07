@@ -2,7 +2,6 @@ import { MetaPixel } from "@/components/meta/meta-pixel";
 import { getMainSitePixelId } from "@/lib/meta/config";
 import { MicrosoftClarity } from "@/components/clarity/microsoft-clarity";
 import { getMainSiteClarityId } from "@/lib/clarity/config";
-import { AppClerkProvider } from "@/components/auth/app-clerk-provider";
 
 /**
  * Layout de la superficie de MARKETING (motorflowapp.com): landing, precios,
@@ -21,6 +20,10 @@ import { AppClerkProvider } from "@/components/auth/app-clerk-provider";
  * NUESTRO funnel, no el de los concesionarios.
  *
  * ⚠️ Página de marketing nueva → va DENTRO de este grupo, o no se mide.
+ *
+ * SIN ClerkProvider a propósito: ninguna página de acá usa componentes de Clerk
+ * en el cliente, y montarlo bajaba ~350 KB de JS en la landing (el navbar
+ * detecta la sesión con `useSessionHint`, sin Clerk).
  */
 export default function MarketingLayout({
   children,
@@ -31,10 +34,10 @@ export default function MarketingLayout({
   const clarityId = getMainSiteClarityId();
 
   return (
-    <AppClerkProvider>
+    <>
       {pixelId && <MetaPixel pixelId={pixelId} />}
       {clarityId && <MicrosoftClarity projectId={clarityId} />}
       {children}
-    </AppClerkProvider>
+    </>
   );
 }

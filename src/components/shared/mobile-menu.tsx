@@ -8,10 +8,10 @@ import gsap from "gsap";
 import { PiList, PiX, PiEnvelope, PiGauge, PiUserPlus } from "react-icons/pi";
 import { WhatsAppIcon } from "@/components/tenant/social-icons";
 import { SITE_WHATSAPP_URL } from "@/lib/seo";
+import { useSessionHint } from "@/hooks/use-session-hint";
 
 interface MobileMenuProps {
   isLoginEnabled: boolean;
-  isSignedIn: boolean;
 }
 
 // Anclas con "/" adelante: el menú se monta también en /precios y /blog, donde
@@ -23,7 +23,8 @@ const LINKS = [
   { href: "/blog", label: "Blog" },
 ];
 
-export function MobileMenu({ isLoginEnabled, isSignedIn }: MobileMenuProps) {
+export function MobileMenu({ isLoginEnabled }: MobileMenuProps) {
+  const isSignedIn = useSessionHint();
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);

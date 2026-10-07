@@ -150,6 +150,7 @@ src/
 │   ├── admin/                       # Panel super-admin
 │   ├── meta/                        # Meta Pixel + tracking de eventos
 │   ├── clarity/                     # Microsoft Clarity (web principal)
+│   ├── google-analytics/            # GA4 gtag.js (web principal)
 │   ├── seo/                         # JsonLd
 │   └── legal/
 ├── lib/
@@ -160,6 +161,7 @@ src/
 │   ├── plans.ts                         # PLAN_LIMITS + gating por plan
 │   ├── meta/                            # Pixel + Conversions API (ver rules/tracking.md)
 │   ├── clarity/                         # Microsoft Clarity: config + eventos custom
+│   ├── google-analytics/                # GA4: measurement id validado
 │   ├── storage/                         # Abstracción local | s3
 │   ├── table/                           # Filtros/orden URL-based (ver rules/table-filters.md)
 │   ├── sections/ pdf/ mercadolibre/ import/
@@ -773,6 +775,10 @@ META_CAPI_TEST_EVENT_CODE=          # ⚠️ VACÍO EN PRODUCCIÓN o los eventos
 # el interruptor. Ver .claude/rules/tracking.md.
 NEXT_PUBLIC_CLARITY_PROJECT_ID=
 
+# Google Analytics 4 — WEB PRINCIPAL (G-XXXXXXXXXX). Su presencia es el interruptor.
+# También alimenta la integración Clarity ↔ GA4. Ver .claude/rules/tracking.md.
+NEXT_PUBLIC_GA_MEASUREMENT_ID=
+
 # Notificaciones internas al equipo
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_CHAT_ID=
@@ -809,6 +815,7 @@ RESEND_API_KEY=
 - Páginas `/precios`, `/blog` (+ `[slug]`), `/terminos`, `/privacidad`.
 - **Meta Pixel + Conversions API** con deduplicación por `eventId` (ver `.claude/rules/tracking.md`).
 - **Microsoft Clarity** (heatmaps + grabaciones) en el route group `(marketing)`, con eventos custom en el form de contacto.
+- **Google Analytics 4** (gtag.js) en el route group `(marketing)`. Solo page views; los sitios de los tenants no lo cargan.
 - FAB de WhatsApp desde `SITE_WHATSAPP_URL` de `lib/seo.ts`.
 
 *Auth y cuentas*

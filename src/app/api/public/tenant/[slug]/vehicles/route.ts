@@ -44,13 +44,31 @@ export const GET = withLogger<TenantParams>(async (request, { requestId, params 
 
   const vehicles = await getPublishedVehicles(dealership.id, filters);
 
-  // Serializar Decimal
+  // Campo por campo, nunca `...v`: este endpoint es público y antes filtraba el
+  // costo de compra, el VIN, el número de motor y la patente. La query ya trae
+  // solo campos públicos (PUBLIC_VEHICLE_SELECT); esto es la segunda barrera.
   const serialized = vehicles.map((v) => ({
-    ...v,
+    id: v.id,
+    publicSlug: v.publicSlug,
+    title: v.title,
+    brand: v.brand,
+    model: v.model,
+    year: v.year,
     price: v.price.toString(),
-    createdAt: v.createdAt.toISOString(),
-    updatedAt: v.updatedAt.toISOString(),
+    currency: v.currency,
+    kilometers: v.kilometers,
+    fuelType: v.fuelType,
+    transmission: v.transmission,
+    bodyType: v.bodyType,
+    color: v.color,
+    doors: v.doors,
+    engine: v.engine,
+    description: v.description,
+    condition: v.condition,
+    status: v.status,
+    featured: v.featured,
     publishedAt: v.publishedAt?.toISOString() ?? null,
+    images: v.images.map((img) => ({ url: img.url, isPrimary: img.isPrimary, alt: img.alt })),
   }));
 
   logger.info(requestId, "public.vehicles.list.ok", {

@@ -9,12 +9,15 @@ import { NextResponse } from "next/server";
 import { withLogger } from "@/lib/api-handler";
 import { getCurrentDealership } from "@/lib/auth";
 import { getAccountInfo, deleteAccount } from "@/lib/mercadolibre/token-store";
+import { denyApiAccess } from "@/lib/api-access";
 
 export const GET = withLogger(async (_request, _ctx) => {
   const dealership = await getCurrentDealership();
   if (!dealership) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
+  const denied = denyApiAccess(undefined, dealership, "read");
+  if (denied) return denied;
 
   const account = await getAccountInfo(dealership.id);
 
@@ -37,6 +40,8 @@ export const DELETE = withLogger(async (_request, _ctx) => {
   if (!dealership) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
+  const denied = denyApiAccess(undefined, dealership, "write");
+  if (denied) return denied;
 
   const account = await getAccountInfo(dealership.id);
   if (!account) {

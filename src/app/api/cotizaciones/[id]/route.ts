@@ -15,6 +15,7 @@ import {
   assertEditable,
   decorateWithExpired,
 } from "@/lib/quotation-status";
+import { denyApiAccess } from "@/lib/api-access";
 
 type QuotationParams = { id: string };
 
@@ -56,6 +57,8 @@ export const GET = withLogger<QuotationParams>(
         { status: 404 }
       );
     }
+    const denied = denyApiAccess(requestId, dealership, "read");
+    if (denied) return denied;
 
     const { id } = params;
     const quotation = await prisma.quotation.findFirst({
@@ -98,6 +101,8 @@ export const PATCH = withLogger<QuotationParams>(
         { status: 404 }
       );
     }
+    const denied = denyApiAccess(requestId, dealership, "write");
+    if (denied) return denied;
 
     const { id } = params;
     const body: unknown = await request.json();
@@ -191,6 +196,8 @@ export const PUT = withLogger<QuotationParams>(
         { status: 404 }
       );
     }
+    const denied = denyApiAccess(requestId, dealership, "write");
+    if (denied) return denied;
 
     const { id } = params;
     const body: unknown = await request.json();
@@ -363,6 +370,8 @@ export const DELETE = withLogger<QuotationParams>(
         { status: 404 }
       );
     }
+    const denied = denyApiAccess(requestId, dealership, "write");
+    if (denied) return denied;
 
     const { id } = params;
     const existing = await prisma.quotation.findFirst({

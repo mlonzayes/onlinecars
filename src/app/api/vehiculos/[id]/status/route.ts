@@ -9,6 +9,7 @@ import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { blockingSaleErrorBody, findBlockingSale } from "@/lib/sale-guards";
 import { invalidateVehicleCaches } from "@/lib/cache-tags";
+import { denyApiAccess } from "@/lib/api-access";
 
 type VehicleParams = { id: string };
 
@@ -33,6 +34,8 @@ export const PATCH = withLogger<VehicleParams>(async (request, { requestId, para
     logger.warn(requestId, "vehicles.status.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   const { id } = params;
 

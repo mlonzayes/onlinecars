@@ -19,6 +19,7 @@ import { logger } from "@/lib/logger";
 import { canSeeCosts, canEditCosts } from "@/lib/permissions";
 import { invalidateDashboardHomeData } from "@/lib/dashboard-cache";
 import { vehicleExpenseCreateSchema } from "@/lib/validators/vehicle-expense";
+import { denyApiAccess } from "@/lib/api-access";
 
 type RouteParams = { id: string };
 
@@ -30,6 +31,8 @@ export const GET = withLogger<RouteParams>(async (_request, { requestId, params 
   if (!dealership) {
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "read");
+  if (denied) return denied;
   if (!canSeeCosts(dealership.currentUser, dealership)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
@@ -72,6 +75,8 @@ export const POST = withLogger<RouteParams>(async (request, { requestId, params 
   if (!dealership) {
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
   // Cargar gastos modifica el costo/margen → solo admin.
   if (!canEditCosts(dealership.currentUser)) {
     return NextResponse.json(

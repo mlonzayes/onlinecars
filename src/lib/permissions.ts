@@ -27,3 +27,12 @@ export function canSeeCosts(
 export function canEditCosts(user: Pick<DealershipUser, "role">): boolean {
   return user.role === "admin";
 }
+
+/**
+ * Indica si el user puede modificar datos del concesionario (crear, editar,
+ * borrar). admin y editor sí; viewer es solo lectura. Los permisos más finos
+ * (costos, usuarios, configuración) se chequean aparte, en cada handler.
+ */
+export function canWrite(user: Pick<DealershipUser, "role">): boolean {
+  return user.role === "admin" || user.role === "editor";
+}

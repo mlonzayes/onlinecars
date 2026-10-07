@@ -33,6 +33,8 @@ export default async function DashboardHomePage() {
   const isAdmin = dealership.currentUser.role === "admin";
   const { grossRevenue, netProfit, revenueWithCost, salesCount, salesWithCost } =
     stats.financials;
+  // `?? 0`: el resumen vive cacheado en Redis hasta 1h; uno viejo no trae el campo.
+  const unconvertedSales = stats.financials.unconvertedSales ?? 0;
   // Margen y neta solo tienen sentido sobre ventas con costo cargado.
   const hasCostData = salesWithCost > 0;
   const marginPct =
@@ -106,6 +108,11 @@ export default async function DashboardHomePage() {
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-semibold">{formatCurrency(grossRevenue)}</p>
+              {unconvertedSales > 0 && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {unconvertedSales} venta(s) en dólares sin cotización disponible, fuera del total
+                </p>
+              )}
             </CardContent>
           </Card>
 

@@ -6,6 +6,7 @@ import { storage } from "@/lib/storage";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { invalidateTenantHomeBundle } from "@/lib/tenant";
+import { denyApiAccess } from "@/lib/api-access";
 
 type RouteParams = { id: string };
 
@@ -28,6 +29,8 @@ export const DELETE = withLogger<RouteParams>(async (_request, { requestId, para
       { status: 404 }
     );
   }
+  const denied = denyApiAccess(requestId, dealership, "write", ctx?.actingAsPlatform ?? false);
+  if (denied) return denied;
 
   const { id: mediaId } = params;
 

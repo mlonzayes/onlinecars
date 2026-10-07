@@ -36,6 +36,7 @@ import {
   type AllowedTenantImageMimeType,
   type AllowedVideoMimeType,
 } from "@/lib/constants";
+import { denyApiAccess } from "@/lib/api-access";
 
 const presignSchema = z
   .object({
@@ -61,6 +62,8 @@ export const POST = withLogger(async (request, { requestId }) => {
     logger.warn(requestId, "media.presign.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write", ctx?.actingAsPlatform ?? false);
+  if (denied) return denied;
 
   const body: unknown = await request.json();
   const parsed = presignSchema.safeParse(body);

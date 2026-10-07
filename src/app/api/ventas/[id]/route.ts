@@ -8,6 +8,7 @@ import { saleUpdateSchema } from "@/lib/validators/sale";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { Prisma } from "@prisma/client";
+import { denyApiAccess } from "@/lib/api-access";
 
 type SaleParams = { id: string };
 
@@ -53,6 +54,8 @@ export const GET = withLogger<SaleParams>(async (_request, { requestId, params }
     logger.warn(requestId, "sales.detail.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "read");
+  if (denied) return denied;
 
   const { id } = params;
 
@@ -86,6 +89,8 @@ export const PATCH = withLogger<SaleParams>(async (request, { requestId, params 
     logger.warn(requestId, "sales.update.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   const { id } = params;
   const body: unknown = await request.json();
@@ -159,6 +164,8 @@ export const DELETE = withLogger<SaleParams>(async (_request, { requestId, param
     logger.warn(requestId, "sales.delete.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   const { id } = params;
 

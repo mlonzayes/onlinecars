@@ -10,6 +10,7 @@ import { blockingSaleErrorBody, findBlockingSale } from "@/lib/sale-guards";
 import { invalidateVehicleCaches } from "@/lib/cache-tags";
 import { canSeeCosts, canEditCosts } from "@/lib/permissions";
 import { canPublishMoreVehicles, getPlanLimits } from "@/lib/plans";
+import { denyApiAccess } from "@/lib/api-access";
 
 type VehicleParams = { id: string };
 
@@ -28,6 +29,8 @@ export const GET = withLogger<VehicleParams>(async (_request, { requestId, param
     logger.warn(requestId, "vehicles.detail.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "read");
+  if (denied) return denied;
 
   const { id } = params;
 
@@ -74,6 +77,8 @@ export const PUT = withLogger<VehicleParams>(async (request, { requestId, params
     logger.warn(requestId, "vehicles.update.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   const { id } = params;
 
@@ -186,6 +191,8 @@ export const DELETE = withLogger<VehicleParams>(async (_request, { requestId, pa
     logger.warn(requestId, "vehicles.delete.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   const { id } = params;
 

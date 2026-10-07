@@ -23,6 +23,7 @@ import {
   type MediaPurpose,
 } from "@/lib/constants";
 import { invalidateTenantHomeBundle } from "@/lib/tenant";
+import { denyApiAccess } from "@/lib/api-access";
 
 function isSingleton(purpose: MediaPurpose): boolean {
   return (SINGLETON_MEDIA_PURPOSES as readonly MediaPurpose[]).includes(purpose);
@@ -50,6 +51,8 @@ export const POST = withLogger(async (request, { requestId }) => {
       { status: 404 }
     );
   }
+  const denied = denyApiAccess(requestId, dealership, "write", ctx?.actingAsPlatform ?? false);
+  if (denied) return denied;
 
   // Parsear multipart
   let formData: FormData;

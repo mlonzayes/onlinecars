@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { storage } from "@/lib/storage";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
+import { denyApiAccess } from "@/lib/api-access";
 
 type Params = { id: string; docId: string };
 
@@ -23,6 +24,8 @@ export const DELETE = withLogger<Params>(async (_request, { requestId, params })
     logger.warn(requestId, "sales.documents.delete.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   const { id: saleId, docId } = params;
 

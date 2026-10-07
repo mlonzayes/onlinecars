@@ -4,6 +4,7 @@ import { getCurrentDealership } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
+import { denyApiAccess } from "@/lib/api-access";
 
 type Params = { id: string };
 
@@ -18,6 +19,8 @@ export const DELETE = withLogger<Params>(async (_req, { requestId, params }) => 
   if (!dealership) {
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   if (dealership.currentUser.role !== "admin") {
     return NextResponse.json({ error: "Solo el dueño puede cancelar invitaciones" }, { status: 403 });

@@ -12,6 +12,7 @@ import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { canEditCosts } from "@/lib/permissions";
 import { invalidateDashboardHomeData } from "@/lib/dashboard-cache";
+import { denyApiAccess } from "@/lib/api-access";
 
 type RouteParams = { id: string; expenseId: string };
 
@@ -23,6 +24,8 @@ export const DELETE = withLogger<RouteParams>(async (_request, { requestId, para
   if (!dealership) {
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
   if (!canEditCosts(dealership.currentUser)) {
     return NextResponse.json(
       { error: "Solo un administrador puede eliminar gastos" },

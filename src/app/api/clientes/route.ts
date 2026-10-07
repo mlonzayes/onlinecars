@@ -7,6 +7,7 @@ import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { Prisma } from "@prisma/client";
 import { revalidateTag } from "next/cache";
+import { denyApiAccess } from "@/lib/api-access";
 
 // GET /api/clientes
 // Lista paginada de clientes del concesionario autenticado.
@@ -23,6 +24,8 @@ export const GET = withLogger(async (request, { requestId }) => {
     logger.warn(requestId, "customers.list.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "read");
+  if (denied) return denied;
 
   const { searchParams } = new URL(request.url);
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
@@ -92,6 +95,8 @@ export const POST = withLogger(async (request, { requestId }) => {
     logger.warn(requestId, "customers.create.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   const body: unknown = await request.json();
   const parsed = customerCreateSchema.safeParse(body);

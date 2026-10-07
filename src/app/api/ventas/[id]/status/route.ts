@@ -8,6 +8,7 @@ import { saleStatusSchema } from "@/lib/validators/sale";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { createNotification } from "@/lib/notifications";
+import { denyApiAccess } from "@/lib/api-access";
 
 type SaleParams = { id: string };
 
@@ -45,6 +46,8 @@ export const PATCH = withLogger<SaleParams>(async (request, { requestId, params 
     logger.warn(requestId, "sales.status.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   const { id } = params;
   const body: unknown = await request.json();

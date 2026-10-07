@@ -9,6 +9,7 @@ import { logger } from "@/lib/logger";
 import { invalidateTenantHomeBundle } from "@/lib/tenant";
 import { getPlanLimits } from "@/lib/plans";
 import { addDomainToVercel, removeDomainFromVercel } from "@/lib/vercel";
+import { denyApiAccess } from "@/lib/api-access";
 
 // Feature flag: dominios custom en STANDBY (Fase 2). Mientras esté en false:
 //   - El campo `website` se ignora silenciosamente en el PUT (no se guarda)
@@ -78,6 +79,8 @@ export const GET = withLogger(async (_request, { requestId }) => {
     logger.warn(requestId, "dealership.get.not_found", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "read", ctx?.actingAsPlatform ?? false);
+  if (denied) return denied;
 
   logger.info(requestId, "dealership.get.ok", { dealershipId: dealership.id });
 
@@ -108,6 +111,8 @@ export const PUT = withLogger(async (request, { requestId }) => {
     logger.warn(requestId, "dealership.update.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write", ctx?.actingAsPlatform ?? false);
+  if (denied) return denied;
 
   const body: unknown = await request.json();
   const parsed = dealershipUpdateSchema.safeParse(body);

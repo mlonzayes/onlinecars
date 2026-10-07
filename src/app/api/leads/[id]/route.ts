@@ -7,6 +7,7 @@ import { z } from "zod";
 import { LEAD_STATUSES } from "@/lib/constants";
 import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
+import { denyApiAccess } from "@/lib/api-access";
 
 type LeadParams = { id: string };
 
@@ -29,6 +30,8 @@ export const GET = withLogger<LeadParams>(async (_request, { requestId, params }
     logger.warn(requestId, "leads.detail.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "read");
+  if (denied) return denied;
 
   const { id } = params;
 
@@ -89,6 +92,8 @@ export const PATCH = withLogger<LeadParams>(async (request, { requestId, params 
     logger.warn(requestId, "leads.update.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   const { id } = params;
 
@@ -158,6 +163,8 @@ export const DELETE = withLogger<LeadParams>(async (_request, { requestId, param
     logger.warn(requestId, "leads.delete.no_dealership", { userId });
     return NextResponse.json({ error: "Concesionario no encontrado" }, { status: 404 });
   }
+  const denied = denyApiAccess(requestId, dealership, "write");
+  if (denied) return denied;
 
   const { id } = params;
 

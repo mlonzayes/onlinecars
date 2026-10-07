@@ -53,8 +53,11 @@ export function HeroSection() {
         </p>
 
         <div className="mt-8 flex flex-wrap justify-center gap-3">
+          {/* prefetch={false}: con login prendido el CTA va a /sign-up, y
+              prefetchearlo baja ~135 KB de Clerk en la landing apenas carga. */}
           <Link
             href={cta.href}
+            prefetch={false}
             className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-blue-700"
           >
             {cta.label}

@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
-import gsap from "gsap";
 import { PiList, PiX, PiEnvelope, PiGauge, PiUserPlus } from "react-icons/pi";
 import { WhatsAppIcon } from "@/components/tenant/social-icons";
 import { SITE_WHATSAPP_URL } from "@/lib/seo";
@@ -26,39 +25,18 @@ const LINKS = [
 export function MobileMenu({ isLoginEnabled, isSignedIn }: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const itemsRef = useRef<HTMLDivElement>(null);
 
   // El portal necesita document.body — solo disponible en cliente.
   useEffect(() => setMounted(true), []);
 
-  // Al abrir: lock del scroll del body + animación de entrada (overlay + stagger).
+  // Al abrir: lock del scroll del body. La animación de entrada es CSS
+  // (.mobile-menu-* en globals.css) — antes era GSAP, que pesaba en el bundle
+  // de la landing solo para esto.
   useEffect(() => {
     if (!isOpen) return;
-
     document.body.style.overflow = "hidden";
-
-    let ctx: gsap.Context | undefined;
-    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      ctx = gsap.context(() => {
-        gsap.fromTo(
-          overlayRef.current,
-          { opacity: 0 },
-          { opacity: 1, duration: 0.25, ease: "power2.out" }
-        );
-        if (itemsRef.current) {
-          gsap.fromTo(
-            Array.from(itemsRef.current.children),
-            { opacity: 0, y: 24 },
-            { opacity: 1, y: 0, duration: 0.4, stagger: 0.06, delay: 0.08, ease: "power3.out" }
-          );
-        }
-      });
-    }
-
     return () => {
       document.body.style.overflow = "";
-      ctx?.revert();
     };
   }, [isOpen]);
 
@@ -88,7 +66,7 @@ export function MobileMenu({ isLoginEnabled, isSignedIn }: MobileMenuProps) {
       {mounted &&
         isOpen &&
         createPortal(
-          <div ref={overlayRef} className="fixed inset-0 z-[100] flex flex-col bg-white">
+          <div className="mobile-menu-overlay fixed inset-0 z-[100] flex flex-col bg-white">
             {/* Header del menú: marca + cerrar */}
             <div className="flex h-16 shrink-0 items-center justify-between px-5">
               <Image src="/logo/motorflow_light.png" alt="motorflow" width={150} height={150} />
@@ -103,7 +81,7 @@ export function MobileMenu({ isLoginEnabled, isSignedIn }: MobileMenuProps) {
             </div>
 
             {/* Links + acciones */}
-            <div ref={itemsRef} className="flex flex-1 flex-col px-6 pt-4">
+            <div className="mobile-menu-items flex flex-1 flex-col px-6 pt-4">
               {LINKS.map((l) => (
                 <Link
                   key={l.href}

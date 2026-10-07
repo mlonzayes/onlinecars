@@ -44,7 +44,7 @@ export function SolutionSection() {
             </div>
           </FadeIn>
 
-          <FadeIn delay={0.15}>
+          <FadeIn>
             <div className="overflow-hidden rounded-2xl border border-gray-200 shadow-xl shadow-gray-100/80">
               <Image
                 src="/premium_images/person_using_phone.png"

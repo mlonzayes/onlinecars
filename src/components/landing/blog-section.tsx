@@ -26,7 +26,7 @@ export function BlogSection({ posts }: BlogSectionProps) {
             </p>
           </FadeIn>
 
-          <FadeIn delay={0.1} className="shrink-0">
+          <FadeIn className="shrink-0">
             <Link
               href="/blog"
               className="group inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 underline-offset-4 hover:underline"

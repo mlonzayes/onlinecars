@@ -235,7 +235,9 @@
 }
 
 /* Glows decorativos del hero de la landing. Animan solo el transform (barato,
-   GPU) y solo si el usuario no pidió menos movimiento. */
+   GPU), solo si el usuario no pidió menos movimiento y solo desde sm: en mobile
+   son 4 capas con blur-3xl componiéndose en loop infinito, que en gama baja se
+   come batería y frames del scroll a cambio de un efecto que casi no se ve. */
 @keyframes heroFloat {
   0%,
   100% {
@@ -256,7 +258,7 @@
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
+@media (min-width: 640px) and (prefers-reduced-motion: no-preference) {
   .hero-glow {
     animation: heroFloat 15s ease-in-out infinite;
   }
@@ -295,7 +297,7 @@
   }
 }
 
-/* Revelado al hacer scroll del sitio del tenant (useRevealOnScroll). Las
+/* Revelado al hacer scroll (useRevealOnScroll) — sitio del tenant y landing. Las
    clases las pone el JS SOLO a lo que arranca fuera del viewport, así que sin
    JS todo queda visible. Opacity + transform: compositable, no toca layout. */
 .reveal-target {
@@ -328,4 +330,26 @@
       animation-range: 0 260px;
     }
   }
+}
+
+/* Entrada del menú mobile de la web principal (MobileMenu). CSS en vez de GSAP:
+   el menú se monta al abrir, así que la animación corre sola en el mount. */
+@keyframes mobileMenuFade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mobile-menu-overlay {
+    animation: mobileMenuFade 0.25s ease-out both;
+  }
+  .mobile-menu-items > * {
+    animation: heroEnterFadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .mobile-menu-items > :nth-child(1) { animation-delay: 0.08s; }
+  .mobile-menu-items > :nth-child(2) { animation-delay: 0.14s; }
+  .mobile-menu-items > :nth-child(3) { animation-delay: 0.2s; }
+  .mobile-menu-items > :nth-child(4) { animation-delay: 0.26s; }
+  .mobile-menu-items > :nth-child(5) { animation-delay: 0.32s; }
 }

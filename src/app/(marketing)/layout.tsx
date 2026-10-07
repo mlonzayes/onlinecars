@@ -2,7 +2,6 @@ import { MetaPixel } from "@/components/meta/meta-pixel";
 import { getMainSitePixelId } from "@/lib/meta/config";
 import { MicrosoftClarity } from "@/components/clarity/microsoft-clarity";
 import { getMainSiteClarityId } from "@/lib/clarity/config";
-import { AppClerkProvider } from "@/components/auth/app-clerk-provider";
 
 /**
  * Layout de la superficie de MARKETING (motorflowapp.com): landing, precios,
@@ -20,6 +19,13 @@ import { AppClerkProvider } from "@/components/auth/app-clerk-provider";
  * Microsoft Clarity (heatmaps + grabaciones) vive acá por la misma razón: mide
  * NUESTRO funnel, no el de los concesionarios.
  *
+ * Sin <AppClerkProvider> a propósito: ninguna página de marketing usa
+ * componentes ni hooks de Clerk en el cliente (el navbar resuelve la sesión con
+ * `auth()` en el server, que lo cubre el middleware). Montarlo descargaba
+ * ~350 KB de JS + fetches a la API de Clerk en cada visita a la landing.
+ * Si una página de marketing necesita <SignInButton> o similar, se envuelve
+ * ESA página, no todo el grupo.
+ *
  * ⚠️ Página de marketing nueva → va DENTRO de este grupo, o no se mide.
  */
 export default function MarketingLayout({
@@ -31,10 +37,10 @@ export default function MarketingLayout({
   const clarityId = getMainSiteClarityId();
 
   return (
-    <AppClerkProvider>
+    <>
       {pixelId && <MetaPixel pixelId={pixelId} />}
       {clarityId && <MicrosoftClarity projectId={clarityId} />}
       {children}
-    </AppClerkProvider>
+    </>
   );
 }

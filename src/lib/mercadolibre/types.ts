@@ -112,3 +112,30 @@ export const ML_LISTING_STATUS_MAP = {
 } as const;
 
 export type MLListingStatus = "active" | "paused" | "closed" | "error";
+
+// ─── Paquetes de clasificados (classifieds_promotion_packs) ───────────────────
+
+// Lo que devuelve GET /users/{id}/classifieds_promotion_packs. Solo tipamos lo
+// que usamos; ML manda más campos (charge_id, promotion_pack_id, etc).
+export interface MLPromotionPackListingDetail {
+  listing_type_id: string;
+  available_listings: number;
+  used_listings?: number;
+  remaining_listings?: number;
+}
+
+export interface MLPromotionPack {
+  id: number | string;
+  description?: string;
+  category_id?: string;
+  package_type?: string;
+  // "publications" = cupo para publicar · "upgrades" = cupo para destacar
+  package_content: string;
+  status: string; // active | pending | finished
+  date_start?: string | null;
+  date_expires?: string | null;
+  engagement_type?: string; // "none" | "re-engagement" (renovación automática)
+  remaining_listings?: number;
+  used_listings?: number;
+  listing_details?: MLPromotionPackListingDetail[];
+}

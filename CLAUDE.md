@@ -128,7 +128,7 @@ src/
 │   │   ├── vehiculos/ leads/ clientes/ ventas/ cotizaciones/
 │   │   ├── sitio-web/               # Secciones, branding, plantilla, redes, Meta Pixel, Clarity
 │   │   ├── configuracion/           # Settings (solapas por ?tab=)
-│   │   ├── vendedores/ portales/    # Usuarios del tenant · integración MercadoLibre
+│   │   ├── vendedores/ portales/    # Usuarios del tenant · integración MercadoLibre (+ portales/mercadolibre: paquetes y publicación)
 │   │   └── contabilidad/ bancos/ pagos/
 │   ├── admin/                       # Panel SUPER-ADMIN (cuentas, trials, /admin/sitios)
 │   ├── (onboarding)/                # onboarding/ + aceptar-terminos/
@@ -192,7 +192,7 @@ src/
 │   ├── sections                  # + /[type] /order
 │   └── usuarios/invitar          # + /[id]
 ├── vehiculos                     # + /[id] /publish /featured /status /bulk /catalog /import
-│   └── [id]/{images,gastos,ml}   # images: /[imageId] /order · ml: /sync
+│   └── [id]/{images,gastos,ml}   # images: /[imageId] /order · ml: /sync /destacar
 ├── clientes · leads · ventas · cotizaciones
 │   ├── ventas/[id]/documentos    # + /[docId] /[docId]/url (presigned)
 │   └── cotizaciones/[id]         # + /status /pdf
@@ -883,7 +883,7 @@ RESEND_API_KEY=
 - Vehículos: CRUD + publish/featured/status + imágenes (upload, delete, reorder) + **import masivo desde Excel** + acciones bulk + gastos por vehículo (`VehicleExpense`) y margen.
 - Leads, Clientes, Ventas (con legajo de documentos y presigned URLs), **Cotizaciones** (compra y venta, con numeración por tenant y PDF vía pdfmake).
 - Contabilidad, bancos y pagos: **solo placeholders** ("próximamente"), sin funcionalidad.
-- **Integración MercadoLibre**: OAuth, sync de publicaciones, webhooks.
+- **Integración MercadoLibre**: OAuth, sync de publicaciones, webhooks. Paquetes de publicación/destaques (`lib/mercadolibre/packs.ts`): se publica siempre con `silver` (consume un lugar del paquete) y se destaca después con `POST /items/{id}/listing_type`.
 - Notificaciones in-app con polling.
 - Cotización USD: base BCRA global (`ExchangeRate`, cron de sync) + `usdSpread` por tenant.
 - Filtros/orden URL-based en los listados (ver `.claude/rules/table-filters.md`).

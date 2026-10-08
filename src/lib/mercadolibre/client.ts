@@ -108,7 +108,7 @@ export async function exchangeCode(code: string, redirectUri: string): Promise<M
 
 // ─── Helpers HTTP ─────────────────────────────────────────────────────────────
 
-async function mlFetch<T>(
+export async function mlFetch<T>(
   dealershipId: string,
   path: string,
   options: RequestInit = {}
@@ -144,7 +144,9 @@ async function mlFetch<T>(
     throw new Error(`ML API ${res.status}: ${errorBody}`);
   }
 
-  return res.json();
+  // Algunos endpoints (ej: POST /items/{id}/listing_type) responden sin body.
+  const text = await res.text();
+  return (text ? JSON.parse(text) : null) as T;
 }
 
 // ─── User info ────────────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { Sparkles } from "lucide-react";
+import { ChevronRight, PackageOpen, Sparkles } from "lucide-react";
 import { MLIntegrationCard } from "@/components/dashboard/settings/ml-integration-card";
 import { getCurrentDealership } from "@/lib/auth";
 import { getAccountInfo } from "@/lib/mercadolibre/token-store";
@@ -114,6 +114,21 @@ export default async function PortalesPage() {
 
       <div className="space-y-4">
         <MLIntegrationCard initialStatus={initialStatus} />
+        {account && (
+          <Link
+            href="/dashboard/portales/mercadolibre"
+            className="flex items-center gap-3 rounded-xl border p-4 transition-colors hover:bg-muted/50"
+          >
+            <PackageOpen className="h-5 w-5 shrink-0 text-muted-foreground" />
+            <div className="flex-1">
+              <p className="font-medium">Paquetes y publicaciones</p>
+              <p className="text-sm text-muted-foreground">
+                Mirá cuántos lugares te quedan en tus paquetes y publicá o destacá tu stock.
+              </p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
+        )}
       </div>
     </div>
   );

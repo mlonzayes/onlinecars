@@ -1,0 +1,39 @@
+// Textos del chat con IA. Los usa tanto el server (mensajes de error, tarjetas
+// de confirmación) como la UI del panel.
+export const CHAT_COPY = {
+  title: "Asistente",
+  subtitle: "Gestioná el stock, los gastos y las consultas escribiendo.",
+  launcher: "Asistente IA",
+  placeholder: "Ej: cargale 150.000 de detailing al Corolla",
+  send: "Enviar",
+  newConversation: "Nueva conversación",
+  thinking: "Pensando…",
+  empty: "Preguntame por tu stock, cargá gastos o pedime un resumen del mes.",
+  usage: (used: number, limit: number) => `${used}/${limit} mensajes este mes`,
+  confirm: "Confirmar",
+  cancel: "Cancelar",
+  confirmed: "Listo, hecho.",
+  cancelled: "Cancelado. No se hizo nada.",
+  actionExpired: "La acción venció o ya se usó. Pedímela de nuevo.",
+  lockedTitle: "Asistente con IA",
+  lockedDescription:
+    "Operá el panel escribiendo: cargá autos y gastos, consultá ganancias y respondé consultas más rápido. Es un adicional que se contrata aparte.",
+  lockedCta: "Quiero contratarlo",
+  contactMessage: (dealershipName: string) =>
+    `Hola! Soy de ${dealershipName} y quiero contratar el asistente con IA de motorflow.`,
+  errors: {
+    disabled: "El asistente no está disponible.",
+    notContracted: "Tu cuenta no tiene el asistente con IA contratado.",
+    rateLimited: "Vas muy rápido. Esperá un minuto y volvé a intentar.",
+    quotaMessages: "Llegaste al límite de mensajes del mes. Se renueva el 1°, o ampliá tu paquete.",
+    quotaTokens: "Llegaste al límite de uso del mes. Se renueva el 1°, o ampliá tu paquete.",
+    generic: "No pude responder. Probá de nuevo en un rato.",
+    toolLimit: "Esto me llevó demasiados pasos. ¿Me lo pedís más concreto?",
+  },
+  actions: {
+    deleteExpense: "Eliminar gasto",
+    publish: "Publicar en el sitio",
+    unpublish: "Despublicar del sitio",
+    generic: "Confirmar acción",
+  },
+} as const;

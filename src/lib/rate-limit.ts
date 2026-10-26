@@ -57,6 +57,16 @@ export const mcpLimiter = new Ratelimit({
   analytics: false,
 });
 
+// Chat con IA del panel: anti-spam por usuario (key = clerkUserId). Cada
+// mensaje cuesta plata de verdad; una persona escribiendo no pasa de unos pocos
+// por minuto. El cupo mensual del add-on va aparte (src/lib/chat/quota.ts).
+export const chatLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, "1 m"),
+  prefix: "rl:chat",
+  analytics: false,
+});
+
 // Extrae la IP del cliente. En Vercel el header confiable es x-forwarded-for
 // (la primera IP del array — el resto son proxies intermedios). En local
 // puede venir vacío o como ::1.

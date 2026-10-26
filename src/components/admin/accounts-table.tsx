@@ -158,6 +158,7 @@ export function AccountsTable({ accounts, emptyLabel }: AccountsTableProps) {
                   name={a.name}
                   plan={a.plan}
                   subscriptionStatus={a.subscriptionStatus}
+                  aiChatMonthlyMessages={a.aiChatMonthlyMessages}
                 />
               </TableCell>
             </TableRow>

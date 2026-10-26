@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { buildCspHeaders } from "./src/lib/security/csp";
 
 // Whitelist dinámico del dominio público de R2/S3 para next/image.
 // En local sin S3_PUBLIC_URL no hay patrones — las imágenes vienen de /uploads/...
@@ -35,9 +36,8 @@ function buildRemotePatterns() {
   return patterns;
 }
 
-// Headers de seguridad aplicados a TODAS las respuestas. Se evitó CSP en este
-// pase porque tunearlo bien con Clerk (scripts inline, iframes, eval en dev)
-// requiere una iteración aparte con report-only mode.
+// Headers de seguridad aplicados a TODAS las respuestas. La CSP se arma en
+// src/lib/security/csp.ts (hoy en modo report-only) y se suma al final.
 const securityHeaders = [
   // Bloquea que el browser interprete archivos con MIME distinto al declarado
   // — defensa contra ataques de "MIME confusion" donde un .jpg subido contiene JS.
@@ -80,6 +80,8 @@ if (process.env.NODE_ENV === "production") {
     value: "max-age=63072000; includeSubDomains; preload",
   });
 }
+
+securityHeaders.push(...buildCspHeaders(process.env.NODE_ENV !== "production"));
 
 const nextConfig: NextConfig = {
   // Metadata en el <head> para TODOS, no solo para bots. Next 15 por default la

@@ -14,6 +14,8 @@ export interface PlatformAccount {
   whatsapp: string | null;
   plan: string;
   subscriptionStatus: string;
+  // Add-on del asistente con IA: mensajes por mes. 0 = no contratado.
+  aiChatMonthlyMessages: number;
   // --- Sitio público ---
   // Si false, {slug}.motorflowapp.com responde 404. Es el toggle que maneja el
   // dealer desde su panel y el super-admin desde /admin/sitios.
@@ -67,6 +69,7 @@ export async function getPlatformData(): Promise<PlatformData> {
       whatsapp: true,
       plan: true,
       subscriptionStatus: true,
+      aiChatMonthlyMessages: true,
       siteEnabled: true,
       templateId: true,
       website: true,
@@ -89,6 +92,7 @@ export async function getPlatformData(): Promise<PlatformData> {
     whatsapp: d.whatsapp,
     plan: d.plan,
     subscriptionStatus: d.subscriptionStatus,
+    aiChatMonthlyMessages: d.aiChatMonthlyMessages,
     siteEnabled: d.siteEnabled,
     templateId: d.templateId,
     website: d.website,

@@ -37,6 +37,16 @@ export const waitlistLimiter = new Ratelimit({
   analytics: false,
 });
 
+// Reportes de CSP: los manda el browser solo, uno por violación. Una página con
+// un script mal permitido puede tirar varios por carga; con esto alcanza para
+// ver el patrón sin que un loop llene los logs.
+export const cspReportLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(30, "1 m"),
+  prefix: "rl:public:csp",
+  analytics: false,
+});
+
 // MCP: anti-abuso por usuario (key = clerkUserId), independiente del cupo
 // diario del plan. Una conversación normal hace pocas llamadas por minuto; un
 // loop de la IA o un script, cientos.
@@ -44,6 +54,16 @@ export const mcpLimiter = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(30, "1 m"),
   prefix: "rl:mcp",
+  analytics: false,
+});
+
+// Chat con IA del panel: anti-spam por usuario (key = clerkUserId). Cada
+// mensaje cuesta plata de verdad; una persona escribiendo no pasa de unos pocos
+// por minuto. El cupo mensual del add-on va aparte (src/lib/chat/quota.ts).
+export const chatLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, "1 m"),
+  prefix: "rl:chat",
   analytics: false,
 });
 

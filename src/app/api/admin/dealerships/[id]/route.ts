@@ -8,9 +8,10 @@
  *                 { "subscriptionStatus": "suspended" }
  *                 { "siteEnabled": true }
  *                 { "templateId": "impacto" }
+ *                 { "aiChatMonthlyMessages": 300 }
  * PATCH response: { "data": { "id": "cmx...", "slug": "autos-lopez", "plan": "premium",
  *                             "subscriptionStatus": "active", "siteEnabled": true,
- *                             "templateId": "impacto" } }
+ *                             "templateId": "impacto", "aiChatMonthlyMessages": 300 } }
  */
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
@@ -50,6 +51,7 @@ export const PATCH = withLogger<RouteParams>(async (request, { requestId, params
         subscriptionStatus: true,
         siteEnabled: true,
         templateId: true,
+        aiChatMonthlyMessages: true,
       },
     });
 

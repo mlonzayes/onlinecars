@@ -66,6 +66,7 @@ pnpm build          # Build de producción
 pnpm start          # Levanta el build
 pnpm lint           # ESLint
 pnpm lint:fix       # ESLint con --fix
+pnpm chat:eval --models <slug>,<slug>   # Compara modelos de OpenRouter para el chat (gasta centavos)
 ```
 
 **No hay script de `typecheck` ni de `test`** — para chequear tipos corré `pnpm exec tsc --noEmit`. Si vas a agregar testing, primero pedile al usuario que confirme el setup.
@@ -158,6 +159,7 @@ src/
 │   ├── services/                        # Lógica de negocio compartida por canales (ver abajo)
 │   ├── mcp/                             # Servidor MCP: OAuth, cupo diario, tools (ver sección MCP)
 │   ├── rate-limit.ts honeypot.ts        # Protección de endpoints públicos
+│   ├── security/csp.ts                  # Content-Security-Policy (la importa next.config.ts)
 │   ├── tenant.ts tenant-templates.ts tenant-defaults.ts tenant-format.ts
 │   ├── plans.ts                         # PLAN_LIMITS + gating por plan
 │   ├── meta/                            # Pixel + Conversions API (ver rules/tracking.md)
@@ -185,6 +187,7 @@ src/
 /api
 ├── public/                       # SIN auth — rate limit + honeypot OBLIGATORIOS
 │   ├── contact                   # POST — form de la landing (NO existe /api/waitlist)
+│   ├── csp-report                # POST — violaciones de CSP que manda el browser
 │   └── tenant/[slug]/{vehicles,leads,reviews}
 ├── onboarding · terms/accept
 ├── concesionario                 # GET/PUT + /theme /logo /favicon
@@ -202,6 +205,7 @@ src/
 ├── admin/{dealerships/[id],dealerships/[id]/pagos,impersonation}
 ├── cron/{expire-trials,sync-exchange-rate}
 ├── mcp                           # Servidor MCP para Claude/ChatGPT (OAuth de Clerk) — ver sección MCP
+├── chat                          # GET/POST — asistente con IA del panel (add-on) + /acciones/[id] — ver sección Chat
 └── webhooks/clerk
 
 /.well-known/oauth-protected-resource[/api/mcp] · /.well-known/oauth-authorization-server   # metadata OAuth del MCP
@@ -209,8 +213,8 @@ src/
 
 **Pendientes conocidos:**
 - Email transaccional con Resend (dependencia instalada, sin uso en el código).
-- CSP (`Content-Security-Policy`) — los demás headers de seguridad ya están; este
-  queda para una iteración aparte, con tuneo Clerk-friendly en modo report-only primero.
+- CSP: está en **report-only**. Falta revisar las violaciones de prod y pasarla a
+  enforcing (ver "Headers de seguridad").
 - Testing (Vitest + RTL). Las reglas de `.claude/rules/testing.md` son aspiracionales.
 - Routing de dominios custom en el middleware (`CUSTOM_DOMAINS_ENABLED = false`).
 
@@ -330,6 +334,29 @@ Deja que el dealer opere el panel desde Claude o ChatGPT ("cargame este auto",
   la moneda de cada venta y totaliza por moneda; el dashboard (`dashboard-financials.ts`)
   pasa todo a pesos con la cotización del dealer. Los dos usan la cotización de hoy.
 
+#### Chat con IA del panel (`/api/chat` + `src/lib/chat/`)
+
+El mismo "operá el panel escribiendo" del MCP, para el dealer que no tiene Claude ni
+ChatGPT. Se vende como **add-on**: `Dealership.aiChatMonthlyMessages` (mensajes/mes,
+0 = apagado) lo setea el super-admin desde `/admin`, no depende del plan.
+
+- **Reusa el MCP en memoria** (`mcp-bridge.ts`): `InMemoryTransport` + `Client` contra
+  `createMcpServer(ctx)` con `source: "chat"`. Cero tools propias: tool nueva del MCP →
+  aparece sola en el chat. En ese canal `runTool` no cobra el cupo diario del MCP.
+- **Modelo vía OpenRouter** con el SDK `openai` (`client.ts`). `OPENROUTER_API_KEY` +
+  `AI_CHAT_MODEL` son el interruptor. Cada request manda `provider.data_collection: "deny"`
+  (por el chat pasan datos de clientes): no lo saques. El modelo se elige con
+  `pnpm chat:eval --models a,b` (`evals/chat/`, no ejecuta tools).
+- **Límites:** `chatLimiter` (10/min por usuario), cupo mensual que cuenta TODOS los
+  mensajes (el off-topic también consume), techo de tokens `AI_CHAT_MONTHLY_TOKEN_CAP`,
+  y topes por mensaje en `CHAT_LIMITS` (largo, historial, vueltas de tools, salida).
+- **Historial efímero en Redis** (24 h), del lado del server: el cliente solo manda
+  `conversationId` + texto. No se loggea el texto de los mensajes (PII).
+- **Borrar y publicar se confirman FUERA del modelo** (`pending-actions.ts`): quedan
+  pendientes en Redis y se ejecutan solo con el botón de la tarjeta
+  (`POST /api/chat/acciones/[id]`). Frena las prompt injections que llegan en el texto
+  de un lead. Tool nueva con `destructiveHint: true` → entra sola en ese circuito.
+
 **Alta de un cliente (Claude, ChatGPT):** Clerk Dashboard → OAuth applications →
 crear la app con el redirect URI del cliente (Claude: `https://claude.ai/api/mcp/auth_callback`)
 → sumar su client ID a `MCP_OAUTH_CLIENT_IDS` → en el cliente, conector personalizado con
@@ -407,7 +434,12 @@ Definidos en [next.config.ts](next.config.ts) → función `headers()`. Aplican 
 - `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), ...`
 - `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload` — **solo en `NODE_ENV=production`** (en dev rompe localhost).
 
-**`Content-Security-Policy` está pendiente** — armarlo bien con Clerk requiere modo `Report-Only` primero, recopilar violaciones, tunear, y recién después aplicar enforcing.
+**`Content-Security-Policy`** se arma en [src/lib/security/csp.ts](src/lib/security/csp.ts) y hoy sale como **`Content-Security-Policy-Report-Only`**: el browser no bloquea nada, solo reporta a `POST /api/public/csp-report`, que loggea `security.csp.violation` (sin query strings, ignorando extensiones del browser).
+
+- **Orígenes que salen de env:** Clerk (decodificado de `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`), `S3_PUBLIC_URL`, `S3_ENDPOINT` y la URL de reportes (`NEXT_PUBLIC_APP_URL`, absoluta porque en un subdominio de tenant un path relativo cae en el rewrite). Se leen **en el build**: cambiar esas env vars exige redeploy.
+- **Servicio externo nuevo** (script, iframe, fetch, imagen) → sumarlo a la directiva que corresponda en `csp.ts`, o va a aparecer en los reportes (y con enforcing, se rompe).
+- **`'unsafe-inline'` en `script-src` es a propósito:** Next mete scripts inline de hidratación y Meta/Clarity también. Sacarlo exige nonces, que vuelven dinámicas las páginas y rompen el ISR del tenant.
+- **Pasar a enforcing:** cuando `security.csp.violation` quede sin entradas legítimas unos días en prod, cambiar `CSP_MODE` a `"enforce"`.
 
 ### Storage de archivos
 
@@ -731,6 +763,7 @@ Ver schema completo en [prisma/schema.prisma](prisma/schema.prisma). Resumen:
 - **`ExchangeRate`** — cotización oficial USD (BCRA), global. El plus por tenant es `Dealership.usdSpread`; el valor efectivo se calcula al usarlo, **nunca se persiste sumado**.
 - **`SubscriptionPayment`** — pagos de la suscripción a la plataforma, cargados por el super-admin. Actualizan `Dealership.paidUntil`.
 - **`TermsAcceptance`** — registro de aceptación de términos por usuario.
+- **`Dealership.aiChatMonthlyMessages`** — cupo del add-on del asistente con IA (0 = no contratado). Las conversaciones NO se guardan en DB: viven en Redis 24 h.
 
 **Distinción clave Lead vs Customer:** un `Lead` es una consulta pre-venta (puede no tener email, puede ser anónimo). Un `Customer` es alguien que firma una operación — tiene documento obligatorio. No mezclar.
 
@@ -857,6 +890,13 @@ CRON_SECRET=
 # por coma. Su PRESENCIA es el interruptor: vacía = el MCP no existe (404).
 MCP_OAUTH_CLIENT_IDS=
 
+# Chat con IA del panel (/api/chat) vía OpenRouter. Las DOS primeras son el
+# interruptor: sin alguna, el chat no existe (aunque el dealer tenga cupo).
+OPENROUTER_API_KEY=                 # SECRETO
+AI_CHAT_MODEL=                      # slug de OpenRouter, sale del eval (pnpm chat:eval)
+AI_CHAT_MONTHLY_TOKEN_CAP=          # techo de tokens por dealer/mes. Vacío = sin techo
+OPENROUTER_BASE_URL=                # solo tests locales (un OpenRouter falso). VACÍA en prod
+
 # Email (Resend) — dependencia instalada, SIN uso en el código
 RESEND_API_KEY=
 ```
@@ -903,14 +943,15 @@ RESEND_API_KEY=
 
 *Plataforma*
 - **Servidor MCP** (`/api/mcp`) para operar el panel desde Claude/ChatGPT: vehículos y gastos, con OAuth de Clerk y cupo por plan.
+- **Asistente con IA del panel** (`/api/chat`, add-on): las mismas tools del MCP en memoria, modelo vía OpenRouter, confirmación de borrar/publicar fuera del modelo.
 - Middleware de subdomain routing (rewrite a `/tenant/{slug}`, con `url.search` incluido).
 - Storage S3-compatible (Contabo) con dos buckets — público (imágenes) + privado (documentos, presigned 5 min).
 - Logging con `withLogger` + `request_id` propagado.
-- **Seguridad**: headers (X-Frame, nosniff, Referrer-Policy, Permissions-Policy, HSTS-prod), rate limiting Upstash y honeypot en todos los endpoints públicos.
+- **Seguridad**: headers (X-Frame, nosniff, Referrer-Policy, Permissions-Policy, HSTS-prod, CSP report-only), rate limiting Upstash y honeypot en todos los endpoints públicos.
 - i18n paso 1: `country`, `currency`, `locale`, `siteLocale`, `timezone` por tenant.
 
 **Pendiente:**
-- CSP (Content-Security-Policy) — iteración aparte, con Clerk-tuning en modo report-only primero.
+- CSP: pasar de report-only a enforcing una vez que los logs de prod queden limpios.
 - Email transaccional con Resend (dependencia instalada, sin uso).
 - Testing (Vitest + RTL) — no hay NADA configurado.
 - Routing de dominios custom en el middleware (`CUSTOM_DOMAINS_ENABLED = false`).

@@ -7,12 +7,18 @@ import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { RegisterPaymentDialog } from "@/components/admin/register-payment-dialog";
 import { DEALERSHIP_PLANS } from "@/lib/constants";
+import { AI_CHAT_PACKAGES } from "@/lib/chat/config";
 
 interface AccountRowActionsProps {
   id: string;
   name: string;
   plan: string;
   subscriptionStatus: string;
+  aiChatMonthlyMessages: number;
+}
+
+function aiChatLabel(messages: number): string {
+  return messages === 0 ? "IA: no" : `IA: ${messages}/mes`;
 }
 
 // bg-background/text-foreground explícitos para que el dropdown nativo sea
@@ -25,6 +31,7 @@ export function AccountRowActions({
   name,
   plan,
   subscriptionStatus,
+  aiChatMonthlyMessages,
 }: AccountRowActionsProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -60,6 +67,17 @@ export function AccountRowActions({
     void patch({ plan: next }, `Plan actualizado a ${next}`);
   }
 
+  // Si a la cuenta se le cargó un valor que ya no está en los paquetes, igual se muestra.
+  const aiChatOptions = AI_CHAT_PACKAGES.some((p) => p === aiChatMonthlyMessages)
+    ? [...AI_CHAT_PACKAGES]
+    : [...AI_CHAT_PACKAGES, aiChatMonthlyMessages];
+
+  function handleAiChatChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const next = Number(e.target.value);
+    if (next === aiChatMonthlyMessages) return;
+    void patch({ aiChatMonthlyMessages: next }, `Asistente IA: ${aiChatLabel(next)}`);
+  }
+
   function handleToggle() {
     if (isSuspended) {
       void patch({ subscriptionStatus: "active" }, "Cuenta habilitada");
@@ -80,6 +98,20 @@ export function AccountRowActions({
         {DEALERSHIP_PLANS.map((p) => (
           <option key={p} value={p} className="bg-background text-foreground">
             {p}
+          </option>
+        ))}
+      </select>
+
+      <select
+        className={cn(SELECT_CLASS, "normal-case")}
+        value={aiChatMonthlyMessages}
+        disabled={loading}
+        onChange={handleAiChatChange}
+        aria-label="Asistente con IA"
+      >
+        {aiChatOptions.map((p) => (
+          <option key={p} value={p} className="bg-background text-foreground">
+            {aiChatLabel(p)}
           </option>
         ))}
       </select>

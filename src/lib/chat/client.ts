@@ -47,7 +47,7 @@ export async function completeChat(
   messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
   tools: OpenAI.Chat.Completions.ChatCompletionTool[],
   model: string = getChatModel()
-): Promise<{ message: OpenAI.Chat.Completions.ChatCompletionMessage; usage: ChatUsage }> {
+): Promise<{ message: OpenAI.Chat.Completions.ChatCompletionMessage; truncated: boolean; usage: ChatUsage }> {
   const params: OpenRouterParams = {
     model,
     messages,
@@ -73,6 +73,8 @@ export async function completeChat(
   const usage = completion.usage as (OpenAI.CompletionUsage & { cost?: number }) | undefined;
   return {
     message: choice.message,
+    // true = el modelo chocó con max_tokens y el texto quedó cortado.
+    truncated: choice.finish_reason === "length",
     usage: {
       promptTokens: usage?.prompt_tokens ?? 0,
       completionTokens: usage?.completion_tokens ?? 0,

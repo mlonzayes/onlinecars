@@ -95,8 +95,10 @@ export async function runChatTurn(input: ChatTurnInput): Promise<ChatTurnResult>
     const text = response.message.content?.trim() ?? "";
 
     if (calls.length === 0) {
-      conversation.messages.push({ role: "assistant", content: text });
-      return { reply: text || CHAT_COPY.errors.generic, pendingActions, usage, toolCalls };
+      // Cortada por el tope de salida: se avisa en vez de dejar el texto a la mitad.
+      const reply = response.truncated && text ? `${text}…\n\n${CHAT_COPY.truncated}` : text;
+      conversation.messages.push({ role: "assistant", content: reply });
+      return { reply: reply || CHAT_COPY.errors.generic, pendingActions, usage, toolCalls };
     }
 
     conversation.messages.push({ role: "assistant", content: text || null, tool_calls: calls });

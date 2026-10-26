@@ -8,6 +8,7 @@ import { useTheme } from "next-themes";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "./notification-bell";
+import { AiChatLauncher } from "./ai-chat/ai-chat-launcher";
 import { formatCurrency } from "@/lib/utils";
 import type { EffectiveUsdRate } from "@/lib/exchange-rate";
 
@@ -72,6 +73,8 @@ interface DashboardHeaderProps {
   dealershipName: string;
   // Cotización de trabajo del dealer (oficial + spread). null si no hay dato.
   usdRate: EffectiveUsdRate | null;
+  // Asistente con IA. null = el chat está apagado a nivel plataforma (sin botón).
+  aiChat: { enabled: boolean; contactHref: string } | null;
 }
 
 // Formatea "2026-06-18" a "18/06" para el tooltip del chip.
@@ -81,7 +84,7 @@ function formatRateDate(iso: string | null): string | null {
   return m && d ? `${d}/${m}` : null;
 }
 
-export function DashboardHeader({ dealershipName, usdRate }: DashboardHeaderProps) {
+export function DashboardHeader({ dealershipName, usdRate, aiChat }: DashboardHeaderProps) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
 
@@ -135,6 +138,8 @@ export function DashboardHeader({ dealershipName, usdRate }: DashboardHeaderProp
 
       {/* Acciones del header */}
       <div className="flex items-center gap-2">
+        {aiChat && <AiChatLauncher enabled={aiChat.enabled} contactHref={aiChat.contactHref} />}
+
         {/* Cotización del día (tu cotización = oficial + spread) */}
         {usdRate && (
           <div

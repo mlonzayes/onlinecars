@@ -11,6 +11,9 @@ import { DashboardHeader } from "@/components/dashboard/header";
 import { DashboardFooter } from "@/components/dashboard/dashboard-footer";
 import { Toaster } from "@/components/ui/sonner";
 import { AppClerkProvider } from "@/components/auth/app-clerk-provider";
+import { isChatEnabled } from "@/lib/chat/config";
+import { CHAT_COPY } from "@/lib/chat/copy";
+import { SITE_WHATSAPP } from "@/lib/seo";
 
 export default async function DashboardLayout({
   children,
@@ -59,12 +62,21 @@ export default async function DashboardLayout({
     ? applySpread(baseRate, Number(dealership.usdSpread))
     : null;
 
+  // Asistente con IA (add-on). Al header viaja solo lo justo, nunca el dealership.
+  const supportWhatsapp = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP ?? SITE_WHATSAPP;
+  const aiChat = isChatEnabled()
+    ? {
+        enabled: dealership.aiChatMonthlyMessages > 0,
+        contactHref: `https://wa.me/${supportWhatsapp}?text=${encodeURIComponent(CHAT_COPY.contactMessage(dealership.name))}`,
+      }
+    : null;
+
   return (
     <AppClerkProvider>
       <SidebarProvider>
         <DashboardSidebar dealership={dealership} />
         <main className="flex flex-1 flex-col">
-          <DashboardHeader dealershipName={dealership.name} usdRate={usdRate} />
+          <DashboardHeader dealershipName={dealership.name} usdRate={usdRate} aiChat={aiChat} />
           <div className="flex-1 p-6">{children}</div>
           <DashboardFooter />
         </main>

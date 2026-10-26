@@ -352,10 +352,12 @@ ChatGPT. Se vende como **add-on**: `Dealership.aiChatMonthlyMessages` (mensajes/
   y topes por mensaje en `CHAT_LIMITS` (largo, historial, vueltas de tools, salida).
 - **Historial efímero en Redis** (24 h), del lado del server: el cliente solo manda
   `conversationId` + texto. No se loggea el texto de los mensajes (PII).
-- **Borrar y publicar se confirman FUERA del modelo** (`pending-actions.ts`): quedan
-  pendientes en Redis y se ejecutan solo con el botón de la tarjeta
-  (`POST /api/chat/acciones/[id]`). Frena las prompt injections que llegan en el texto
-  de un lead. Tool nueva con `destructiveHint: true` → entra sola en ese circuito.
+- **Toda escritura se confirma FUERA del modelo** (`pending-actions.ts`): cualquier tool
+  sin `readOnlyHint: true` queda pendiente en Redis y se ejecuta solo con el botón de la
+  tarjeta (`POST /api/chat/acciones/[id]`), que muestra el cambio armado con datos reales
+  ("Precio: 30.000 → 1.000"). Frena las prompt injections que llegan en el texto de un
+  lead. **Falla cerrado:** tool nueva que escribe → sumar su descriptor en
+  `action-descriptions.ts`, o el chat no la puede ejecutar.
 
 #### Auditoría (`AuditLog` + `src/lib/services/audit.ts`)
 

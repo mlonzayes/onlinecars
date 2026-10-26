@@ -23,10 +23,12 @@ export const runtime = "nodejs";
 type RouteParams = { id: string };
 
 // La tool devuelve JSON con un `mensaje` para el usuario; si no, un texto genérico.
+// Al cargar un auto suma el link para subir las fotos, que si no se pierde.
 function resultMessage(text: string): string {
   try {
-    const parsed = JSON.parse(text) as { mensaje?: unknown };
-    return typeof parsed.mensaje === "string" ? parsed.mensaje : CHAT_COPY.confirmed;
+    const parsed = JSON.parse(text) as { mensaje?: unknown; linkFotos?: unknown };
+    if (typeof parsed.mensaje !== "string") return CHAT_COPY.confirmed;
+    return typeof parsed.linkFotos === "string" ? `${parsed.mensaje} ${parsed.linkFotos}` : parsed.mensaje;
   } catch {
     return CHAT_COPY.confirmed;
   }

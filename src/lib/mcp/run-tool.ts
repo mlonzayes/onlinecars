@@ -23,9 +23,12 @@ export async function runTool(
   run: () => Promise<unknown>
 ): Promise<CallToolResult> {
   const startedAt = Date.now();
-  const meta = { tool, dealershipId: ctx.dealership.id };
+  const meta = { tool, dealershipId: ctx.dealership.id, source: ctx.source };
 
-  const quota = await checkMcpQuota(ctx);
+  // El chat del panel tiene su propio cupo mensual por mensaje (src/lib/chat/quota.ts).
+  const usesMcpQuota = ctx.source === "mcp";
+
+  const quota = usesMcpQuota ? await checkMcpQuota(ctx) : { ok: true, limit: Infinity };
   if (!quota.ok) {
     logger.warn(ctx.requestId, "mcp.tool.quota_exceeded", { ...meta, limit: quota.limit });
     return textResult(
@@ -37,7 +40,7 @@ export async function runTool(
 
   try {
     const payload = await run();
-    await consumeMcpQuota(ctx);
+    if (usesMcpQuota) await consumeMcpQuota(ctx);
     logger.info(ctx.requestId, "mcp.tool.called", { ...meta, ok: true, durationMs: Date.now() - startedAt });
     return textResult(JSON.stringify(payload, null, 2));
   } catch (error) {

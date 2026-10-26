@@ -127,6 +127,10 @@ model Dealership {
   // Gateado por plan (allowClarity). Es PÚBLICO (va en el HTML). Su presencia
   // es el interruptor: null = no se monta nada.
   clarityProjectId     String?
+  // --- Chat con IA del panel (add-on) ---
+  // Mensajes por mes que el dealer puede mandarle al chat del dashboard. Lo
+  // setea el super-admin al vender el paquete; NO depende del plan. 0 = apagado.
+  aiChatMonthlyMessages Int     @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

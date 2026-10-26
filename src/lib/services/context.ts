@@ -4,7 +4,7 @@ import { canWrite } from "@/lib/permissions";
 import { ServiceError } from "./service-error";
 import type { DealershipWithUser } from "@/lib/auth";
 
-export type ServiceSource = "dashboard" | "mcp";
+export type ServiceSource = "dashboard" | "mcp" | "chat";
 
 /**
  * Todo lo que un servicio necesita saber de quién llama. El canal (handler del

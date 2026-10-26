@@ -66,6 +66,7 @@ pnpm build          # Build de producción
 pnpm start          # Levanta el build
 pnpm lint           # ESLint
 pnpm lint:fix       # ESLint con --fix
+pnpm chat:eval --models <slug>,<slug>   # Compara modelos de OpenRouter para el chat (gasta centavos)
 ```
 
 **No hay script de `typecheck` ni de `test`** — para chequear tipos corré `pnpm exec tsc --noEmit`. Si vas a agregar testing, primero pedile al usuario que confirme el setup.
@@ -204,7 +205,8 @@ src/
 ├── admin/{dealerships/[id],dealerships/[id]/pagos,impersonation}
 ├── cron/{expire-trials,sync-exchange-rate}
 ├── mcp                           # Servidor MCP para Claude/ChatGPT (OAuth de Clerk) — ver sección MCP
-└── webhooks/clerk
+├── chat                          # GET/POST — asistente con IA del panel (add-on) + /acciones/[id] — ver sección Chat
+└── webhooks/{clerk,billing}      # billing: eventos firmados de billing-svc (Mercado Pago) — ver contracts/billing/
 
 /.well-known/oauth-protected-resource[/api/mcp] · /.well-known/oauth-authorization-server   # metadata OAuth del MCP
 ```
@@ -331,6 +333,29 @@ Deja que el dealer opere el panel desde Claude o ChatGPT ("cargame este auto",
 - **Nunca sumar ARS con USD sin convertir.** `resumen_negocio` convierte costo y gastos a
   la moneda de cada venta y totaliza por moneda; el dashboard (`dashboard-financials.ts`)
   pasa todo a pesos con la cotización del dealer. Los dos usan la cotización de hoy.
+
+#### Chat con IA del panel (`/api/chat` + `src/lib/chat/`)
+
+El mismo "operá el panel escribiendo" del MCP, para el dealer que no tiene Claude ni
+ChatGPT. Se vende como **add-on**: `Dealership.aiChatMonthlyMessages` (mensajes/mes,
+0 = apagado) lo setea el super-admin desde `/admin`, no depende del plan.
+
+- **Reusa el MCP en memoria** (`mcp-bridge.ts`): `InMemoryTransport` + `Client` contra
+  `createMcpServer(ctx)` con `source: "chat"`. Cero tools propias: tool nueva del MCP →
+  aparece sola en el chat. En ese canal `runTool` no cobra el cupo diario del MCP.
+- **Modelo vía OpenRouter** con el SDK `openai` (`client.ts`). `OPENROUTER_API_KEY` +
+  `AI_CHAT_MODEL` son el interruptor. Cada request manda `provider.data_collection: "deny"`
+  (por el chat pasan datos de clientes): no lo saques. El modelo se elige con
+  `pnpm chat:eval --models a,b` (`evals/chat/`, no ejecuta tools).
+- **Límites:** `chatLimiter` (10/min por usuario), cupo mensual que cuenta TODOS los
+  mensajes (el off-topic también consume), techo de tokens `AI_CHAT_MONTHLY_TOKEN_CAP`,
+  y topes por mensaje en `CHAT_LIMITS` (largo, historial, vueltas de tools, salida).
+- **Historial efímero en Redis** (24 h), del lado del server: el cliente solo manda
+  `conversationId` + texto. No se loggea el texto de los mensajes (PII).
+- **Borrar y publicar se confirman FUERA del modelo** (`pending-actions.ts`): quedan
+  pendientes en Redis y se ejecutan solo con el botón de la tarjeta
+  (`POST /api/chat/acciones/[id]`). Frena las prompt injections que llegan en el texto
+  de un lead. Tool nueva con `destructiveHint: true` → entra sola en ese circuito.
 
 **Alta de un cliente (Claude, ChatGPT):** Clerk Dashboard → OAuth applications →
 crear la app con el redirect URI del cliente (Claude: `https://claude.ai/api/mcp/auth_callback`)
@@ -736,8 +761,11 @@ Ver schema completo en [prisma/schema.prisma](prisma/schema.prisma). Resumen:
 - **`Notification`** — avisos in-app del panel (lead nuevo, review, venta). Polling desde `/api/notifications`.
 - **`MercadoLibreAccount`** + **`MercadoLibreListing`** — vínculo OAuth con ML y mapeo publicación ↔ vehículo. Los tokens se guardan cifrados (`ML_TOKEN_SECRET`).
 - **`ExchangeRate`** — cotización oficial USD (BCRA), global. El plus por tenant es `Dealership.usdSpread`; el valor efectivo se calcula al usarlo, **nunca se persiste sumado**.
-- **`SubscriptionPayment`** — pagos de la suscripción a la plataforma, cargados por el super-admin. Actualizan `Dealership.paidUntil`.
+- **`SubscriptionPayment`** — pagos de la suscripción a la plataforma. `source: manual` los carga el super-admin (actualizan `Dealership.paidUntil`); `source: mercadopago` los registra `/api/webhooks/billing` (idempotentes por `externalId`).
+- **`BillingEventReceipt`** — eventos de billing-svc ya recibidos (dedupe de reintentos del outbox).
+- **Cobros con Mercado Pago (en construcción):** viven en un servicio Go aparte (`motorflow-billing`, schema `billing` de la misma base). Next solo guarda la proyección (`plan`, `subscriptionStatus`, `paidUntil`, `billingGraceEndsAt`, `billingStateVersion`) y nunca escribe en `billing.*`. Contrato, firma HMAC, estados y orden de eventos: [contracts/billing/README.md](contracts/billing/README.md). Cliente Next → Go: `src/lib/billing/client.ts`.
 - **`TermsAcceptance`** — registro de aceptación de términos por usuario.
+- **`Dealership.aiChatMonthlyMessages`** — cupo del add-on del asistente con IA (0 = no contratado). Las conversaciones NO se guardan en DB: viven en Redis 24 h.
 
 **Distinción clave Lead vs Customer:** un `Lead` es una consulta pre-venta (puede no tener email, puede ser anónimo). Un `Customer` es alguien que firma una operación — tiene documento obligatorio. No mezclar.
 
@@ -864,6 +892,18 @@ CRON_SECRET=
 # por coma. Su PRESENCIA es el interruptor: vacía = el MCP no existe (404).
 MCP_OAUTH_CLIENT_IDS=
 
+# billing-svc (Mercado Pago, servicio Go aparte) — ver contracts/billing/.
+# Un secret por dirección. Sin BILLING_WEBHOOK_SECRET, /api/webhooks/billing da 404.
+BILLING_SERVICE_URL=                # ej. https://billing.motorflowapp.com (sin barra final)
+BILLING_API_SECRET=                 # SECRETO — firma Next → Go
+BILLING_WEBHOOK_SECRET=             # SECRETO — firma Go → Next
+
+# Chat con IA del panel (/api/chat) vía OpenRouter. Las DOS primeras son el
+# interruptor: sin alguna, el chat no existe (aunque el dealer tenga cupo).
+OPENROUTER_API_KEY=                 # SECRETO
+AI_CHAT_MODEL=                      # slug de OpenRouter, sale del eval (pnpm chat:eval)
+AI_CHAT_MONTHLY_TOKEN_CAP=          # techo de tokens por dealer/mes. Vacío = sin techo
+
 # Email (Resend) — dependencia instalada, SIN uso en el código
 RESEND_API_KEY=
 ```
@@ -910,6 +950,7 @@ RESEND_API_KEY=
 
 *Plataforma*
 - **Servidor MCP** (`/api/mcp`) para operar el panel desde Claude/ChatGPT: vehículos y gastos, con OAuth de Clerk y cupo por plan.
+- **Asistente con IA del panel** (`/api/chat`, add-on): las mismas tools del MCP en memoria, modelo vía OpenRouter, confirmación de borrar/publicar fuera del modelo.
 - Middleware de subdomain routing (rewrite a `/tenant/{slug}`, con `url.search` incluido).
 - Storage S3-compatible (Contabo) con dos buckets — público (imágenes) + privado (documentos, presigned 5 min).
 - Logging con `withLogger` + `request_id` propagado.

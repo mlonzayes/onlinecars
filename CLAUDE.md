@@ -434,6 +434,13 @@ Definidos en [next.config.ts](next.config.ts) → función `headers()`. Aplican 
 - `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), ...`
 - `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload` — **solo en `NODE_ENV=production`** (en dev rompe localhost).
 
+**CSRF (en el middleware, [src/lib/security/csrf.ts](src/lib/security/csrf.ts)):** todo request a `/api/*`
+que no sea GET/HEAD/OPTIONS tiene que traer un `Origin` del panel (o `Sec-Fetch-Site: same-origin`
+si no hay Origin); si no, 403 y log `security.csrf.rejected`. Hace falta porque los subdominios de
+los tenants son **same-site** con `app.`: `SameSite=Lax` no frena un POST armado desde ahí.
+Falla cerrado: endpoint nuevo que reciba POST de un tercero (webhook, servidor, sitio del tenant)
+→ sumarlo a `EXEMPT_PREFIXES` (hoy: `/api/public/`, `/api/webhooks/`, ML webhooks, `/api/cron/`, `/api/mcp`).
+
 **`Content-Security-Policy`** se arma en [src/lib/security/csp.ts](src/lib/security/csp.ts) y hoy sale como **`Content-Security-Policy-Report-Only`**: el browser no bloquea nada, solo reporta a `POST /api/public/csp-report`, que loggea `security.csp.violation` (sin query strings, ignorando extensiones del browser).
 
 - **Orígenes que salen de env:** Clerk (decodificado de `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`), `S3_PUBLIC_URL`, `S3_ENDPOINT` y la URL de reportes (`NEXT_PUBLIC_APP_URL`, absoluta porque en un subdominio de tenant un path relativo cae en el rewrite). Se leen **en el build**: cambiar esas env vars exige redeploy.

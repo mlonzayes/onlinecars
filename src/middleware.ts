@@ -1,6 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { rejectCrossOriginApiRequest } from "@/lib/security/csrf";
 import { getTenantPathPrefix, isTenantSubdomainRouting } from "@/lib/tenant-routing";
 
 // OJO: esto es un ALLOWLIST. Con NEXT_PUBLIC_ENABLE_LOGIN=true, todo lo que no
@@ -93,6 +94,10 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
       );
     }
   }
+
+  // CSRF: todo lo que muta en /api tiene que venir del propio panel.
+  const csrfRejection = rejectCrossOriginApiRequest(req);
+  if (csrfRejection) return csrfRejection;
 
   // Proteger rutas del dashboard solo si login está habilitado
   if (isLoginEnabled && !isPublicRoute(req)) {

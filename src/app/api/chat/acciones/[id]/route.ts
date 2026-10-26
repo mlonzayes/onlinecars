@@ -66,6 +66,9 @@ export const POST = withLogger<RouteParams>(async (request, { requestId, params 
     tool: action.tool,
     decision: parsed.data.decision,
     ok,
+    // Cuántos avisos de cambio sensible tenía: un confirm con avisos es lo que
+    // hay que mirar si aparece un precio regalado o un teléfono ajeno.
+    warnings: action.warnings?.length ?? 0,
   });
 
   // Se anota en el historial para que el modelo sepa qué pasó con lo pendiente.

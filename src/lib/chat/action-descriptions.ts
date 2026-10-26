@@ -5,6 +5,7 @@ import { getVehicle } from "@/lib/services/vehicles";
 import type { ServiceContext } from "@/lib/services/context";
 import { formatVehiclePrice } from "@/lib/tenant-format";
 import { CHAT_COPY } from "./copy";
+import { vehicleCreateWarnings, vehicleUpdateWarnings } from "./sensitive-changes";
 import { describeVehicleChanges } from "./vehicle-diff";
 
 // Lo que dice la tarjeta de confirmación de cada tool que escribe. Se arma con
@@ -18,6 +19,8 @@ type Args = Record<string, unknown>;
 interface ActionDescription {
   label: string;
   description: string;
+  // Cambios sensibles (ver sensitive-changes.ts). Vacío = tarjeta normal.
+  warnings?: string[];
 }
 type Describer = (ctx: ServiceContext, args: Args) => Promise<ActionDescription>;
 
@@ -33,6 +36,7 @@ const DESCRIBERS: Record<string, Describer> = {
     return {
       label: CHAT_COPY.actions.createVehicle,
       description: `${str(args.title)} · ${str(args.year)} · ${formatVehiclePrice(args.price, str(args.currency) || "ARS")}${km}\n${CHAT_COPY.actions.draftNote}`,
+      warnings: vehicleCreateWarnings(args),
     };
   },
 
@@ -41,7 +45,11 @@ const DESCRIBERS: Record<string, Describer> = {
     const { vehiculo_id: _id, ...changes } = args;
     const lines = describeVehicleChanges(vehicle, changes, canEditCosts(ctx.dealership.currentUser));
     if (lines.length === 0) throw new Error(CHAT_COPY.actions.noChanges);
-    return { label: CHAT_COPY.actions.updateVehicle, description: [vehicle.title, ...lines].join("\n") };
+    return {
+      label: CHAT_COPY.actions.updateVehicle,
+      description: [vehicle.title, ...lines].join("\n"),
+      warnings: vehicleUpdateWarnings(vehicle, changes),
+    };
   },
 
   async cargar_gasto(ctx, args) {

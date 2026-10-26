@@ -33,9 +33,11 @@ export interface PendingAction {
   label: string;
   description: string;
   destructive: boolean;
+  // Cambios sensibles: la tarjeta los resalta y pide un segundo paso.
+  warnings: string[];
 }
 
-export type PendingActionView = Pick<PendingAction, "id" | "label" | "description" | "destructive">;
+export type PendingActionView = Pick<PendingAction, "id" | "label" | "description" | "destructive" | "warnings">;
 
 function actionKey(id: string): string {
   return `chat:action:${id}`;
@@ -45,7 +47,7 @@ export async function createPendingAction(
   ctx: ServiceContext,
   input: { conversationId: string; tool: Tool; args: Record<string, unknown> }
 ): Promise<PendingAction> {
-  const { label, description } = await describeAction(ctx, input.tool.name, input.args);
+  const { label, description, warnings = [] } = await describeAction(ctx, input.tool.name, input.args);
   const action: PendingAction = {
     id: randomUUID(),
     dealershipId: ctx.dealership.id,
@@ -56,6 +58,7 @@ export async function createPendingAction(
     label,
     description,
     destructive: input.tool.annotations?.destructiveHint === true,
+    warnings,
   };
   await redis.set(actionKey(action.id), action, { ex: CHAT_LIMITS.pendingActionTtlSeconds });
   return action;
@@ -74,5 +77,12 @@ export async function takePendingAction(ctx: ServiceContext, id: string): Promis
 }
 
 export function toPendingActionView(action: PendingAction): PendingActionView {
-  return { id: action.id, label: action.label, description: action.description, destructive: action.destructive };
+  return {
+    id: action.id,
+    label: action.label,
+    description: action.description,
+    destructive: action.destructive,
+    // Las acciones guardadas antes de este campo no lo traen.
+    warnings: action.warnings ?? [],
+  };
 }

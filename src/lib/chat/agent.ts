@@ -57,7 +57,8 @@ async function executeCall(
         args,
       });
       pending.push(action);
-      return `Quedó pendiente: el usuario tiene que tocar "Confirmar" en pantalla (${action.label}: ${action.description}). Todavía NO se hizo.`;
+      const warnings = action.warnings.length > 0 ? ` La tarjeta le avisa: ${action.warnings.join(" ")}` : "";
+      return `Quedó pendiente: el usuario tiene que tocar "Confirmar" en pantalla (${action.label}: ${action.description}).${warnings} Todavía NO se hizo.`;
     } catch (error) {
       return error instanceof Error ? error.message : String(error);
     }

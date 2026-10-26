@@ -3,6 +3,7 @@ import { logger } from "@/lib/logger";
 import { invalidateVehicleCaches } from "@/lib/cache-tags";
 import { assertCanEditInventory, logMeta, type ServiceContext } from "../context";
 import { isPrismaNotFound } from "../service-error";
+import { recordAudit } from "../audit";
 import { assertNoBlockingSale, vehicleNotFound } from "./guards";
 import type { VehicleStatus } from "@/lib/constants";
 
@@ -17,6 +18,12 @@ export async function setVehicleStatus(
   assertCanEditInventory(ctx, EVENT);
   await assertNoBlockingSale(ctx, vehicleId, EVENT);
 
+  const before = await prisma.vehicle.findFirst({
+    where: { id: vehicleId, dealershipId: ctx.dealership.id },
+    select: { status: true },
+  });
+  if (!before) throw vehicleNotFound(ctx, vehicleId, EVENT);
+
   try {
     const vehicle = await prisma.vehicle.update({
       where: { id: vehicleId, dealershipId: ctx.dealership.id },
@@ -24,6 +31,14 @@ export async function setVehicleStatus(
       select: { id: true, status: true },
     });
     await invalidateVehicleCaches(ctx.dealership.slug);
+    if (before.status !== status) {
+      await recordAudit(ctx, {
+        action: "vehicle.status",
+        entityType: "vehicle",
+        entityId: vehicleId,
+        changes: { status: { from: before.status, to: status } },
+      });
+    }
     logger.info(ctx.requestId, `${EVENT}.updated`, logMeta(ctx, { vehicleId, status }));
     return vehicle;
   } catch (error) {

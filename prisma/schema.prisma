@@ -151,6 +151,7 @@ model Dealership {
   notifications     Notification[]
   vehicleExpenses   VehicleExpense[]
   subscriptionPayments SubscriptionPayment[]
+  auditLogs         AuditLog[]
 
   @@map("dealerships")
 }
@@ -387,6 +388,29 @@ model VehicleExpense {
   @@index([vehicleId])
   @@index([dealershipId])
   @@map("vehicle_expenses")
+}
+
+// Registro de cambios hechos por un usuario, desde cualquier canal (panel, MCP,
+// chat). Lo escriben los servicios de src/lib/services, no los handlers.
+// Sin FK a la entidad a propósito: el registro de un borrado tiene que sobrevivir
+// a la fila borrada. `changes` nunca lleva datos personales de clientes.
+model AuditLog {
+  id           String   @id @default(cuid())
+  dealershipId String
+  clerkUserId  String
+  source       String   // dashboard | mcp | chat
+  action       String   // ej: vehicle.update, expense.delete
+  entityType   String   // vehicle | expense
+  entityId     String
+  changes      Json?    // update: { campo: { from, to } } · create/delete: snapshot
+  requestId    String
+  createdAt    DateTime @default(now())
+
+  dealership Dealership @relation(fields: [dealershipId], references: [id], onDelete: Cascade)
+
+  @@index([dealershipId, createdAt])
+  @@index([dealershipId, entityType, entityId])
+  @@map("audit_logs")
 }
 
 model Lead {

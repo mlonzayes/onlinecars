@@ -357,6 +357,14 @@ ChatGPT. Se vende como **add-on**: `Dealership.aiChatMonthlyMessages` (mensajes/
   (`POST /api/chat/acciones/[id]`). Frena las prompt injections que llegan en el texto
   de un lead. Tool nueva con `destructiveHint: true` → entra sola en ese circuito.
 
+#### Auditoría (`AuditLog` + `src/lib/services/audit.ts`)
+
+Los servicios de escritura registran quién cambió qué (`clerkUserId`, `source`
+dashboard/mcp/chat, `action`, diff antes/después) con `recordAudit()` después de
+mutar. Hoy cubre vehículos (create/update/status/publish/delete) y gastos. Es
+fail-open y `changes` nunca lleva datos personales de clientes. Servicio de escritura
+nuevo → llamar a `recordAudit`.
+
 **Alta de un cliente (Claude, ChatGPT):** Clerk Dashboard → OAuth applications →
 crear la app con el redirect URI del cliente (Claude: `https://claude.ai/api/mcp/auth_callback`)
 → sumar su client ID a `MCP_OAUTH_CLIENT_IDS` → en el cliente, conector personalizado con
@@ -763,6 +771,7 @@ Ver schema completo en [prisma/schema.prisma](prisma/schema.prisma). Resumen:
 - **`ExchangeRate`** — cotización oficial USD (BCRA), global. El plus por tenant es `Dealership.usdSpread`; el valor efectivo se calcula al usarlo, **nunca se persiste sumado**.
 - **`SubscriptionPayment`** — pagos de la suscripción a la plataforma, cargados por el super-admin. Actualizan `Dealership.paidUntil`.
 - **`TermsAcceptance`** — registro de aceptación de términos por usuario.
+- **`AuditLog`** — quién cambió qué y desde qué canal (panel, MCP, chat). Sin FK a la entidad: sobrevive al borrado. Tabla: `audit_logs`.
 - **`Dealership.aiChatMonthlyMessages`** — cupo del add-on del asistente con IA (0 = no contratado). Las conversaciones NO se guardan en DB: viven en Redis 24 h.
 
 **Distinción clave Lead vs Customer:** un `Lead` es una consulta pre-venta (puede no tener email, puede ser anónimo). Un `Customer` es alguien que firma una operación — tiene documento obligatorio. No mezclar.

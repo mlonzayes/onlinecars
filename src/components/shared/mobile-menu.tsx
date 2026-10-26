@@ -5,26 +5,23 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
 import gsap from "gsap";
-import { PiList, PiX, PiEnvelope, PiGauge, PiUserPlus } from "react-icons/pi";
+import { PiList, PiX } from "react-icons/pi";
 import { WhatsAppIcon } from "@/components/tenant/social-icons";
 import { SITE_WHATSAPP_URL } from "@/lib/seo";
+import { MARKETING_NAV_LINKS } from "./marketing-nav-links";
 
 interface MobileMenuProps {
   isLoginEnabled: boolean;
   isSignedIn: boolean;
 }
 
-// Anclas con "/" adelante: el menú se monta también en /precios y /blog, donde
-// un href="#faq" pelado no navega a ningún lado.
-const LINKS = [
-  { href: "/#producto", label: "Producto" },
-  { href: "/#planes", label: "Planes" },
-  { href: "/#faq", label: "FAQ" },
-  { href: "/blog", label: "Blog" },
-];
-
 export function MobileMenu({ isLoginEnabled, isSignedIn }: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const primary = !isLoginEnabled
+    ? { href: "/#contacto", label: "Contacto" }
+    : isSignedIn
+      ? { href: "/dashboard", label: "Ir al panel" }
+      : { href: "/sign-up", label: "Probar 15 días gratis" };
   const [mounted, setMounted] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<HTMLDivElement>(null);
@@ -73,10 +70,10 @@ export function MobileMenu({ isLoginEnabled, isSignedIn }: MobileMenuProps) {
   }, [isOpen]);
 
   return (
-    <div className="md:hidden">
+    <div className="lg:hidden">
       <button
         type="button"
-        className="rounded-full p-2 text-gray-700 transition hover:bg-gray-100"
+        className="rounded-lg p-2 text-ink transition hover:bg-ink/5"
         onClick={() => setIsOpen(true)}
         aria-label="Abrir menú"
       >
@@ -88,13 +85,13 @@ export function MobileMenu({ isLoginEnabled, isSignedIn }: MobileMenuProps) {
       {mounted &&
         isOpen &&
         createPortal(
-          <div ref={overlayRef} className="fixed inset-0 z-[100] flex flex-col bg-white">
+          <div ref={overlayRef} className="fixed inset-0 z-[100] flex flex-col bg-paper">
             {/* Header del menú: marca + cerrar */}
             <div className="flex h-16 shrink-0 items-center justify-between px-5">
               <Image src="/logo/motorflow_light.png" alt="motorflow" width={150} height={150} />
               <button
                 type="button"
-                className="rounded-full p-2 text-gray-700 transition hover:bg-gray-100"
+                className="rounded-lg p-2 text-ink transition hover:bg-ink/5"
                 onClick={() => setIsOpen(false)}
                 aria-label="Cerrar menú"
               >
@@ -104,61 +101,46 @@ export function MobileMenu({ isLoginEnabled, isSignedIn }: MobileMenuProps) {
 
             {/* Links + acciones */}
             <div ref={itemsRef} className="flex flex-1 flex-col px-6 pt-4">
-              {LINKS.map((l) => (
+              {MARKETING_NAV_LINKS.map((l) => (
                 <Link
                   key={l.href}
                   href={l.href}
                   onClick={() => setIsOpen(false)}
-                  className="border-b border-gray-100 py-5 text-2xl font-light text-gray-900 transition hover:text-blue-600"
+                  className="border-b border-ink/10 py-5 font-display text-2xl font-light text-ink transition hover:text-brand"
                 >
                   {l.label}
                 </Link>
               ))}
 
               <div className="mt-8 flex flex-col gap-3">
-                {/* Login — secundario (outline) */}
-                {isLoginEnabled &&
-                  (isSignedIn ? (
-                    <Link
-                      href="/dashboard"
-                      onClick={() => setIsOpen(false)}
-                      className="inline-flex items-center justify-center gap-2 rounded-full border border-gray-300 px-6 py-3.5 text-sm font-medium text-gray-900 transition hover:border-gray-900"
-                    >
-                      <PiGauge className="size-4" />
-                      <span>Ir al panel</span>
-                    </Link>
-                  ) : (
-                    <Link
-                      href="/sign-up"
-                      onClick={() => setIsOpen(false)}
-                      className="inline-flex items-center justify-center gap-2 rounded-full border border-gray-300 px-6 py-3.5 text-sm font-medium text-gray-900 transition hover:border-gray-900"
-                    >
-                      <PiUserPlus className="size-4" />
-                      <span>Registrarse</span>
-                    </Link>
-                  ))}
-
-                {/* WhatsApp — canal directo de ventas/soporte (verde de marca) */}
+                {/* Primaria: la misma acción que el hero (registro con self-serve
+                    abierto). WhatsApp queda como secundaria. */}
+                <Link
+                  href={primary.href}
+                  onClick={() => setIsOpen(false)}
+                  className="inline-flex items-center justify-center rounded-lg bg-brand px-6 py-3.5 text-sm font-medium text-white transition hover:bg-brand-deep"
+                >
+                  {primary.label}
+                </Link>
+                {isLoginEnabled && !isSignedIn && (
+                  <Link
+                    href="/sign-in"
+                    onClick={() => setIsOpen(false)}
+                    className="inline-flex items-center justify-center rounded-lg border border-ink/15 px-6 py-3.5 text-sm font-medium text-ink transition hover:border-ink"
+                  >
+                    Ingresar
+                  </Link>
+                )}
                 <a
                   href={SITE_WHATSAPP_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => setIsOpen(false)}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-[#20bd5a]"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-ink/15 px-6 py-3.5 text-sm font-medium text-ink transition hover:border-ink"
                 >
-                  <WhatsAppIcon className="size-4" />
-                  <span>WhatsApp</span>
+                  <WhatsAppIcon className="size-4 text-[#25D366]" />
+                  <span>Escribinos por WhatsApp</span>
                 </a>
-
-                {/* Contacto — primario (azul sólido) */}
-                <Link
-                  href="/#contacto"
-                  onClick={() => setIsOpen(false)}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-blue-700"
-                >
-                  <PiEnvelope className="size-4" />
-                  <span>Contacto</span>
-                </Link>
               </div>
             </div>
           </div>,

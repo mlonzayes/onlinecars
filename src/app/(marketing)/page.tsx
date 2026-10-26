@@ -1,36 +1,42 @@
+import type { Metadata } from "next";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
-import { HeroSection } from "@/components/landing/hero-section";
-import { ProblemSection } from "@/components/landing/problem-section";
-import { ProductShowcase } from "@/components/landing/product-showcase";
-import { DifferentiatorsSection } from "@/components/landing/differentiators-section";
-import { GuaranteesSection } from "@/components/landing/guarantees-section";
-import { PricingCards } from "@/components/landing/pricing-cards";
-import { PricingDisclaimer } from "@/components/landing/pricing-disclaimer";
+import { HeroAiSection } from "@/components/landing/hero-ai-section";
+import { ProblemStorySection } from "@/components/landing/problem-story-section";
+import { AiRequestsSection } from "@/components/landing/ai-requests-section";
+import { SystemShowcaseSection } from "@/components/landing/system-showcase-section";
+import { IntegrationsSection } from "@/components/landing/integrations-section";
+import { OnboardingStepsSection } from "@/components/landing/onboarding-steps-section";
+import { FounderSection } from "@/components/landing/founder-section";
+import { PricingSection } from "@/components/landing/pricing-section";
 import { FaqContactSection, getFaqs } from "@/components/landing/faq-contact-section";
+import { FinalCtaSection } from "@/components/landing/final-cta-section";
+import { MobileStickyCta } from "@/components/landing/mobile-sticky-cta";
 import { WhatsAppFab } from "@/components/landing/whatsapp-fab";
 import { Toaster } from "@/components/ui/sonner";
 import { JsonLd } from "@/components/seo/json-ld";
-import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, SITE_EMAIL, SITE_PHONE } from "@/lib/seo";
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, SITE_EMAIL, SITE_PHONE, getPrimaryCta } from "@/lib/seo";
 import { COUNTRIES, COUNTRY_LABELS } from "@/lib/constants";
 
 /**
- * Landing de motorflow — 7 secciones.
+ * Landing de motorflow — rediseño "manejá tu concesionaria con IA".
  *
- * Pasó de 14 a 7 en el rediseño. Lo que se sacó NO fue por largo, fue por
- * repetido: Solution, Services y Benefits decían lo mismo que el showcase con
- * otras palabras (el argumento "sitio propio" aparecía 4 veces, "MercadoLibre"
- * 5). Repetir un argumento cuatro veces no lo refuerza — hace que dejen de
- * creerte, y te da cuatro oportunidades más de que cierren la pestaña.
+ * Brief, copy y pendientes en .agents/landing-brief.md (skill landing-que-vende).
+ * Tráfico principal: Meta Ads en celular. Acción única: crear cuenta (prueba de
+ * 15 días). El form de contacto queda como salida secundaria en la FAQ.
  *
  * Componentes archivados (siguen en el repo, sin importar):
- *   solution-section · vehicle-types-section · services-section (+ roadmap-*) ·
- *   benefits-section · dealer-workflow-section · mid-cta-section ·
- *   testimonials-section (testimonios ficticios) · blog-section
- *
- * El blog NO se borró del sitio: sigue en /blog, en el navbar y en el footer.
- * Se sacó de la home porque era una salida de tráfico a un scroll del CTA final.
+ *   hero-section · problem-section · product-showcase · differentiators-section ·
+ *   guarantees-section · solution-section · vehicle-types-section ·
+ *   services-section (+ roadmap-*) · benefits-section · dealer-workflow-section ·
+ *   mid-cta-section · testimonials-section (testimonios ficticios) · blog-section
  */
+
+export const metadata: Metadata = {
+  title: { absolute: "Sistema para concesionarias que manejás con IA | motorflow" },
+  description:
+    "Tu web, tu stock, tus consultas y el margen de cada auto. Cargá un auto o un gasto escribiéndole a Claude o ChatGPT. Probalo 15 días gratis.",
+};
 
 // Structured data (schema.org) — la leen Google (rich results / FAQ) y los
 // motores de IA para entender qué es motorflow, qué ofrece y a qué precio.
@@ -94,56 +100,39 @@ function buildStructuredData() {
 }
 
 export default function HomePage() {
+  const cta = getPrimaryCta();
+
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-paper">
       <JsonLd data={buildStructuredData()} />
       <Navbar />
 
       <main className="flex-1">
-        {/* 1. Hero — promesa + screenshot (LCP) */}
-        <HeroSection />
-
-        {/* 2. Problema — tensión: dependencia de ML, invisibilidad, caos operativo */}
-        <ProblemSection />
-
-        {/* 3. Producto en acción — el screenshot ES el argumento (absorbe Solución) */}
-        <ProductShowcase />
-
-        {/* 4. Diferenciadores — 3, no 12 (absorbe Beneficios + Servicios) */}
-        <DifferentiatorsSection />
-
-        {/* 5. Garantías — quita riesgo JUSTO antes del precio (reemplaza testimonios) */}
-        <GuaranteesSection />
-
-        {/* 6. Precios — filtra y califica el lead */}
-        <section id="planes" className="bg-white px-4 py-16 sm:py-20">
-          <div className="mx-auto max-w-6xl">
-            <div className="text-center">
-              <p className="text-xs font-medium uppercase tracking-widest text-blue-600">
-                Precios
-              </p>
-              <h2 className="mt-3 text-2xl font-normal tracking-tight text-gray-900 sm:text-3xl">
-                Planes simples y transparentes
-              </h2>
-              <p className="mx-auto mt-3 max-w-xl text-sm font-light text-gray-600">
-                Pagás por mes, sin comisiones por venta. Cancelás cuando quieras.
-              </p>
-            </div>
-            <div className="mt-12">
-              <PricingCards />
-            </div>
-            <div className="mt-6">
-              <PricingDisclaimer />
-            </div>
-          </div>
-        </section>
-
-        {/* 7. FAQ + Contacto — objeciones y conversión, sin corte entre medio */}
+        {/* 1. Hero — IA como diferencial + chat que carga un auto (LCP = titular) */}
+        <HeroAiSection />
+        {/* 2. Problema — el mismo auto en tres lados, contado con detalles del rubro */}
+        <ProblemStorySection />
+        {/* 3. Qué le pedís a la IA — prueba del diferencial + CTA */}
+        <AiRequestsSection />
+        {/* 4. El sistema detrás — capturas reales del producto */}
+        <SystemShowcaseSection />
+        {/* 5. Integraciones — solo las que existen hoy */}
+        <IntegrationsSection />
+        {/* 6. Cómo arrancás — el onboarding conecta la IA */}
+        <OnboardingStepsSection />
+        {/* 7. Quién está detrás + garantías (prueba honesta sin testimonios) */}
+        <FounderSection />
+        {/* 8. Precios */}
+        <PricingSection />
+        {/* 9. FAQ + contacto secundario */}
         <FaqContactSection />
+        {/* 10. CTA final */}
+        <FinalCtaSection />
       </main>
 
       <Footer />
       <WhatsAppFab />
+      <MobileStickyCta href={cta.href} label={cta.shortLabel} />
       <Toaster />
     </div>
   );

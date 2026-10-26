@@ -25,6 +25,17 @@ export interface ChatUsage {
   costUsd: number;
 }
 
+/** Error del proveedor que llega dentro de una respuesta 200 de OpenRouter. */
+export class ChatProviderError extends Error {
+  constructor(
+    readonly code: number | null,
+    message: string
+  ) {
+    super(message);
+    this.name = "ChatProviderError";
+  }
+}
+
 let client: OpenAI | null = null;
 
 function getClient(): OpenAI {
@@ -49,8 +60,15 @@ export async function completeChat(
   };
   const completion = await getClient().chat.completions.create(params);
 
+  // OpenRouter a veces contesta 200 con `error` y sin `choices` (falló el
+  // proveedor de atrás). Sin esto explota leyendo choices[0] y se pierde el motivo.
+  const raw = completion as unknown as { choices?: unknown[]; error?: { code?: number; message?: string } };
+  if (raw.error || !Array.isArray(raw.choices)) {
+    throw new ChatProviderError(raw.error?.code ?? null, raw.error?.message ?? "Respuesta sin choices");
+  }
+
   const choice = completion.choices[0];
-  if (!choice) throw new Error("El modelo no devolvió ninguna respuesta");
+  if (!choice) throw new ChatProviderError(null, "El modelo no devolvió ninguna respuesta");
 
   const usage = completion.usage as (OpenAI.CompletionUsage & { cost?: number }) | undefined;
   return {

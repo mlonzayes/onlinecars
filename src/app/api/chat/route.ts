@@ -13,6 +13,7 @@ import { toPendingActionView } from "@/lib/chat/pending-actions";
 import { addChatTokens, consumeChatMessage, getChatQuota } from "@/lib/chat/quota";
 import { buildThreadContext } from "@/lib/chat/system-prompt";
 import { toDisplayMessages } from "@/lib/chat/display";
+import { describeChatFailure } from "@/lib/chat/errors";
 import { chatMessageSchema } from "@/lib/validators/chat";
 
 // Chat con IA del panel (add-on). Opera con las mismas tools del MCP.
@@ -24,7 +25,8 @@ import { chatMessageSchema } from "@/lib/validators/chat";
 //   { "data": { "conversationId": "4f0c…", "reply": "Listo, cargué…",
 //               "pendingActions": [{ "id": "…", "label": "Eliminar gasto", "description": "…", "destructive": true }],
 //               "usage": { "used": 38, "limit": 300 } } }
-// Errores: 403 sin add-on · 429 rate limit o cupo del mes agotado.
+// Errores: 403 sin add-on · 429 rate limit o cupo del mes agotado · 503 falló el
+// modelo (nunca 502: Cloudflare lo tapa con su página y el panel no ve el mensaje).
 //
 //   GET /api/chat?conversationId=4f0c…
 // Response 200: { "data": { "usage": { "used": 38, "limit": 300 }, "messages": [{ "role": "user", "content": "…" }] } }
@@ -111,12 +113,15 @@ export const POST = withLogger(async (request, { requestId }) => {
       { headers: rl.headers }
     );
   } catch (error) {
+    const failure = describeChatFailure(error);
     logger.error(requestId, "chat.message.failed", {
       dealershipId: ctx.dealership.id,
       model: getChatModel(),
+      reason: failure.reason,
+      providerStatus: failure.providerStatus,
       error: error instanceof Error ? error.message : String(error),
     });
-    return NextResponse.json({ error: CHAT_COPY.errors.generic, requestId }, { status: 502, headers: rl.headers });
+    return NextResponse.json({ error: failure.message, requestId }, { status: failure.status, headers: rl.headers });
   } finally {
     await bridge.close();
   }

@@ -28,6 +28,8 @@ export const CHAT_COPY = {
     quotaMessages: "Llegaste al límite de mensajes del mes. Se renueva el 1°, o ampliá tu paquete.",
     quotaTokens: "Llegaste al límite de uso del mes. Se renueva el 1°, o ampliá tu paquete.",
     generic: "No pude responder. Probá de nuevo en un rato.",
+    modelUnavailable: "El asistente no está disponible en este momento. Ya nos llegó el aviso.",
+    providerBusy: "El asistente está saturado. Probá de nuevo en un minuto.",
     toolLimit: "Esto me llevó demasiados pasos. ¿Me lo pedís más concreto?",
   },
   actions: {

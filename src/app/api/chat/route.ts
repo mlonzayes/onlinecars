@@ -25,8 +25,9 @@ import { chatMessageSchema } from "@/lib/validators/chat";
 //   { "data": { "conversationId": "4f0c…", "reply": "Listo, cargué…",
 //               "pendingActions": [{ "id": "…", "label": "Eliminar gasto", "description": "…", "destructive": true }],
 //               "usage": { "used": 38, "limit": 300 } } }
-// Errores: 403 sin add-on · 429 rate limit o cupo del mes agotado · 503 falló el
-// modelo (nunca 502: Cloudflare lo tapa con su página y el panel no ve el mensaje).
+// Errores: 403 sin add-on, cuenta suspendida o POST de otro origen · 429 rate
+// limit o cupo del mes agotado · 503 falló el modelo o no se pudo leer el cupo
+// (nunca 502: Cloudflare lo tapa con su página y el panel no ve el mensaje).
 //
 //   GET /api/chat?conversationId=4f0c…
 // Response 200: { "data": { "usage": { "used": 38, "limit": 300 }, "messages": [{ "role": "user", "content": "…" }] } }
@@ -71,6 +72,9 @@ export const POST = withLogger(async (request, { requestId }) => {
   const quota = await getChatQuota(ctx);
   if (!quota.ok) {
     logger.warn(requestId, "chat.quota_exceeded", { dealershipId: ctx.dealership.id, reason: quota.reason });
+    if (quota.reason === "unavailable") {
+      return NextResponse.json({ error: CHAT_COPY.errors.quotaUnavailable }, { status: 503, headers: rl.headers });
+    }
     const error = quota.reason === "tokens" ? CHAT_COPY.errors.quotaTokens : CHAT_COPY.errors.quotaMessages;
     return NextResponse.json({ error }, { status: 429, headers: rl.headers });
   }

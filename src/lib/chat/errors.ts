@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { ChatProviderError } from "./client";
 import { CHAT_COPY } from "./copy";
 
 // Qué hacer cuando falla la llamada al modelo. Nunca 502/504: Cloudflare
@@ -15,14 +16,18 @@ export interface ChatFailure {
 }
 
 export function describeChatFailure(error: unknown): ChatFailure {
-  if (error instanceof OpenAI.APIError) {
-    const providerStatus = error.status ?? null;
+  if (error instanceof OpenAI.APIError || error instanceof ChatProviderError) {
+    const providerStatus = (error instanceof ChatProviderError ? error.code : error.status) ?? null;
     // 404: el modelo no existe o ningún proveedor lo puede servir (típico de
     // los gratis con data_collection: "deny"). 400: parámetro no soportado.
     if (providerStatus === 404 || providerStatus === 400) {
       return { status: 503, message: CHAT_COPY.errors.modelUnavailable, providerStatus, reason: "model_unavailable" };
     }
     if (providerStatus === 429 || (providerStatus !== null && providerStatus >= 500)) {
+      return { status: 503, message: CHAT_COPY.errors.providerBusy, providerStatus, reason: "provider_busy" };
+    }
+    // Sin código: el proveedor falló sin decir por qué. Se reintenta.
+    if (providerStatus === null) {
       return { status: 503, message: CHAT_COPY.errors.providerBusy, providerStatus, reason: "provider_busy" };
     }
     // 401 key inválida, 402 sin créditos, 403 límite de gasto: son nuestros.

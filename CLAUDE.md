@@ -158,6 +158,7 @@ src/
 │   ├── services/                        # Lógica de negocio compartida por canales (ver abajo)
 │   ├── mcp/                             # Servidor MCP: OAuth, cupo diario, tools (ver sección MCP)
 │   ├── rate-limit.ts honeypot.ts        # Protección de endpoints públicos
+│   ├── security/csp.ts                  # Content-Security-Policy (la importa next.config.ts)
 │   ├── tenant.ts tenant-templates.ts tenant-defaults.ts tenant-format.ts
 │   ├── plans.ts                         # PLAN_LIMITS + gating por plan
 │   ├── meta/                            # Pixel + Conversions API (ver rules/tracking.md)
@@ -185,6 +186,7 @@ src/
 /api
 ├── public/                       # SIN auth — rate limit + honeypot OBLIGATORIOS
 │   ├── contact                   # POST — form de la landing (NO existe /api/waitlist)
+│   ├── csp-report                # POST — violaciones de CSP que manda el browser
 │   └── tenant/[slug]/{vehicles,leads,reviews}
 ├── onboarding · terms/accept
 ├── concesionario                 # GET/PUT + /theme /logo /favicon
@@ -209,8 +211,8 @@ src/
 
 **Pendientes conocidos:**
 - Email transaccional con Resend (dependencia instalada, sin uso en el código).
-- CSP (`Content-Security-Policy`) — los demás headers de seguridad ya están; este
-  queda para una iteración aparte, con tuneo Clerk-friendly en modo report-only primero.
+- CSP: está en **report-only**. Falta revisar las violaciones de prod y pasarla a
+  enforcing (ver "Headers de seguridad").
 - Testing (Vitest + RTL). Las reglas de `.claude/rules/testing.md` son aspiracionales.
 - Routing de dominios custom en el middleware (`CUSTOM_DOMAINS_ENABLED = false`).
 
@@ -407,7 +409,12 @@ Definidos en [next.config.ts](next.config.ts) → función `headers()`. Aplican 
 - `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), ...`
 - `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload` — **solo en `NODE_ENV=production`** (en dev rompe localhost).
 
-**`Content-Security-Policy` está pendiente** — armarlo bien con Clerk requiere modo `Report-Only` primero, recopilar violaciones, tunear, y recién después aplicar enforcing.
+**`Content-Security-Policy`** se arma en [src/lib/security/csp.ts](src/lib/security/csp.ts) y hoy sale como **`Content-Security-Policy-Report-Only`**: el browser no bloquea nada, solo reporta a `POST /api/public/csp-report`, que loggea `security.csp.violation` (sin query strings, ignorando extensiones del browser).
+
+- **Orígenes que salen de env:** Clerk (decodificado de `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`), `S3_PUBLIC_URL`, `S3_ENDPOINT` y la URL de reportes (`NEXT_PUBLIC_APP_URL`, absoluta porque en un subdominio de tenant un path relativo cae en el rewrite). Se leen **en el build**: cambiar esas env vars exige redeploy.
+- **Servicio externo nuevo** (script, iframe, fetch, imagen) → sumarlo a la directiva que corresponda en `csp.ts`, o va a aparecer en los reportes (y con enforcing, se rompe).
+- **`'unsafe-inline'` en `script-src` es a propósito:** Next mete scripts inline de hidratación y Meta/Clarity también. Sacarlo exige nonces, que vuelven dinámicas las páginas y rompen el ISR del tenant.
+- **Pasar a enforcing:** cuando `security.csp.violation` quede sin entradas legítimas unos días en prod, cambiar `CSP_MODE` a `"enforce"`.
 
 ### Storage de archivos
 
@@ -906,11 +913,11 @@ RESEND_API_KEY=
 - Middleware de subdomain routing (rewrite a `/tenant/{slug}`, con `url.search` incluido).
 - Storage S3-compatible (Contabo) con dos buckets — público (imágenes) + privado (documentos, presigned 5 min).
 - Logging con `withLogger` + `request_id` propagado.
-- **Seguridad**: headers (X-Frame, nosniff, Referrer-Policy, Permissions-Policy, HSTS-prod), rate limiting Upstash y honeypot en todos los endpoints públicos.
+- **Seguridad**: headers (X-Frame, nosniff, Referrer-Policy, Permissions-Policy, HSTS-prod, CSP report-only), rate limiting Upstash y honeypot en todos los endpoints públicos.
 - i18n paso 1: `country`, `currency`, `locale`, `siteLocale`, `timezone` por tenant.
 
 **Pendiente:**
-- CSP (Content-Security-Policy) — iteración aparte, con Clerk-tuning en modo report-only primero.
+- CSP: pasar de report-only a enforcing una vez que los logs de prod queden limpios.
 - Email transaccional con Resend (dependencia instalada, sin uso).
 - Testing (Vitest + RTL) — no hay NADA configurado.
 - Routing de dominios custom en el middleware (`CUSTOM_DOMAINS_ENABLED = false`).

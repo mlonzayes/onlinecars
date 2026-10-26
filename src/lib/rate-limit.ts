@@ -37,6 +37,16 @@ export const waitlistLimiter = new Ratelimit({
   analytics: false,
 });
 
+// Reportes de CSP: los manda el browser solo, uno por violación. Una página con
+// un script mal permitido puede tirar varios por carga; con esto alcanza para
+// ver el patrón sin que un loop llene los logs.
+export const cspReportLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(30, "1 m"),
+  prefix: "rl:public:csp",
+  analytics: false,
+});
+
 // MCP: anti-abuso por usuario (key = clerkUserId), independiente del cupo
 // diario del plan. Una conversación normal hace pocas llamadas por minuto; un
 // loop de la IA o un script, cientos.

@@ -23,6 +23,9 @@ export const adminDealershipUpdateSchema = z
     // Plantilla visual. Lista derivada de TENANT_TEMPLATES — ver el validator
     // de dealership, comparten fuente.
     templateId: z.enum(TENANT_TEMPLATE_ID_TUPLE).optional(),
+    // Add-on del asistente con IA: mensajes por mes (0 = apagado). Se vende
+    // aparte del plan, por eso lo setea el super-admin y no el dealer.
+    aiChatMonthlyMessages: z.number().int().min(0).max(100_000).optional(),
   })
   .refine((d) => Object.values(d).some((v) => v !== undefined), {
     message: "Nada para actualizar",

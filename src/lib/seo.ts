@@ -47,10 +47,14 @@ export function isSelfServeEnabled(): boolean {
   return process.env.NEXT_PUBLIC_ENABLE_LOGIN === "true";
 }
 
-export function getPrimaryCta(): { href: string; label: string } {
+/**
+ * CTA principal de la landing. `label` va en el hero (único lugar donde se
+ * dicen los 15 días); `shortLabel` en el resto de la página y la barra mobile.
+ */
+export function getPrimaryCta(): { href: string; label: string; shortLabel: string } {
   return isSelfServeEnabled()
-    ? { href: "/sign-up", label: "Crear mi cuenta" }
-    : { href: "#contacto", label: "Quiero mi sitio" };
+    ? { href: "/sign-up", label: "Probar 15 días gratis", shortLabel: "Probar gratis" }
+    : { href: "#contacto", label: "Quiero mi sitio", shortLabel: "Quiero mi sitio" };
 }
 
 /**

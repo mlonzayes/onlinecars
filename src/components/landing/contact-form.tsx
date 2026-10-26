@@ -7,6 +7,10 @@ import { HONEYPOT_FIELD, HONEYPOT_STYLE } from "@/lib/honeypot";
 import { trackMetaEventWithId } from "@/lib/meta/client";
 import { META_EVENT_ID_FIELD } from "@/lib/meta/events";
 import { CLARITY_EVENTS, setClarityTag, trackClarityEvent } from "@/lib/clarity/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 // Planes válidos — coinciden con el Zod del endpoint (/api/public/contact).
 const PLAN_KEYS = ["base", "media", "premium", "enterprise", "no_se"] as const;
@@ -98,24 +102,20 @@ export function LandingContactForm() {
 
   if (sent) {
     return (
-      <div className="rounded-xl border border-blue-100 bg-blue-50 p-8 text-center">
-        <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-blue-100">
-          <PiCheckCircle className="h-6 w-6 text-blue-600" />
+      <div className="rounded-xl bg-paper p-8 text-center">
+        <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-brand/10">
+          <PiCheckCircle className="h-6 w-6 text-brand" />
         </div>
-        <h3 className="text-base font-semibold text-gray-900">¡Consulta enviada!</h3>
-        <p className="mt-1 text-sm font-light text-gray-500">
-          Nos ponemos en contacto a la brevedad.
-        </p>
+        <h3 className="text-base text-ink">Recibimos tu consulta</h3>
+        <p className="mt-1 text-sm text-ink-soft">Te escribimos pronto.</p>
       </div>
     );
   }
 
-  const inputClass =
-    "w-full rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30";
-  const labelClass = "mb-1.5 block text-sm font-medium text-gray-700";
+  const fieldClass = "h-11 border-ink/15 bg-white text-base sm:text-sm";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-3">
       {/* Honeypot — invisible para humanos, los bots lo llenan. */}
       <input
         type="text"
@@ -128,82 +128,61 @@ export function LandingContactForm() {
         style={HONEYPOT_STYLE}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label htmlFor="contact-name" className={labelClass}>
-            Nombre <span className="text-red-500">*</span>
-          </label>
-          <input
-            id="contact-name"
-            type="text"
-            value={form.name}
-            onChange={(e) => handleChange("name", e.target.value)}
-            className={inputClass}
-            placeholder="Tu nombre"
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="contact-email" className={labelClass}>
-            Email <span className="text-red-500">*</span>
-          </label>
-          <input
-            id="contact-email"
-            type="email"
-            value={form.email}
-            onChange={(e) => handleChange("email", e.target.value)}
-            className={inputClass}
-            placeholder="tu@email.com"
-            required
-          />
-        </div>
-      </div>
+      {/* Labels solo para lectores de pantalla: el placeholder alcanza a la vista. */}
+      <Label htmlFor="contact-name" className="sr-only">Nombre</Label>
+      <Input
+        id="contact-name"
+        value={form.name}
+        onChange={(e) => handleChange("name", e.target.value)}
+        className={fieldClass}
+        placeholder="Nombre *"
+        autoComplete="name"
+        required
+      />
+      <Label htmlFor="contact-email" className="sr-only">Email</Label>
+      <Input
+        id="contact-email"
+        type="email"
+        value={form.email}
+        onChange={(e) => handleChange("email", e.target.value)}
+        className={fieldClass}
+        placeholder="Email *"
+        autoComplete="email"
+        required
+      />
+      <Label htmlFor="contact-phone" className="sr-only">WhatsApp</Label>
+      <Input
+        id="contact-phone"
+        type="tel"
+        value={form.phone}
+        onChange={(e) => handleChange("phone", e.target.value)}
+        className={fieldClass}
+        placeholder="WhatsApp"
+        autoComplete="tel"
+      />
+      <Label htmlFor="contact-message" className="sr-only">Mensaje</Label>
+      <Textarea
+        id="contact-message"
+        value={form.message}
+        onChange={(e) => handleChange("message", e.target.value)}
+        rows={3}
+        className="resize-none border-ink/15 bg-white text-base sm:text-sm"
+        placeholder="Mensaje"
+      />
 
-      <div>
-        <label htmlFor="contact-phone" className={labelClass}>
-          Teléfono / WhatsApp
-        </label>
-        <input
-          id="contact-phone"
-          type="tel"
-          value={form.phone}
-          onChange={(e) => handleChange("phone", e.target.value)}
-          className={inputClass}
-          placeholder="+54 9 11 ..."
-        />
-      </div>
-
-      <div>
-        <label htmlFor="contact-message" className={labelClass}>
-          Mensaje
-        </label>
-        <textarea
-          id="contact-message"
-          value={form.message}
-          onChange={(e) => handleChange("message", e.target.value)}
-          rows={4}
-          className={`${inputClass} resize-none`}
-          placeholder="Contanos qué necesitás..."
-        />
-      </div>
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-      >
+      <Button type="submit" disabled={loading} className="h-11 w-full bg-brand text-white hover:bg-brand-deep">
         {loading ? (
           <>
-            <PiCircleNotch className="h-4 w-4 animate-spin" />
+            <PiCircleNotch className="animate-spin" />
             Enviando...
           </>
         ) : (
           <>
-            <PiPaperPlaneTilt className="h-4 w-4" />
-            Enviar consulta
+            <PiPaperPlaneTilt />
+            Enviar
           </>
         )}
-      </button>
+      </Button>
     </form>
   );
 }

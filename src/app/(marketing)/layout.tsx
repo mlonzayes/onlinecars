@@ -1,8 +1,18 @@
+import localFont from "next/font/local";
 import { MetaPixel } from "@/components/meta/meta-pixel";
 import { getMainSitePixelId } from "@/lib/meta/config";
 import { MicrosoftClarity } from "@/components/clarity/microsoft-clarity";
 import { getMainSiteClarityId } from "@/lib/clarity/config";
 import { AppClerkProvider } from "@/components/auth/app-clerk-provider";
+
+// Outfit (display de titulares, geométrica y redonda): se carga SOLO en
+// marketing para que el panel y los sitios de los tenants no la descarguen.
+const outfit = localFont({
+  src: "../../fonts/outfit-latin-var.woff2",
+  weight: "100 900",
+  variable: "--font-outfit",
+  display: "swap",
+});
 
 /**
  * Layout de la superficie de MARKETING (motorflowapp.com): landing, precios,
@@ -34,7 +44,9 @@ export default function MarketingLayout({
     <AppClerkProvider>
       {pixelId && <MetaPixel pixelId={pixelId} />}
       {clarityId && <MicrosoftClarity projectId={clarityId} />}
-      {children}
+      {/* "light": la web de marketing es siempre clara, aunque el sistema del
+          visitante esté en modo oscuro (ver @custom-variant dark en globals.css). */}
+      <div className={`light bg-paper text-ink ${outfit.variable}`}>{children}</div>
     </AppClerkProvider>
   );
 }

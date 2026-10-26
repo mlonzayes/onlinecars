@@ -3,6 +3,7 @@ import { logger } from "@/lib/logger";
 import { invalidateVehicleCaches } from "@/lib/cache-tags";
 import { assertCanEditInventory, logMeta, type ServiceContext } from "../context";
 import { isPrismaNotFound } from "../service-error";
+import { recordAudit } from "../audit";
 import { assertCanPublishMore, vehicleNotFound } from "./guards";
 
 const EVENT = "vehicles.publish";
@@ -61,6 +62,13 @@ async function applyPublished(
       select: { id: true, publishedAt: true },
     });
     await invalidateVehicleCaches(ctx.dealership.slug);
+    // applyPublished solo corre cuando el estado cambia, así que el "from" es el opuesto.
+    await recordAudit(ctx, {
+      action: published ? "vehicle.publish" : "vehicle.unpublish",
+      entityType: "vehicle",
+      entityId: vehicleId,
+      changes: { published: { from: !published, to: published } },
+    });
     logger.info(ctx.requestId, `${EVENT}.toggled`, logMeta(ctx, { vehicleId, published }));
     return vehicle;
   } catch (error) {

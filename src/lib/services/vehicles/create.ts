@@ -5,6 +5,8 @@ import { invalidateVehicleCaches } from "@/lib/cache-tags";
 import { canEditCosts } from "@/lib/permissions";
 import { generateVehicleSlug } from "@/lib/utils/slug";
 import { assertCanEditInventory, logMeta, type ServiceContext } from "../context";
+import { auditSnapshot, recordAudit } from "../audit";
+import { VEHICLE_AUDIT_FIELDS } from "./audit-fields";
 import type { VehicleCreateInput } from "@/lib/validators/vehicle";
 
 // publicSlug lleva sufijo hex aleatorio: la colisión con otro vehículo del mismo
@@ -46,6 +48,12 @@ export async function createVehicle(ctx: ServiceContext, input: VehicleCreateInp
       });
 
       await invalidateVehicleCaches(ctx.dealership.slug);
+      await recordAudit(ctx, {
+        action: "vehicle.create",
+        entityType: "vehicle",
+        entityId: vehicle.id,
+        changes: auditSnapshot(vehicle, VEHICLE_AUDIT_FIELDS),
+      });
       logger.info(
         ctx.requestId,
         "vehicles.create.ok",

@@ -51,7 +51,7 @@ async function executeCall(
 
   if (requiresConfirmation(tool)) {
     try {
-      const action = await createPendingAction(input.ctx, input.bridge, {
+      const action = await createPendingAction(input.ctx, {
         conversationId: input.conversationId,
         tool,
         args,

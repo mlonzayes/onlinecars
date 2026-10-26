@@ -37,9 +37,14 @@ export const CHAT_COPY = {
     toolLimit: "Esto me llevó demasiados pasos. ¿Me lo pedís más concreto?",
   },
   actions: {
+    createVehicle: "Cargar vehículo",
+    updateVehicle: "Editar vehículo",
+    createExpense: "Cargar gasto",
     deleteExpense: "Eliminar gasto",
     publish: "Publicar en el sitio",
     unpublish: "Despublicar del sitio",
-    generic: "Confirmar acción",
+    draftNote: "Queda como borrador: no se ve en el sitio hasta publicarlo.",
+    noChanges: "No hay cambios para aplicar: los datos ya son esos.",
+    unsupported: "Esta acción no se puede hacer desde el chat. Hacela desde el panel.",
   },
 } as const;

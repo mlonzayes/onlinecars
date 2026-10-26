@@ -350,6 +350,13 @@ ChatGPT. Se vende como **add-on**: `Dealership.aiChatMonthlyMessages` (mensajes/
 - **Límites:** `chatLimiter` (10/min por usuario), cupo mensual que cuenta TODOS los
   mensajes (el off-topic también consume), techo de tokens `AI_CHAT_MONTHLY_TOKEN_CAP`,
   y topes por mensaje en `CHAT_LIMITS` (largo, historial, vueltas de tools, salida).
+  **La lectura del cupo falla CERRADO** (503 si Redis no responde): sin cupo no hay techo
+  de gasto. Igual conviene un límite de gasto en la key de OpenRouter, que no depende del código.
+- **Entrada (`channel.ts`):** los POST se aceptan solo con `Origin` del panel
+  (`lib/security/same-origin.ts`) — los subdominios de tenants son same-site y
+  SameSite=Lax no los frena. Cuenta suspendida o vencida → 403 antes de llamar al modelo.
+- **`listar_leads` no devuelve teléfono ni email** (solo `tieneTelefono`/`tieneEmail`);
+  `ver_lead` sí. Minimiza los datos de clientes que viajan al proveedor del modelo.
 - **Historial efímero en Redis** (24 h), del lado del server: el cliente solo manda
   `conversationId` + texto. No se loggea el texto de los mensajes (PII).
 - **Borrar y publicar se confirman FUERA del modelo** (`pending-actions.ts`): quedan

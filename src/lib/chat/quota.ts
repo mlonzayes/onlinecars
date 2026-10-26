@@ -9,8 +9,12 @@ import { getMonthlyTokenCap } from "./config";
 // dealer y no nos sale gratis a nosotros.
 //
 // Además lleva los tokens del mes como techo de costo duro
-// (AI_CHAT_MONTHLY_TOKEN_CAP). Fail-open como el resto: si Redis se cae, se
-// deja pasar y se loggea.
+// (AI_CHAT_MONTHLY_TOKEN_CAP).
+//
+// La LECTURA falla cerrado, al revés que el rate limit de los endpoints
+// públicos: sin Redis no hay cupo ni techo de tokens, y cada mensaje es plata
+// nuestra en OpenRouter. Mejor un chat caído un rato que una factura sin techo.
+// Las escrituras siguen fail-open: si la lectura anduvo, Redis está arriba.
 
 const QUOTA_TTL_SECONDS = 60 * 60 * 24 * 40;
 
@@ -28,7 +32,7 @@ export interface ChatQuotaStatus {
   ok: boolean;
   used: number;
   limit: number;
-  reason?: "messages" | "tokens";
+  reason?: "messages" | "tokens" | "unavailable";
 }
 
 function logRedisError(ctx: ServiceContext, event: string, error: unknown) {
@@ -51,7 +55,7 @@ export async function getChatQuota(ctx: ServiceContext): Promise<ChatQuotaStatus
     return { ok: true, used: usedMessages, limit };
   } catch (error) {
     logRedisError(ctx, "chat.quota.read_failed", error);
-    return { ok: true, used: 0, limit };
+    return { ok: false, used: 0, limit, reason: "unavailable" };
   }
 }
 

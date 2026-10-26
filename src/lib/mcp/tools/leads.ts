@@ -26,6 +26,14 @@ function toLeadView(lead: LeadRow) {
   };
 }
 
+// En el listado van sin teléfono ni email: es lo que más se pide ("resumime las
+// consultas") y no necesita datos de contacto. Así un listado no le manda al
+// proveedor del modelo los datos de todos los clientes de una. ver_lead los trae.
+function toLeadListItem(lead: LeadRow) {
+  const { telefono: _phone, email: _email, ...item } = toLeadView(lead);
+  return { ...item, tieneTelefono: Boolean(lead.phone), tieneEmail: Boolean(lead.email) };
+}
+
 export function registerLeadTools(server: McpServer, ctx: McpContext): void {
   server.registerTool(
     "listar_leads",
@@ -33,7 +41,8 @@ export function registerLeadTools(server: McpServer, ctx: McpContext): void {
       title: "Listar consultas (leads)",
       description:
         "Consultas recibidas del sitio, WhatsApp, MercadoLibre o pedidos de tasación, de la más nueva a la más vieja. " +
-        "Estados: new = sin contestar, contacted = contactado, qualified = interesado, closed = cerrado.",
+        "Estados: new = sin contestar, contacted = contactado, qualified = interesado, closed = cerrado. " +
+        "No trae teléfono ni email: para contactar a alguien, usá ver_lead.",
       inputSchema: z.object({
         estado: z.enum(LEAD_STATUSES).optional(),
         origen: z.enum(LEAD_SOURCES).optional(),
@@ -54,7 +63,7 @@ export function registerLeadTools(server: McpServer, ctx: McpContext): void {
           search: input.texto,
           lastDays: input.ultimos_dias,
         });
-        return { ...meta, consultas: items.map(toLeadView) };
+        return { ...meta, consultas: items.map(toLeadListItem) };
       })
   );
 

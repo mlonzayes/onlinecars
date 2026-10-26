@@ -1,6 +1,6 @@
 import "server-only";
 import OpenAI from "openai";
-import { getChatApiKey, getChatModel, CHAT_LIMITS } from "./config";
+import { getChatApiKey, getChatBaseUrl, getChatModel, CHAT_LIMITS } from "./config";
 
 type ChatParams = OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming;
 
@@ -28,7 +28,7 @@ export interface ChatUsage {
 let client: OpenAI | null = null;
 
 function getClient(): OpenAI {
-  client ??= new OpenAI({ baseURL: "https://openrouter.ai/api/v1", apiKey: getChatApiKey() });
+  client ??= new OpenAI({ baseURL: getChatBaseUrl(), apiKey: getChatApiKey() });
   return client;
 }
 

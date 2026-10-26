@@ -895,6 +895,7 @@ MCP_OAUTH_CLIENT_IDS=
 OPENROUTER_API_KEY=                 # SECRETO
 AI_CHAT_MODEL=                      # slug de OpenRouter, sale del eval (pnpm chat:eval)
 AI_CHAT_MONTHLY_TOKEN_CAP=          # techo de tokens por dealer/mes. Vacío = sin techo
+OPENROUTER_BASE_URL=                # solo tests locales (un OpenRouter falso). VACÍA en prod
 
 # Email (Resend) — dependencia instalada, SIN uso en el código
 RESEND_API_KEY=

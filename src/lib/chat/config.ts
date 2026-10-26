@@ -10,6 +10,11 @@ export function isChatEnabled(): boolean {
   return Boolean(process.env.OPENROUTER_API_KEY && process.env.AI_CHAT_MODEL);
 }
 
+// Override para tests locales o un gateway compatible propio. En prod, vacía.
+export function getChatBaseUrl(): string {
+  return process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1";
+}
+
 export function getChatApiKey(): string {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) throw new Error("OPENROUTER_API_KEY no está configurada");

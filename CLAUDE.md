@@ -206,7 +206,7 @@ src/
 ├── cron/{expire-trials,sync-exchange-rate}
 ├── mcp                           # Servidor MCP para Claude/ChatGPT (OAuth de Clerk) — ver sección MCP
 ├── chat                          # GET/POST — asistente con IA del panel (add-on) + /acciones/[id] — ver sección Chat
-└── webhooks/{clerk,billing}      # billing: eventos firmados de billing-svc (Mercado Pago) — ver contracts/billing/
+└── webhooks/clerk
 
 /.well-known/oauth-protected-resource[/api/mcp] · /.well-known/oauth-authorization-server   # metadata OAuth del MCP
 ```
@@ -761,9 +761,7 @@ Ver schema completo en [prisma/schema.prisma](prisma/schema.prisma). Resumen:
 - **`Notification`** — avisos in-app del panel (lead nuevo, review, venta). Polling desde `/api/notifications`.
 - **`MercadoLibreAccount`** + **`MercadoLibreListing`** — vínculo OAuth con ML y mapeo publicación ↔ vehículo. Los tokens se guardan cifrados (`ML_TOKEN_SECRET`).
 - **`ExchangeRate`** — cotización oficial USD (BCRA), global. El plus por tenant es `Dealership.usdSpread`; el valor efectivo se calcula al usarlo, **nunca se persiste sumado**.
-- **`SubscriptionPayment`** — pagos de la suscripción a la plataforma. `source: manual` los carga el super-admin (actualizan `Dealership.paidUntil`); `source: mercadopago` los registra `/api/webhooks/billing` (idempotentes por `externalId`).
-- **`BillingEventReceipt`** — eventos de billing-svc ya recibidos (dedupe de reintentos del outbox).
-- **Cobros con Mercado Pago (en construcción):** viven en un servicio Go aparte (`motorflow-billing`, schema `billing` de la misma base). Next solo guarda la proyección (`plan`, `subscriptionStatus`, `paidUntil`, `billingGraceEndsAt`, `billingStateVersion`) y nunca escribe en `billing.*`. Contrato, firma HMAC, estados y orden de eventos: [contracts/billing/README.md](contracts/billing/README.md). Cliente Next → Go: `src/lib/billing/client.ts`.
+- **`SubscriptionPayment`** — pagos de la suscripción a la plataforma, cargados por el super-admin. Actualizan `Dealership.paidUntil`.
 - **`TermsAcceptance`** — registro de aceptación de términos por usuario.
 - **`Dealership.aiChatMonthlyMessages`** — cupo del add-on del asistente con IA (0 = no contratado). Las conversaciones NO se guardan en DB: viven en Redis 24 h.
 
@@ -891,12 +889,6 @@ CRON_SECRET=
 # MCP (/api/mcp) — client IDs de las OAuth apps de Clerk habilitadas, separados
 # por coma. Su PRESENCIA es el interruptor: vacía = el MCP no existe (404).
 MCP_OAUTH_CLIENT_IDS=
-
-# billing-svc (Mercado Pago, servicio Go aparte) — ver contracts/billing/.
-# Un secret por dirección. Sin BILLING_WEBHOOK_SECRET, /api/webhooks/billing da 404.
-BILLING_SERVICE_URL=                # ej. https://billing.motorflowapp.com (sin barra final)
-BILLING_API_SECRET=                 # SECRETO — firma Next → Go
-BILLING_WEBHOOK_SECRET=             # SECRETO — firma Go → Next
 
 # Chat con IA del panel (/api/chat) vía OpenRouter. Las DOS primeras son el
 # interruptor: sin alguna, el chat no existe (aunque el dealer tenga cupo).

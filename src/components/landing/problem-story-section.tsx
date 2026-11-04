@@ -30,10 +30,7 @@ export function ProblemStorySection() {
                 <li key={c.name} className="flex items-center justify-between py-3 text-sm">
                   <span className="text-white/70">Corolla 2019 · {c.name}</span>
                   <span
-                    // Los estados desactualizados en ámbar (alerta); el real, en brand.
-                    className={`rounded-full px-2.5 py-0.5 text-xs ${
-                      c.stale ? "bg-accent-amber/15 text-accent-amber" : "bg-brand text-white"
-                    }`}
+                    className={`rounded-full px-2.5 py-0.5 text-xs text-white ${c.stale ? "bg-white/10" : "bg-brand"}`}
                   >
                     {c.status}
                   </span>

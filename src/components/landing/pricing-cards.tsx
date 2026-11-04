@@ -67,7 +67,7 @@ export function PricingCards() {
         >
           <div className="flex items-center justify-between gap-2">
             <h3 className="font-display text-lg font-normal text-ink">{plan.name}</h3>
-            {plan.highlighted && <Badge className="bg-accent-amber font-medium text-ink">Recomendado</Badge>}
+            {plan.highlighted && <Badge className="bg-brand font-normal text-white">Recomendado</Badge>}
           </div>
 
           <p className="mt-3 flex items-baseline gap-1">

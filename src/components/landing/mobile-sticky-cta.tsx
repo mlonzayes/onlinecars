@@ -34,6 +34,8 @@ export function MobileStickyCta({ href, label }: MobileStickyCtaProps) {
     >
       <Link
         href={href}
+        // Sin prefetch: /sign-up arrastra el chunk de Clerk a la landing.
+        prefetch={false}
         tabIndex={visible ? 0 : -1}
         className="flex flex-1 items-center justify-center rounded-lg bg-brand px-4 py-3 text-base font-medium text-white"
       >

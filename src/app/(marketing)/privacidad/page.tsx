@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function PrivacidadPage() {
   return (
-    <LegalShell title="Política de Privacidad" lastUpdated="15 de junio de 2026">
+    <LegalShell title="Política de Privacidad" lastUpdated="4 de noviembre de 2026">
       <p>
         Esta Política de Privacidad describe cómo se tratan los datos personales en{" "}
         <strong>motorflow</strong> (la &quot;Plataforma&quot;), un servicio de software
@@ -118,6 +118,15 @@ export default function PrivacidadPage() {
         <li><strong>Base de datos y alojamiento</strong> de la aplicación.</li>
         <li><strong>Almacenamiento de archivos</strong> (imágenes del catálogo y documentos del legajo).</li>
         <li><strong>Servicios de caché, límite de uso y envío de correos</strong>.</li>
+        <li>
+          <strong>Modelos de inteligencia artificial</strong> que procesan los mensajes que el
+          usuario le escribe al asistente del panel, configurados para que el proveedor no
+          conserve esos datos ni los use para entrenar sus modelos.
+        </li>
+        <li>
+          <strong>Medición y publicidad</strong> del sitio web de motorflow: Meta (Píxel y API de
+          conversiones), Google Analytics y Microsoft Clarity (ver sección 9).
+        </li>
       </ul>
       <p>
         Con cada proveedor se procura mantener acuerdos que exijan niveles de seguridad y
@@ -147,9 +156,33 @@ export default function PrivacidadPage() {
       <h2>9. Cookies</h2>
       <p>
         Utilizamos cookies y tecnologías similares necesarias para el funcionamiento de la
-        Plataforma (por ejemplo, mantener la sesión) y, eventualmente, para entender su
-        uso y mejorarla. Podés configurar tu navegador para rechazarlas, aunque algunas
-        funciones podrían dejar de operar correctamente.
+        Plataforma (por ejemplo, mantener la sesión). Podés configurar tu navegador para
+        rechazarlas, aunque algunas funciones podrían dejar de operar correctamente.
+      </p>
+      <p>
+        En el sitio web de motorflow (motorflowapp.com) usamos además herramientas de
+        terceros para medir visitas y campañas:
+      </p>
+      <ul>
+        <li>
+          <strong>Meta</strong> (Píxel y API de conversiones): mide qué visitas llegan desde
+          nuestros anuncios y si terminan en una consulta. Si completás el formulario de
+          contacto, tu nombre, email y teléfono se envían a Meta cifrados (hash) para atribuir la
+          conversión.
+        </li>
+        <li>
+          <strong>Google Analytics</strong>: estadísticas de uso del sitio (páginas vistas,
+          origen de las visitas, dispositivo).
+        </li>
+        <li>
+          <strong>Microsoft Clarity</strong>: mapas de calor y grabaciones de la navegación,
+          sin registrar lo que se escribe en los campos de los formularios.
+        </li>
+      </ul>
+      <p>
+        Los sitios de cada concesionario pueden usar sus propias herramientas de medición
+        (por ejemplo, su Píxel de Meta o Microsoft Clarity), que el concesionario configura
+        bajo su responsabilidad.
       </p>
 
       <h2>10. Derechos de los titulares</h2>

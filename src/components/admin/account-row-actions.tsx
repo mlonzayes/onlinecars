@@ -18,7 +18,7 @@ interface AccountRowActionsProps {
 }
 
 function aiChatLabel(messages: number): string {
-  return messages === 0 ? "IA: no" : `IA: ${messages}/mes`;
+  return messages === 0 ? "IA: solo plan" : `IA: +${messages}/mes`;
 }
 
 // bg-background/text-foreground explícitos para que el dropdown nativo sea

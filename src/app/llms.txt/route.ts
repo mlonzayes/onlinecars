@@ -45,6 +45,11 @@ dominio propio o en un subdominio (\`{concesionaria}.motorflowapp.com\`). Incluy
 catálogo de vehículos, captación de consultas y un panel para gestionar stock,
 clientes, ventas y cotizaciones. No cobramos comisión por venta.
 
+El panel trae un asistente con IA: el concesionario carga autos y gastos o
+consulta sus números escribiendo, y confirma cada cambio antes de que se aplique.
+Cada plan incluye mensajes por mes (300 en el plan Base) y se pueden sumar packs
+de 100. También se puede operar desde Claude o ChatGPT.
+
 Está disponible para concesionarias de ${countries}. Cada una configura su país, su moneda y su formato regional.
 
 ## Páginas principales

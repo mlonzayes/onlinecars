@@ -135,6 +135,27 @@ const GROUPS: FeatureGroup[] = [
     ],
   },
   {
+    // Alineado con PLAN_LIMITS (aiChatMonthlyMessages, mcpDailyCalls) de src/lib/plans.ts.
+    title: "Inteligencia artificial",
+    rows: [
+      {
+        label: "Asistente IA en el panel",
+        hint: "Mensajes por mes. Cargás autos y gastos o consultás tus números escribiendo.",
+        values: { base: "300", media: "600", premium: "1.200", enterprise: "2.400" },
+      },
+      {
+        label: "Mensajes extra",
+        hint: "Si te quedás corto, sumás packs de 100 mensajes.",
+        values: { base: true, media: true, premium: true, enterprise: true },
+      },
+      {
+        label: "Desde tu Claude o ChatGPT",
+        hint: "Operá motorflow desde la IA que ya usás.",
+        values: { base: "20 pedidos/día", media: "Sin límite", premium: "Sin límite", enterprise: "Sin límite" },
+      },
+    ],
+  },
+  {
     title: "Soporte",
     rows: [
       {

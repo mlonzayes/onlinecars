@@ -2,14 +2,15 @@ import { ChatBubble } from "./chat-bubble";
 import { PublishedCarCard } from "./published-car-card";
 
 /**
- * Video real de Mateo cargando un auto desde Claude. Cuando exista, dejarlo en
+ * Video real de Mateo cargando un auto desde el Asistente IA del panel. Cuando exista, dejarlo en
  * `public/video/` (vertical, mp4 H.264, sin audio, < 3 MB) y poner la ruta acá:
  * reemplaza la conversación de ejemplo. El video real es mejor prueba que
  * cualquier recreación, y es lo mismo que va a mostrar el anuncio de Meta.
  */
 const HERO_VIDEO_SRC: string | null = null;
 
-// La conversación sigue el comportamiento real del MCP: el auto entra como
+// La conversación sigue el comportamiento real del Asistente del panel: toda
+// carga se confirma con un click (tarjeta fuera del modelo), el auto entra como
 // borrador y se publica solo cuando el dealer lo pide.
 function DemoConversation() {
   return (
@@ -21,10 +22,10 @@ function DemoConversation() {
         className="chat-in mr-auto rounded-md border border-dashed border-ink/25 px-2 py-0.5 text-[10px] text-ink-soft"
         style={{ animationDelay: "1s" }}
       >
-        Usando motorflow · crear vehículo
+        ✓ Confirmaste · Cargar vehículo
       </span>
       <ChatBubble from="ai" delay={1.5}>
-        Listo, cargué el Toyota Corolla XEI 2019 como borrador. ¿Lo publico en tu web?
+        Listo, el Toyota Corolla XEI 2019 quedó como borrador. ¿Lo publico en tu web?
       </ChatBubble>
       <ChatBubble from="user" delay={2.4}>
         dale
@@ -48,8 +49,8 @@ export function HeroChatDemo() {
             IA
           </span>
           <div className="leading-tight">
-            <p className="text-xs font-medium text-ink">Tu asistente de IA</p>
-            <p className="text-[10px] text-ink-soft">conectado a motorflow</p>
+            <p className="text-xs font-medium text-ink">Asistente IA</p>
+            <p className="text-[10px] text-ink-soft">dentro de tu panel de motorflow</p>
           </div>
         </div>
 
@@ -61,7 +62,7 @@ export function HeroChatDemo() {
             muted
             loop
             playsInline
-            aria-label="Video: cargando un auto en motorflow desde Claude"
+            aria-label="Video: cargando un auto con el asistente de motorflow"
           />
         ) : (
           <DemoConversation />

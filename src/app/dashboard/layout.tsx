@@ -12,6 +12,7 @@ import { DashboardFooter } from "@/components/dashboard/dashboard-footer";
 import { Toaster } from "@/components/ui/sonner";
 import { AppClerkProvider } from "@/components/auth/app-clerk-provider";
 import { isChatEnabled } from "@/lib/chat/config";
+import { getChatMonthlyMessages } from "@/lib/plans";
 import { CHAT_COPY } from "@/lib/chat/copy";
 import { SITE_WHATSAPP } from "@/lib/seo";
 
@@ -62,11 +63,11 @@ export default async function DashboardLayout({
     ? applySpread(baseRate, Number(dealership.usdSpread))
     : null;
 
-  // Asistente con IA (add-on). Al header viaja solo lo justo, nunca el dealership.
+  // Asistente con IA (cupo del plan + packs extra). Al header viaja solo lo justo, nunca el dealership.
   const supportWhatsapp = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP ?? SITE_WHATSAPP;
   const aiChat = isChatEnabled()
     ? {
-        enabled: dealership.aiChatMonthlyMessages > 0,
+        enabled: getChatMonthlyMessages(dealership) > 0,
         contactHref: `https://wa.me/${supportWhatsapp}?text=${encodeURIComponent(CHAT_COPY.contactMessage(dealership.name))}`,
       }
     : null;

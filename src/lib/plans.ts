@@ -29,6 +29,10 @@ export interface PlanLimits {
   // planes de entrada alcanza para probarlo; de Media para arriba no hay tope
   // diario, solo el rate limit anti-abuso por minuto.
   mcpDailyCalls: number;
+  // Mensajes por mes al Asistente IA del panel (/api/chat) que INCLUYE el plan.
+  // Se duplica en cada escalón. Lo que se compra aparte (packs de 100) vive en
+  // `Dealership.aiChatMonthlyMessages` y se suma: ver getChatMonthlyMessages.
+  aiChatMonthlyMessages: number;
   // Microsoft Clarity (heatmaps + grabaciones) en el sitio público del tenant.
   // Mismo escalón que el pixel: es para el dealer que pauta y quiere ver dónde
   // se le traban los visitantes que no consultan.
@@ -52,6 +56,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     showPoweredBy: true,
     allowMetaPixel: false,
     mcpDailyCalls: 20,
+    aiChatMonthlyMessages: 10, // Para probarlo, no para operar
     allowClarity: false,
   },
   base: {
@@ -64,6 +69,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     showPoweredBy: true, // Badge "Powered by motorflow" en el footer del tenant
     allowMetaPixel: false, // Gancho para upgrade: el que pauta necesita medir
     mcpDailyCalls: 20,
+    aiChatMonthlyMessages: 300,
     allowClarity: false,
   },
   media: {
@@ -76,6 +82,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     showPoweredBy: false,
     allowMetaPixel: true, // Pixel + CAPI habilitados a partir de este plan
     mcpDailyCalls: Infinity,
+    aiChatMonthlyMessages: 600,
     allowClarity: true,
   },
   premium: {
@@ -88,6 +95,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     showPoweredBy: false,
     allowMetaPixel: true,
     mcpDailyCalls: Infinity,
+    aiChatMonthlyMessages: 1200,
     allowClarity: true,
   },
   enterprise: {
@@ -100,6 +108,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     showPoweredBy: false,
     allowMetaPixel: true,
     mcpDailyCalls: Infinity,
+    aiChatMonthlyMessages: 2400,
     allowClarity: true,
   },
 };
@@ -138,6 +147,17 @@ export function canUseMetaPixel(dealership: Pick<Dealership, "plan">): boolean {
  */
 export function getMcpDailyCalls(dealership: Pick<Dealership, "plan">): number {
   return getPlanLimits(dealership).mcpDailyCalls;
+}
+
+/**
+ * Cupo mensual del Asistente IA: lo que incluye el plan + los mensajes extra
+ * que se compraron aparte (`Dealership.aiChatMonthlyMessages`, lo carga el
+ * super-admin desde /admin).
+ */
+export function getChatMonthlyMessages(
+  dealership: Pick<Dealership, "plan" | "aiChatMonthlyMessages">
+): number {
+  return getPlanLimits(dealership).aiChatMonthlyMessages + Math.max(0, dealership.aiChatMonthlyMessages);
 }
 
 /**

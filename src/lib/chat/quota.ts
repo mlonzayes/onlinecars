@@ -1,10 +1,11 @@
 import { redis } from "@/lib/redis";
 import { logger } from "@/lib/logger";
+import { getChatMonthlyMessages } from "@/lib/plans";
 import type { ServiceContext } from "@/lib/services/context";
 import { getMonthlyTokenCap } from "./config";
 
-// Cupo MENSUAL del chat por concesionario (`Dealership.aiChatMonthlyMessages`,
-// lo vende el super-admin). A diferencia del MCP, cuenta TODOS los mensajes,
+// Cupo MENSUAL del chat por concesionario: lo que incluye el plan + los packs
+// extra (`Dealership.aiChatMonthlyMessages`). Ver getChatMonthlyMessages. A diferencia del MCP, cuenta TODOS los mensajes,
 // también los que no llaman tools: así usarlo para otra cosa le come cupo al
 // dealer y no nos sale gratis a nosotros.
 //
@@ -43,7 +44,7 @@ function logRedisError(ctx: ServiceContext, event: string, error: unknown) {
 }
 
 export async function getChatQuota(ctx: ServiceContext): Promise<ChatQuotaStatus> {
-  const limit = ctx.dealership.aiChatMonthlyMessages;
+  const limit = getChatMonthlyMessages(ctx.dealership);
   try {
     const [used, tokens] = await Promise.all([
       redis.get<number>(monthKey(ctx, "messages")),

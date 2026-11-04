@@ -3,8 +3,10 @@ import { HeroChatDemo } from "./hero-chat-demo";
 import { PrimaryCta } from "./primary-cta";
 
 /**
- * Hero: el diferencial es manejar la concesionaria desde la IA que el dealer ya
- * usa. Titular amplio ("con IA") y lo concreto en el subtítulo y el chat.
+ * Hero: el diferencial es manejar la concesionaria escribiendo, con el Asistente
+ * IA que viene adentro del panel (sin configurar nada). Claude/ChatGPT quedan
+ * como alternativa en integraciones y FAQ. Titular amplio ("con IA") y lo
+ * concreto en el subtítulo y el chat.
  *
  * Entra en UNA pantalla en desktop: ocupa 100svh (menos la barra) y el titular
  * escala con el menor entre ancho y alto (min(vw, svh)), así no se desborda en
@@ -24,8 +26,8 @@ export function HeroAiSection() {
           </h1>
 
           <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-ink-soft sm:text-lg lg:mx-0">
-            Escribí <span className="text-ink">«cargame el Corolla 2019»</span> y ya está en tu
-            web. Nosotros te la conectamos.
+            Escribí <span className="text-ink">«cargame el Corolla 2019»</span> en el asistente
+            de motorflow y ya está en tu web. Sin instalar nada.
           </p>
 
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">

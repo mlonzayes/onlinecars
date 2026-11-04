@@ -13,12 +13,15 @@ interface PrimaryCtaProps {
 /**
  * Botón primario de la web de marketing: el Button de shadcn renderizado como
  * Link (mismo patrón que las pages del dashboard), en el azul de la marca.
+ *
+ * `prefetch={false}`: el destino suele ser /sign-up, y prefetchearlo al entrar
+ * al viewport baja el chunk de Clerk (~135 KB) en la landing.
  */
 export function PrimaryCta({ href, children, size = "md", className }: PrimaryCtaProps) {
   return (
     <Button
       nativeButton={false}
-      render={<Link href={href} />}
+      render={<Link href={href} prefetch={false} />}
       className={cn(
         "bg-brand text-white shadow-sm shadow-brand/25 hover:bg-brand-deep [a]:hover:bg-brand-deep",
         size === "lg" ? "h-12 gap-2 px-6 text-base" : "h-10 gap-2 px-5 text-sm",

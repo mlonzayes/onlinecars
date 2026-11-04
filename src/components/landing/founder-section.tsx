@@ -21,7 +21,7 @@ export function FounderSection() {
           ML
         </span>
         <blockquote className="mt-6 font-display text-[clamp(1.5rem,3vw,2.25rem)] font-light leading-snug text-ink text-balance">
-          «Cuando creás tu cuenta, el onboarding lo hacemos juntos.»
+          «Cualquier duda que tengas, nos escribís y te damos una mano.»
         </blockquote>
         <p className="mt-4 text-sm text-ink-soft">
           <span className="text-ink">Mateo Lonzayes</span> · creador de motorflow

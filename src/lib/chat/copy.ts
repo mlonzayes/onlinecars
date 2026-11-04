@@ -18,16 +18,16 @@ export const CHAT_COPY = {
   actionExpired: "La acción venció o ya se usó. Pedímela de nuevo.",
   lockedTitle: "Asistente con IA",
   lockedDescription:
-    "Operá el panel escribiendo: cargá autos y gastos, consultá ganancias y respondé consultas más rápido. Es un adicional que se contrata aparte.",
-  lockedCta: "Quiero contratarlo",
+    "Operá el panel escribiendo: cargá autos y gastos, consultá ganancias y respondé consultas más rápido. Escribinos y te lo activamos.",
+  lockedCta: "Quiero activarlo",
   contactMessage: (dealershipName: string) =>
-    `Hola! Soy de ${dealershipName} y quiero contratar el asistente con IA de motorflow.`,
+    `Hola! Soy de ${dealershipName} y quiero activar el asistente con IA de motorflow.`,
   errors: {
     disabled: "El asistente no está disponible.",
     notContracted: "Tu cuenta no tiene el asistente con IA contratado.",
     rateLimited: "Vas muy rápido. Esperá un minuto y volvé a intentar.",
-    quotaMessages: "Llegaste al límite de mensajes del mes. Se renueva el 1°, o ampliá tu paquete.",
-    quotaTokens: "Llegaste al límite de uso del mes. Se renueva el 1°, o ampliá tu paquete.",
+    quotaMessages: "Llegaste al límite de mensajes del mes. Se renueva el 1°, o sumá un pack de 100 mensajes.",
+    quotaTokens: "Llegaste al límite de uso del mes. Se renueva el 1°, o sumá un pack de 100 mensajes.",
     quotaUnavailable: "El asistente no está disponible en este momento. Probá de nuevo en unos minutos.",
     accountSuspended: "Tu cuenta está suspendida. Contactanos para reactivarla.",
     accountExpired: "Tu período de prueba o suscripción venció. Renovala para seguir usando el asistente.",

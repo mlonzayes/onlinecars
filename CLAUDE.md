@@ -207,7 +207,7 @@ src/
 ├── admin/{dealerships/[id],dealerships/[id]/pagos,impersonation}
 ├── cron/{expire-trials,sync-exchange-rate}
 ├── mcp                           # Servidor MCP para Claude/ChatGPT (OAuth de Clerk) — ver sección MCP
-├── chat                          # GET/POST — asistente con IA del panel (add-on) + /acciones/[id] — ver sección Chat
+├── chat                          # GET/POST — asistente con IA del panel (cupo por plan) + /acciones/[id] — ver sección Chat
 └── webhooks/clerk
 
 /.well-known/oauth-protected-resource[/api/mcp] · /.well-known/oauth-authorization-server   # metadata OAuth del MCP
@@ -339,8 +339,10 @@ Deja que el dealer opere el panel desde Claude o ChatGPT ("cargame este auto",
 #### Chat con IA del panel (`/api/chat` + `src/lib/chat/`)
 
 El mismo "operá el panel escribiendo" del MCP, para el dealer que no tiene Claude ni
-ChatGPT. Se vende como **add-on**: `Dealership.aiChatMonthlyMessages` (mensajes/mes,
-0 = apagado) lo setea el super-admin desde `/admin`, no depende del plan.
+ChatGPT. **Cada plan incluye un cupo de mensajes/mes** (`PLAN_LIMITS.aiChatMonthlyMessages`:
+trial 10, base 300, media 600, premium 1200, enterprise 2400) y se venden **packs extra de 100**
+que el super-admin carga desde `/admin` en `Dealership.aiChatMonthlyMessages` (se SUMAN al plan).
+El cupo efectivo sale siempre de `getChatMonthlyMessages()` de `lib/plans.ts`.
 
 - **Reusa el MCP en memoria** (`mcp-bridge.ts`): `InMemoryTransport` + `Client` contra
   `createMcpServer(ctx)` con `source: "chat"`. Cero tools propias: tool nueva del MCP →
@@ -794,7 +796,7 @@ Ver schema completo en [prisma/schema.prisma](prisma/schema.prisma). Resumen:
 - **`SubscriptionPayment`** — pagos de la suscripción a la plataforma, cargados por el super-admin. Actualizan `Dealership.paidUntil`.
 - **`TermsAcceptance`** — registro de aceptación de términos por usuario.
 - **`AuditLog`** — quién cambió qué y desde qué canal (panel, MCP, chat). Sin FK a la entidad: sobrevive al borrado. Tabla: `audit_logs`.
-- **`Dealership.aiChatMonthlyMessages`** — cupo del add-on del asistente con IA (0 = no contratado). Las conversaciones NO se guardan en DB: viven en Redis 24 h.
+- **`Dealership.aiChatMonthlyMessages`** — mensajes EXTRA por mes del asistente con IA (packs de 100), que se suman al cupo del plan. 0 = solo lo del plan. Las conversaciones NO se guardan en DB: viven en Redis 24 h.
 
 **Distinción clave Lead vs Customer:** un `Lead` es una consulta pre-venta (puede no tener email, puede ser anónimo). Un `Customer` es alguien que firma una operación — tiene documento obligatorio. No mezclar.
 
@@ -979,7 +981,7 @@ RESEND_API_KEY=
 
 *Plataforma*
 - **Servidor MCP** (`/api/mcp`) para operar el panel desde Claude/ChatGPT: vehículos y gastos, con OAuth de Clerk y cupo por plan.
-- **Asistente con IA del panel** (`/api/chat`, add-on): las mismas tools del MCP en memoria, modelo vía OpenRouter, confirmación de borrar/publicar fuera del modelo.
+- **Asistente con IA del panel** (`/api/chat`, cupo mensual por plan + packs extra): las mismas tools del MCP en memoria, modelo vía OpenRouter, confirmación de borrar/publicar fuera del modelo.
 - Middleware de subdomain routing (rewrite a `/tenant/{slug}`, con `url.search` incluido).
 - Storage S3-compatible (Contabo) con dos buckets — público (imágenes) + privado (documentos, presigned 5 min).
 - Logging con `withLogger` + `request_id` propagado.

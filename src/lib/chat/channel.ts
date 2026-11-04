@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAccountBlockReason } from "@/lib/account-status";
 import { logger } from "@/lib/logger";
+import { getChatMonthlyMessages } from "@/lib/plans";
 import { isSameOriginRequest } from "@/lib/security/same-origin";
 import { getDashboardContext } from "@/lib/services/dashboard-context";
 import type { McpContext } from "@/lib/mcp/context";
@@ -30,7 +31,7 @@ export async function getChatContext(
   const ctx = await getDashboardContext(requestId, event);
   if (ctx instanceof NextResponse) return ctx;
 
-  if (ctx.dealership.aiChatMonthlyMessages <= 0) {
+  if (getChatMonthlyMessages(ctx.dealership) <= 0) {
     logger.info(requestId, `${event}.not_contracted`, { dealershipId: ctx.dealership.id });
     return NextResponse.json({ error: CHAT_COPY.errors.notContracted }, { status: 403 });
   }

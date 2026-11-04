@@ -37,9 +37,10 @@ export function getMonthlyTokenCap(): number {
   return Number.isFinite(raw) && raw > 0 ? raw : Infinity;
 }
 
-// Paquetes de mensajes por mes que se venden (el super-admin elige uno desde
-// /admin). 0 = no contratado. Cambiar acá no toca a quien ya tiene uno asignado.
-export const AI_CHAT_PACKAGES = [0, 300, 1000, 3000] as const;
+// Mensajes EXTRA por mes, en packs de 100, que se suman a los que incluye el
+// plan (PLAN_LIMITS.aiChatMonthlyMessages). El super-admin elige desde /admin.
+// 0 = solo lo del plan. Cambiar acá no toca a quien ya tiene uno asignado.
+export const AI_CHAT_PACKAGES = [0, 100, 200, 300, 500, 1000] as const;
 
 export const CHAT_LIMITS = {
   // Largo máximo de un mensaje del usuario. Corta el "pegame este texto y..."

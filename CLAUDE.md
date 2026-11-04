@@ -365,6 +365,10 @@ ChatGPT. Se vende como **add-on**: `Dealership.aiChatMonthlyMessages` (mensajes/
   ("Precio: 30.000 → 1.000"). Frena las prompt injections que llegan en el texto de un
   lead. **Falla cerrado:** tool nueva que escribe → sumar su descriptor en
   `action-descriptions.ts`, o el chat no la puede ejecutar.
+- **Cambios sensibles** (`sensitive-changes.ts`): precio que baja ≥30% en la misma moneda,
+  cambio de moneda, o teléfonos/mails/links NUEVOS en un texto público. La tarjeta los
+  resalta en rojo y no deja confirmar sin tildar "Lo revisé". No bloquea: el dealer puede
+  bajar un precio de verdad. Es para que un click automático no deje pasar una injection.
 
 #### Auditoría (`AuditLog` + `src/lib/services/audit.ts`)
 

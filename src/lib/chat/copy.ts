@@ -47,4 +47,15 @@ export const CHAT_COPY = {
     noChanges: "No hay cambios para aplicar: los datos ya son esos.",
     unsupported: "Esta acción no se puede hacer desde el chat. Hacela desde el panel.",
   },
+  // Cambios sensibles: se resaltan en la tarjeta y piden un segundo paso.
+  warnings: {
+    title: "Revisá este cambio antes de confirmar",
+    acknowledge: "Lo revisé y es correcto",
+    priceDrop: (percent: number, before: string, after: string) =>
+      `El precio baja un ${percent}% (${before} → ${after}).`,
+    currencyChange: (before: string, after: string) =>
+      `Cambia la moneda del precio (${before} → ${after}): el mismo número en otra moneda es otro precio.`,
+    contacts: (items: string) =>
+      `Agrega datos de contacto o links que se van a ver en tu sitio: ${items}. Verificá que sean tuyos.`,
+  },
 } as const;

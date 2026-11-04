@@ -24,8 +24,8 @@ interface Integration {
 }
 
 const INTEGRATIONS: Integration[] = [
-  { name: "ChatGPT", Icon: SiOpenai, desc: "Cargá y consultá por chat." },
-  { name: "Claude", Icon: SiClaude, desc: "Cargá y consultá por chat." },
+  { name: "ChatGPT", Icon: SiOpenai, desc: "Usá motorflow desde tu ChatGPT." },
+  { name: "Claude", Icon: SiClaude, desc: "Usá motorflow desde tu Claude." },
   { name: "Mercado Libre", logo: "/logo/meli.png", desc: "Stock sincronizado.", plan: "Media" },
   { name: "WhatsApp", Icon: SiWhatsapp, desc: "Botón en tu web.", plan: "Media" },
   { name: "Meta Ads", Icon: SiMeta, desc: "Pixel y API de conversiones.", plan: "Media" },

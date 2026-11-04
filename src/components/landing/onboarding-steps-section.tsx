@@ -2,20 +2,20 @@ import { FadeIn } from "./fade-in";
 import { SectionHeading } from "./section-heading";
 
 /**
- * Cómo arrancás. Baja el miedo a "conectar una IA": ese paso lo hacemos
- * nosotros en el onboarding.
+ * Cómo arrancás. Baja el miedo a "usar IA": el asistente ya viene adentro del
+ * panel, no hay nada que instalar ni conectar.
  */
 const STEPS = [
   { n: "1", title: "Creás tu cuenta", desc: "Tu web online en el día." },
-  { n: "2", title: "Conectamos tu IA", desc: "Lo hacemos con vos." },
-  { n: "3", title: "Cargás tus autos", desc: "Por chat, panel o Excel." },
+  { n: "2", title: "Le escribís al asistente", desc: "Ya viene en tu panel." },
+  { n: "3", title: "Cargás tus autos", desc: "Por chat, a mano o desde Excel." },
 ];
 
 export function OnboardingStepsSection() {
   return (
     <section className="bg-white px-4 py-16 sm:px-6 sm:py-24">
       <div className="mx-auto max-w-6xl">
-        <SectionHeading title="Arrancás hoy. La IA te la conectamos nosotros" />
+        <SectionHeading title="Arrancás hoy. La IA ya viene adentro" />
 
         <ol className="relative mt-12 grid gap-8 sm:grid-cols-3 sm:gap-6">
           {/* Línea que une los pasos (solo cuando están en fila). */}

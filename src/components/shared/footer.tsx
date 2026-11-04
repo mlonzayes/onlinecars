@@ -31,7 +31,7 @@ export function Footer() {
           <div className="col-span-2 md:col-span-5">
             <Image src="/logo/motorflow_light.png" alt="motorflow" width={132} height={132} className="h-auto w-[132px]" />
             <p className="mt-4 max-w-xs text-sm font-light leading-relaxed text-ink-soft">
-              El sitio web y el sistema de tu concesionaria, que manejás con la IA que uses.
+              El sitio web y el sistema de tu concesionaria, que manejás escribiendo, con IA.
             </p>
             {/* Redes de motorflow (la plataforma), no las del concesionario */}
             <a

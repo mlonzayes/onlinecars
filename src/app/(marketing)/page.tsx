@@ -35,7 +35,7 @@ import { COUNTRIES, COUNTRY_LABELS } from "@/lib/constants";
 export const metadata: Metadata = {
   title: { absolute: "Sistema para concesionarias que manejás con IA | motorflow" },
   description:
-    "Tu web, tu stock, tus consultas y el margen de cada auto. Cargá un auto o un gasto escribiéndole a Claude o ChatGPT. Probalo 15 días gratis.",
+    "Tu web, tu stock, tus consultas y el margen de cada auto. Cargá un auto o un gasto escribiéndole al asistente con IA. Probalo 15 días gratis.",
 };
 
 // Structured data (schema.org) — la leen Google (rich results / FAQ) y los

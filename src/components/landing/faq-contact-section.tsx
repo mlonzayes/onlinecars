@@ -16,12 +16,22 @@ export interface Faq {
  */
 export function getFaqs(): Faq[] {
   return [
-    { question: "¿Con qué IA funciona?", answer: "Con Claude y ChatGPT. Te la dejamos conectada en el onboarding." },
+    {
+      question: "¿Necesito tener ChatGPT o Claude?",
+      answer: "No. motorflow trae su propio asistente adentro del panel. Si ya usás Claude o ChatGPT, también podés operar desde ahí.",
+    },
+    {
+      question: "¿La IA se paga aparte?",
+      answer: "No. Cada plan incluye mensajes al asistente por mes (300 en Base, y se duplica en cada plan). Si te quedás corto, sumás packs de 100.",
+    },
+    {
+      question: "¿La IA puede inventar datos?",
+      answer: "No cambia nada sin tu OK: cada carga te la muestra para confirmar, y los autos entran como borrador.",
+    },
     { question: "¿Y si no uso IA?", answer: "Todo se hace también desde el panel." },
-    { question: "¿La IA puede inventar datos?", answer: "No publica nada sin tu OK: los autos entran como borrador." },
     { question: "¿Cobran comisión por venta?", answer: "No. Pagás el plan y listo." },
     { question: "¿Tengo que dejar Mercado Libre?", answer: "No. Desde el plan Media se sincroniza con tu web." },
-    { question: "¿Qué incluye la prueba?", answer: "15 días, hasta 10 autos y 20 pedidos diarios a la IA." },
+    { question: "¿Qué incluye la prueba?", answer: "15 días, hasta 10 autos y 10 mensajes al asistente para que lo pruebes." },
     { question: "¿Y si no me sirve?", answer: "Cancelás cuando quieras y te llevás tus datos." },
   ];
 }

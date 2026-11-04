@@ -26,7 +26,11 @@ export function HeroAiSection() {
           </h1>
 
           <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-ink-soft sm:text-lg lg:mx-0">
-            Escribí <span className="text-ink">«cargame el Corolla 2019»</span> en el asistente
+            Escribí{" "}
+            <span className="text-ink underline decoration-accent-amber decoration-[3px] underline-offset-[5px]">
+              «cargame el Corolla 2019»
+            </span>{" "}
+            en el asistente
             de motorflow y ya está en tu web. Sin instalar nada.
           </p>
 

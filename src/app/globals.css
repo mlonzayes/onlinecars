@@ -8,7 +8,11 @@
 
 /* Paleta de la web de marketing: tinta, grises, azul oscuro (navy) para las
    bandas de contraste y el azul del logo (brand), reservado para CTAs y
-   acentos puntuales: si se usa en todo, deja de marcar dónde hacer click. */
+   acentos puntuales: si se usa en todo, deja de marcar dónde hacer click.
+   Accent (ámbar, "luz de giro"): resalta detalles puntuales (badge del plan
+   recomendado, marcador del hero, estados). NUNCA en el CTA principal, que es
+   brand. Sobre blanco no alcanza contraste para texto chico: va de fondo con
+   texto ink, como texto solo sobre navy, o usar accent-deep. */
 @theme {
   --color-paper: #f6f7f9;
   --color-paper-deep: #eceff3;
@@ -17,6 +21,8 @@
   --color-brand: #2563eb;
   --color-brand-deep: #1d4ed8;
   --color-navy: #0b1d3f;
+  --color-accent-amber: #f5a524;
+  --color-accent-amber-deep: #b45309;
 }
 
 @theme inline {

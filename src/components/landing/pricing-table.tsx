@@ -247,7 +247,7 @@ export function PricingTable() {
                     <div className="flex h-full flex-col px-4 pt-8 pb-5">
                       {isHighlighted && (
                         <div className="absolute top-0 left-0 right-0 flex justify-center">
-                          <span className="rounded-b-md bg-blue-600 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
+                          <span className="rounded-b-md bg-accent-amber px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-ink shadow-sm">
                             {plan.highlightLabel ?? "Más elegida"}
                           </span>
                         </div>

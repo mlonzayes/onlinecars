@@ -19,7 +19,7 @@ function DemoConversation() {
         cargame un Corolla XEI 2019, 68.000 km, azul, a 18.500.000
       </ChatBubble>
       <span
-        className="chat-in mr-auto rounded-md border border-dashed border-ink/25 px-2 py-0.5 text-[10px] text-ink-soft"
+        className="chat-in mr-auto rounded-md border border-accent-amber/60 bg-accent-amber/15 px-2 py-0.5 text-[10px] text-ink"
         style={{ animationDelay: "1s" }}
       >
         ✓ Confirmaste · Cargar vehículo

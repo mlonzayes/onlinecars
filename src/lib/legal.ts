@@ -9,7 +9,7 @@ import { prisma } from "./prisma";
  * dashboard detecte que el usuario aceptó una versión vieja y lo obligue a volver
  * a aceptar la nueva. El historial queda registrado en la tabla terms_acceptances.
  */
-export const CURRENT_LEGAL_VERSION = "2026-06-15";
+export const CURRENT_LEGAL_VERSION = "2026-11-04";
 
 /** ¿El usuario ya aceptó la versión legal vigente? */
 export async function hasAcceptedCurrentTerms(clerkUserId: string): Promise<boolean> {

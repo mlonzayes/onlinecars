@@ -1,4 +1,6 @@
+import { Suspense } from "react";
 import localFont from "next/font/local";
+import { AttributionCapture } from "@/components/landing/attribution-capture";
 import { MetaPixel } from "@/components/meta/meta-pixel";
 import { getMainSitePixelId } from "@/lib/meta/config";
 import { MicrosoftClarity } from "@/components/clarity/microsoft-clarity";
@@ -51,6 +53,10 @@ export default function MarketingLayout({
       {pixelId && <MetaPixel pixelId={pixelId} />}
       {clarityId && <MicrosoftClarity projectId={clarityId} />}
       {gaId && <GoogleAnalytics measurementId={gaId} />}
+      {/* Suspense: useSearchParams sin boundary saca a las páginas del render estático. */}
+      <Suspense fallback={null}>
+        <AttributionCapture />
+      </Suspense>
       {/* "light": la web de marketing es siempre clara, aunque el sistema del
           visitante esté en modo oscuro (ver @custom-variant dark en globals.css). */}
       <div className={`light bg-paper text-ink ${outfit.variable}`}>{children}</div>

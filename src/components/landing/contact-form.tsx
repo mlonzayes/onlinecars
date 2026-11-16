@@ -6,6 +6,7 @@ import { PiPaperPlaneTilt, PiCircleNotch, PiCheckCircle } from "react-icons/pi";
 import { HONEYPOT_FIELD, HONEYPOT_STYLE } from "@/lib/honeypot";
 import { trackMetaEventWithId } from "@/lib/meta/client";
 import { META_EVENT_ID_FIELD } from "@/lib/meta/events";
+import { ATTRIBUTION_FIELD, readAttribution } from "@/lib/marketing/attribution";
 import { CLARITY_EVENTS, setClarityTag, trackClarityEvent } from "@/lib/clarity/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,7 +71,7 @@ export function LandingContactForm() {
         ...(plan ? { plan } : {}),
       });
 
-      const payload: Record<string, string> = {
+      const payload: Record<string, unknown> = {
         intent,
         name: form.name,
         email: form.email,
@@ -78,6 +79,7 @@ export function LandingContactForm() {
         message: form.message,
         [HONEYPOT_FIELD]: form[HONEYPOT_FIELD],
         [META_EVENT_ID_FIELD]: metaEventId,
+        [ATTRIBUTION_FIELD]: readAttribution(),
       };
       if (plan) payload.plan = plan;
 

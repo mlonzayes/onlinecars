@@ -6,9 +6,14 @@
  *  - intent="demo": el visitante quiere probar gratis (alta manual por ventas)
  *  - intent="otro": consulta genérica
  *
- * Si están seteadas TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID, mandamos una
- * notificación al chat del equipo para que ventas reaccione rápido. Si Telegram
- * está caído o no configurado, la consulta queda igual aceptada (fail-open).
+ * La consulta se GUARDA en `marketing_leads` con la atribución de la campaña
+ * (UTMs + click ids) y después se avisa por Telegram para que ventas reaccione
+ * rápido. Si la DB falla, el aviso sale igual marcado para cargarlo a mano; si
+ * Telegram falla, el lead ya quedó en la DB. Fail-open: el visitante nunca ve el error.
+ *
+ * Request:  { intent: "plan", plan: "media", name: "Juan Pérez", email: "juan@x.com",
+ *             metaEventId: "<uuid>", attribution: { utmSource: "facebook", utmCampaign: "lanzamiento" } }
+ * Response: 201 { success: true }
  *
  * Protecciones:
  *  - Rate limit por IP (waitlistLimiter — sliding window)
@@ -21,32 +26,21 @@ import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { applyRateLimit, getClientIp, waitlistLimiter } from "@/lib/rate-limit";
 import { isHoneypotTriggered, HONEYPOT_FIELD } from "@/lib/honeypot";
-import { sendTelegramNotification, escapeTelegramHTML } from "@/lib/telegram";
+import { sendTelegramNotification } from "@/lib/telegram";
+import { ATTRIBUTION_FIELD } from "@/lib/marketing/attribution";
+import {
+  INTENT_VALUES,
+  PLAN_VALUES,
+  attributionSchema,
+  buildContactTelegramText,
+  saveMarketingLead,
+} from "@/lib/marketing/contact-lead";
 import {
   extractMetaBrowserSignals,
   getMainSiteCapiCredentials,
   sendMetaConversionEvent,
 } from "@/lib/meta/capi";
 import { META_EVENT_ID_FIELD } from "@/lib/meta/events";
-
-// Coordinar con src/components/landing/contact-form.tsx — los valores tienen
-// que matchear 1:1.
-const INTENT_VALUES = ["plan", "demo", "otro"] as const;
-const PLAN_VALUES = ["base", "media", "premium", "enterprise", "no_se"] as const;
-
-const INTENT_LABELS: Record<(typeof INTENT_VALUES)[number], string> = {
-  plan: "💰 Quiere contratar un plan",
-  demo: "🎁 Quiere probar gratis (demo)",
-  otro: "💬 Consulta genérica",
-};
-
-const PLAN_LABELS: Record<(typeof PLAN_VALUES)[number], string> = {
-  base: "Base",
-  media: "Media",
-  premium: "Premium",
-  enterprise: "Enterprise",
-  no_se: "No definido",
-};
 
 const contactSchema = z
   .object({
@@ -62,6 +56,7 @@ const contactSchema = z
     // visitante tiene un adblocker, el pixel no corrió y solo llega la CAPI —
     // que es justamente el caso que la CAPI viene a cubrir.
     [META_EVENT_ID_FIELD]: z.string().uuid().optional(),
+    [ATTRIBUTION_FIELD]: attributionSchema,
   })
   .strict();
 
@@ -106,41 +101,37 @@ export const POST = withLogger(async (req, { requestId }) => {
 
   const { intent, plan, name, email, phone, dealership, message } = parsed.data;
 
-  logger.info(requestId, "contact.received", { intent, plan, email });
+  const attribution = parsed.data[ATTRIBUTION_FIELD] ?? {};
 
-  // Notificación a Telegram — fire-and-forget. NO la await-eamos para que el
-  // usuario no vea el spinner los 1-3s que tarda la API de Telegram. Si falla,
-  // ya quedó loggeado server-side.
-  const e = (v: string | null | undefined) =>
-    v ? escapeTelegramHTML(v) : "—";
+  const leadId = await saveMarketingLead(
+    { intent, plan, name, email, phone, dealership, message, attribution },
+    requestId
+  );
 
-  const lines = [
-    INTENT_LABELS[intent],
-    "",
-    `<b>Nombre:</b> ${e(name)}`,
-    `<b>Email:</b> ${e(email)}`,
-    `<b>Teléfono:</b> ${e(phone)}`,
-    `<b>Concesionario:</b> ${e(dealership)}`,
-  ];
-  if (intent === "plan") {
-    lines.push(`<b>Plan de interés:</b> ${PLAN_LABELS[plan ?? "no_se"]}`);
-  }
-  if (message) {
-    lines.push("", "<b>Mensaje:</b>", e(message));
-  }
-  const text = lines.join("\n");
+  // Sin email ni teléfono: los logs no llevan PII.
+  logger.info(requestId, "contact.received", {
+    leadId,
+    intent,
+    plan,
+    utmSource: attribution.utmSource,
+    utmCampaign: attribution.utmCampaign,
+  });
 
-  void sendTelegramNotification({ text }, requestId);
+  const text = buildContactTelegramText(
+    { intent, plan, name, email, phone, dealership, message, attribution },
+    leadId
+  );
+
+  // `after()` y no `void`: con la DB caída este aviso es la ÚNICA copia del
+  // lead, y en Vercel una promesa suelta se puede cortar al congelar la función.
+  // Igual va después de la respuesta: el visitante no espera a Telegram.
+  after(async () => {
+    await sendTelegramNotification({ text }, requestId);
+  });
 
   // --- Conversión a Meta (Conversions API) ---
   //
-  // Va en `after()` y NO en `void`: en Vercel, una promesa suelta después del
-  // return se puede cortar cuando la función se congela. `after()` le avisa al
-  // runtime que mantenga viva la invocación. Telegram usa `void` porque perder
-  // un aviso es molesto; perder una conversión te desoptimiza la campaña y te
-  // sube el costo por lead, así que este sí tiene que llegar.
-  //
-  // Y va DESPUÉS de la respuesta: el visitante no espera a Meta.
+  // También en `after()`: perder una conversión desoptimiza la campaña.
   const capi = getMainSiteCapiCredentials();
   if (capi) {
     const eventId = parsed.data[META_EVENT_ID_FIELD] ?? globalThis.crypto.randomUUID();

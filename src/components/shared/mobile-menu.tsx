@@ -125,6 +125,7 @@ export function MobileMenu({ isLoginEnabled }: MobileMenuProps) {
                 )}
                 <a
                   href={SITE_WHATSAPP_URL}
+                  data-contact-location="menu-mobile"
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => setIsOpen(false)}

@@ -43,6 +43,7 @@ export function MobileStickyCta({ href, label }: MobileStickyCtaProps) {
       </Link>
       <a
         href={SITE_WHATSAPP_URL}
+        data-contact-location="sticky-mobile"
         target="_blank"
         rel="noopener noreferrer"
         tabIndex={visible ? 0 : -1}

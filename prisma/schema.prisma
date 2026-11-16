@@ -436,6 +436,36 @@ model Lead {
 }
 
 // Waitlist para la landing de marketing
+// Consulta del form de contacto de la WEB PRINCIPAL (prospecto del SaaS, no de
+// un concesionario: por eso no cuelga de Dealership). Se guarda ANTES de avisar
+// por Telegram para que un aviso perdido no sea un lead perdido. Los utm* y los
+// click ids son la atribución de la campaña (last-touch, ver lib/marketing/attribution.ts).
+model MarketingLead {
+  id          String   @id @default(cuid())
+  intent      String   // plan | demo | otro
+  plan        String?
+  name        String
+  email       String
+  phone       String?
+  dealership  String?
+  message     String?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmContent  String?
+  utmTerm     String?
+  fbclid      String?
+  gclid       String?
+  landingPage String?  // path + query de la primera página de la visita atribuida
+  referrer    String?  // origen externo (solo host), si lo hubo
+  requestId   String
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([utmCampaign, createdAt])
+  @@map("marketing_leads")
+}
+
 model WaitlistEntry {
   id         String   @id @default(cuid())
   email      String   @unique

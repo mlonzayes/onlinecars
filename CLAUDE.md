@@ -781,7 +781,7 @@ Ver schema completo en [prisma/schema.prisma](prisma/schema.prisma). Resumen:
 - **`SaleDocument`** — documento del legajo de venta. Categorizado en `customer | vehicle | operation` con `type` específico (DNI, F08, Boleto, FACTURA_AFIP, etc.). `dealershipId` denormalizado para queries rápidas por tenant. **Datos personales sensibles** — viven en bucket privado y se sirven solo vía presigned URL. Tabla: `sale_documents`.
 - **`Review`** — opinión pública del cliente sobre el concesionario. Entra como `pending` desde el form del sitio del tenant; el admin la modera en el dashboard (`pending | approved | rejected`). `rating: 1-5`. Tabla: `reviews`.
 - **`FinancingPlan`** — banner/video de planes de financiación administrable desde el dashboard (`assetType: image | video | youtube`). Se renderizan en el sitio del tenant. Tabla: `financing_plans`.
-- **`WaitlistEntry`** — entradas de la landing pre-launch. `email` único. **Legacy**: la landing hoy usa el form de contacto (`/api/public/contact`), que NO persiste en DB — notifica por Telegram. El modelo sigue existiendo por los registros históricos. Tabla: `waitlist_entries`.
+- **`WaitlistEntry`** — entradas de la landing pre-launch. `email` único. **Legacy**: la landing hoy usa el form de contacto (`/api/public/contact`), que guarda en `MarketingLead`. El modelo sigue existiendo por los registros históricos. Tabla: `waitlist_entries`.
 
 **Modelos sumados después del MVP inicial:**
 
@@ -795,6 +795,7 @@ Ver schema completo en [prisma/schema.prisma](prisma/schema.prisma). Resumen:
 - **`ExchangeRate`** — cotización oficial USD (BCRA), global. El plus por tenant es `Dealership.usdSpread`; el valor efectivo se calcula al usarlo, **nunca se persiste sumado**.
 - **`SubscriptionPayment`** — pagos de la suscripción a la plataforma, cargados por el super-admin. Actualizan `Dealership.paidUntil`.
 - **`TermsAcceptance`** — registro de aceptación de términos por usuario.
+- **`MarketingLead`** — consulta del form de contacto de la WEB PRINCIPAL (prospecto del SaaS, sin FK a `Dealership`), con la atribución de la campaña: `utm*`, `fbclid`/`gclid`, `landingPage`, `referrer`. Se guarda antes del aviso a Telegram. La captura es last-touch en `localStorage` (`lib/marketing/attribution.ts` + `<AttributionCapture>` en el layout de marketing). Tabla: `marketing_leads`.
 - **`AuditLog`** — quién cambió qué y desde qué canal (panel, MCP, chat). Sin FK a la entidad: sobrevive al borrado. Tabla: `audit_logs`.
 - **`Dealership.aiChatMonthlyMessages`** — mensajes EXTRA por mes del asistente con IA (packs de 100), que se suman al cupo del plan. 0 = solo lo del plan. Las conversaciones NO se guardan en DB: viven en Redis 24 h.
 
@@ -943,7 +944,7 @@ RESEND_API_KEY=
 **Hecho:**
 
 *Web principal*
-- Landing completa en el route group `(marketing)`: hero, problema/solución, showcase, servicios, beneficios, testimonios, pricing, blog, FAQ y form de contacto (`POST /api/public/contact` → notifica por Telegram). **No hay waitlist activa.**
+- Landing completa en el route group `(marketing)`: hero, problema/solución, showcase, servicios, beneficios, testimonios, pricing, blog, FAQ y form de contacto (`POST /api/public/contact` → guarda en `MarketingLead` con UTMs y notifica por Telegram). **No hay waitlist activa.**
 - Páginas `/precios`, `/blog` (+ `[slug]`), `/terminos`, `/privacidad`.
 - **Meta Pixel + Conversions API** con deduplicación por `eventId` (ver `.claude/rules/tracking.md`).
 - **Microsoft Clarity** (heatmaps + grabaciones) en el route group `(marketing)`, con eventos custom en el form de contacto.

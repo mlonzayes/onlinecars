@@ -67,7 +67,7 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <a href={`tel:${SITE_PHONE}`} className={LINK}>
+                <a href={`tel:${SITE_PHONE}`} data-contact-location="footer" className={LINK}>
                   {SITE_PHONE_DISPLAY}
                 </a>
               </li>

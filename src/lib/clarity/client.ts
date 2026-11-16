@@ -26,6 +26,8 @@ export const CLARITY_EVENTS = {
   contactSent: "contact_sent",
   contactFailed: "contact_failed",
   contactValidationError: "contact_validation_error",
+  contactWhatsappClick: "contact_whatsapp_click",
+  contactPhoneClick: "contact_phone_click",
   // Sitio del tenant (van al proyecto de Clarity DEL DEALER)
   leadSubmitted: "lead_submitted",
   leadSent: "lead_sent",

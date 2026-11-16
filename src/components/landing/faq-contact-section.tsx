@@ -57,6 +57,7 @@ export function FaqContactSection() {
           </div>
           <a
             href={SITE_WHATSAPP_URL}
+            data-contact-location="faq"
             target="_blank"
             rel="noopener noreferrer"
             className="mt-6 inline-block text-sm text-brand underline-offset-4 hover:underline"

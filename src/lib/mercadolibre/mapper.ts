@@ -1,13 +1,13 @@
 /**
  * Mapper: Vehicle (DB) → ML item payload.
  *
- * Categoría vehicular Argentina:
- * - Autos usados:   MLA1744
- * - Autos nuevos:   MLA1743
+ * Categoría vehicular Argentina (tiene que ser HOJA, o ML rechaza el item):
+ * - Autos y camionetas (nuevos y usados): MLA1744 — la condición va en `condition`
  * - Pickups/4x4:    MLA3937
- * - Camionetas:     MLA1752
  *
- * Los atributos obligatorios para MLA1744/MLA1743 (Marketplace channel, 2026):
+ * MLA1743 es la categoría PADRE ("Autos, Motos y Otros"): no se puede publicar ahí.
+ *
+ * Los atributos obligatorios para MLA1744 (Marketplace channel, 2026):
  * BRAND, MODEL, VEHICLE_YEAR, KILOMETERS (solo usados), TRIM,
  * FUEL_TYPE, TRANSMISSION, DOORS, VEHICLE_BODY_TYPE.
  *
@@ -51,11 +51,10 @@ const CONDITION_MAP: Record<string, "new" | "used"> = {
   used: "used",
 };
 
-// Categorías por condición y tipo de carrocería
+// Categoría por tipo de carrocería. Nuevo/usado NO cambia la categoría: lo define `condition`.
 function getCategoryId(vehicle: Vehicle): string {
-  if (vehicle.condition === "new") return "MLA1743"; // Autos 0km
   if (vehicle.bodyType === "pickup") return "MLA3937"; // Pickups y 4x4
-  return "MLA1744"; // Autos usados (default)
+  return "MLA1744"; // Autos y camionetas
 }
 
 // ─── TRIM (versión / línea del modelo) ────────────────────────────────────────
@@ -168,11 +167,14 @@ export interface MLPublishValidationError {
  * vez de un 422 críptico de ML.
  */
 export function validateForMLPublish(
-  vehicle: Vehicle,
+  vehicle: VehicleWithImages,
   dealership: Dealership
 ): MLPublishValidationError[] {
   const errors: MLPublishValidationError[] = [];
 
+  if (vehicle.images.length === 0) {
+    errors.push({ field: "images", message: "Subí al menos una foto para publicar en Mercado Libre." });
+  }
   if (vehicle.kilometers == null) {
     errors.push({ field: "kilometers", message: "El kilometraje es obligatorio para publicar en Mercado Libre." });
   }

@@ -103,7 +103,20 @@ export function MLVehiclePanel({ vehicleId, initialListing, hasMLAccount }: Prop
         body: JSON.stringify({ listingTypeId: selectedListingType }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error publicando");
+      if (!res.ok) {
+        // La pre-validación devuelve qué falta en `details`: mostrarlo, no solo el título.
+        const details: unknown = data.details;
+        if (Array.isArray(details) && details.length > 0) {
+          toast.error(data.error ?? "Faltan datos", {
+            description: details
+              .map((d: { message?: string }) => d.message)
+              .filter(Boolean)
+              .join(" · "),
+          });
+          return;
+        }
+        throw new Error(data.error ?? "Error publicando");
+      }
       setListing(data.listing);
 
       // Abrir ML en una pestaña nueva para que el usuario complete el pago

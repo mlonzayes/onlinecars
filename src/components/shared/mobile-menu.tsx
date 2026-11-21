@@ -59,7 +59,7 @@ export function MobileMenu({ isLoginEnabled }: MobileMenuProps) {
     <div className="lg:hidden">
       <button
         type="button"
-        className="rounded-lg p-2 text-ink transition hover:bg-ink/5"
+        className="rounded-full p-2 text-ink transition hover:bg-ink/5"
         onClick={() => setIsOpen(true)}
         aria-label="Abrir menú"
       >
@@ -109,7 +109,7 @@ export function MobileMenu({ isLoginEnabled }: MobileMenuProps) {
                   href={primary.href}
                   prefetch={false}
                   onClick={() => setIsOpen(false)}
-                  className="inline-flex items-center justify-center rounded-lg bg-brand px-6 py-3.5 text-sm font-medium text-white transition hover:bg-brand-deep"
+                  className="nav-cta inline-flex items-center justify-center rounded-full px-6 py-3.5 text-sm font-medium text-white transition hover:brightness-125"
                 >
                   {primary.label}
                 </Link>
@@ -118,7 +118,7 @@ export function MobileMenu({ isLoginEnabled }: MobileMenuProps) {
                     href="/sign-in"
                     prefetch={false}
                     onClick={() => setIsOpen(false)}
-                    className="inline-flex items-center justify-center rounded-lg border border-ink/15 px-6 py-3.5 text-sm font-medium text-ink transition hover:border-ink"
+                    className="inline-flex items-center justify-center rounded-full border border-ink/15 px-6 py-3.5 text-sm font-medium text-ink transition hover:border-ink"
                   >
                     Ingresar
                   </Link>

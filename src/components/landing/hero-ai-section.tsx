@@ -5,46 +5,74 @@ import { PrimaryCta } from "./primary-cta";
 /**
  * Hero: el diferencial es manejar la concesionaria escribiendo, con el Asistente
  * IA que viene adentro del panel (sin configurar nada). Claude/ChatGPT quedan
- * como alternativa en integraciones y FAQ. Titular amplio ("con IA") y lo
- * concreto en el subtítulo y el chat.
+ * como alternativa en integraciones y FAQ.
  *
- * Entra en UNA pantalla en desktop: ocupa 100svh (menos la barra) y el titular
- * escala con el menor entre ancho y alto (min(vw, svh)), así no se desborda en
- * notebooks de 720px de alto ni con zoom. En mobile se apila: texto y CTA
- * primero, el chat debajo.
- * Sin FadeIn ni JS: el titular es el elemento LCP y tiene que pintar al toque.
+ * Va en un "escenario" redondeado con el wallpaper abstracto de fondo, debajo
+ * de la barra (no detrás: la barra es clara y sobre el azul quedaba cortada).
+ * Entra en UNA pantalla en desktop: el escenario ocupa 100svh menos la barra y
+ * el titular escala con min(vw, svh). En mobile se apila: texto y CTA primero,
+ * el iPhone debajo.
+ *
+ * Performance (PageSpeed 100, no negociable):
+ * - El wallpaper es un WebP pre-achicado (13 KB mobile / 38 KB desktop) en un
+ *   <img> con fetchPriority alta: el preload scanner lo encuentra en el HTML.
+ *   No pasa por next/image: el optimizador en frío sumaba latencia al LCP.
+ * - Sin FadeIn ni JS: el titular pinta al toque. El parallax del fondo y del
+ *   teléfono es CSS scroll-driven (globals.css), anima solo transform.
  */
 export function HeroAiSection() {
   const cta = getPrimaryCta();
 
   return (
-    <section className="relative -mt-16 overflow-hidden bg-paper px-4 pb-14 pt-28 sm:px-6 lg:flex lg:min-h-svh lg:items-center lg:pb-10 lg:pt-24">
-      <div className="mx-auto grid w-full max-w-6xl items-center gap-12 lg:grid-cols-12 lg:gap-10">
-        <div className="text-center lg:col-span-7 lg:text-left">
-          <h1 className="mx-auto max-w-xl font-display text-[clamp(2.4rem,min(5.4vw,9svh),4.5rem)] font-light leading-[1.05] tracking-tight text-ink text-balance lg:mx-0">
-            Manejá tu concesionaria con <span className="font-normal text-brand">IA</span>
-          </h1>
+    <section className="px-2 pt-2 sm:px-3 sm:pt-3">
+      <div className="relative isolate overflow-hidden rounded-[1.75rem] bg-[#07114f] px-4 pb-14 pt-14 sm:rounded-[2.25rem] sm:px-6 lg:flex lg:min-h-[calc(100svh-4.75rem)] lg:items-center lg:py-6">
+        {/* eslint-disable-next-line @next/next/no-img-element -- ver comentario de performance */}
+        <img
+          src="/landing/hero-wallpaper-1600.webp"
+          srcSet="/landing/hero-wallpaper-800.webp 800w, /landing/hero-wallpaper-1600.webp 1600w"
+          sizes="100vw"
+          alt=""
+          fetchPriority="high"
+          decoding="async"
+          className="hero-wallpaper absolute inset-0 -z-10 h-full w-full object-cover"
+        />
+        {/* Velo para que el texto blanco pase contraste AA sobre las zonas claras */}
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10 bg-[radial-gradient(120%_90%_at_0%_50%,rgba(4,9,46,0.72),rgba(4,9,46,0.25)_60%,transparent)]"
+        />
 
-          <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-ink-soft sm:text-lg lg:mx-0">
-            Escribí <span className="text-ink">«cargame el Corolla 2019»</span> en el asistente
-            de motorflow y ya está en tu web. Sin instalar nada.
-          </p>
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-12 lg:grid-cols-12 lg:gap-10">
+          <div className="hero-copy text-center lg:col-span-7 lg:text-left">
+            <h1 className="mx-auto max-w-xl font-display text-[clamp(2.4rem,min(5.4vw,9svh),4.5rem)] font-light leading-[1.05] tracking-tight text-white text-balance lg:mx-0">
+              Manejá tu concesionaria de manera{" "}
+              <span className="font-normal text-[#aebcff]">inteligente</span>
+            </h1>
 
-          <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
-            <PrimaryCta href={cta.href} size="lg" className="w-full sm:w-auto">
-              {cta.label}
-            </PrimaryCta>
-            <a
-              href="#pedidos"
-              className="text-sm text-ink-soft underline decoration-ink/20 underline-offset-4 transition hover:text-ink hover:decoration-ink"
-            >
-              Ver ejemplos
-            </a>
+            <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-white/75 sm:text-lg lg:mx-0">
+              Escribile al asistente de motorflow y el auto ya está en tu web. Sin instalar nada.
+            </p>
+
+            <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
+              <PrimaryCta
+                href={cta.href}
+                size="lg"
+                className="w-full bg-white text-ink shadow-lg shadow-black/25 hover:bg-white/90 sm:w-auto [a]:hover:bg-white/90"
+              >
+                {cta.label}
+              </PrimaryCta>
+              <a
+                href="#pedidos"
+                className="text-sm text-white/75 underline decoration-white/30 underline-offset-4 transition hover:text-white hover:decoration-white"
+              >
+                Ver ejemplos
+              </a>
+            </div>
           </div>
-        </div>
 
-        <div className="lg:col-span-5">
-          <HeroChatDemo />
+          <div className="lg:col-span-5">
+            <HeroChatDemo />
+          </div>
         </div>
       </div>
     </section>

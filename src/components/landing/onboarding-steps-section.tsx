@@ -1,34 +1,40 @@
-import { FadeIn } from "./fade-in";
+import { GlassBackdrop } from "./glass-backdrop";
 import { SectionHeading } from "./section-heading";
 
 /**
  * Cómo arrancás. Baja el miedo a "usar IA": el asistente ya viene adentro del
  * panel, no hay nada que instalar ni conectar.
+ *
+ * Banda oscura a propósito: viene pegada a Precios (blanca) y con el mismo
+ * fondo las dos se leían como una sola sección. Las cards son compactas y SIN
+ * backdrop-filter: dentro de la lista animada (sd-rise) el blur dejaba cortes
+ * verticales raros sobre las manchas del fondo.
  */
 const STEPS = [
-  { n: "1", title: "Creás tu cuenta", desc: "Tu web online en el día." },
-  { n: "2", title: "Le escribís al asistente", desc: "Ya viene en tu panel." },
-  { n: "3", title: "Cargás tus autos", desc: "Por chat, a mano o desde Excel." },
+  { n: "01", title: "Creás tu cuenta" },
+  { n: "02", title: "Le escribís al asistente" },
+  { n: "03", title: "Cargás tus autos" },
 ];
 
 export function OnboardingStepsSection() {
   return (
-    <section className="bg-white px-4 py-16 sm:px-6 sm:py-24">
+    <section className="relative isolate overflow-hidden bg-navy px-4 py-16 text-white sm:px-6 sm:py-24">
+      <GlassBackdrop variant="night" />
       <div className="mx-auto max-w-6xl">
-        <SectionHeading title="Arrancás hoy. La IA ya viene adentro" />
+        <SectionHeading tone="dark" title="Cargá tu stock con el asistente" />
 
-        <ol className="relative mt-12 grid gap-8 sm:grid-cols-3 sm:gap-6">
-          {/* Línea que une los pasos (solo cuando están en fila). */}
-          <span aria-hidden className="absolute left-6 right-6 top-6 hidden border-t border-dashed border-ink/15 sm:block" />
+        {/* La animación va en la lista entera (no por card): así las tres
+            entran juntas y quedan siempre en la misma línea. */}
+        <ol className="sd-rise mt-10 grid gap-3 sm:grid-cols-3 sm:gap-4">
           {STEPS.map((s) => (
-            <li key={s.n} className="relative flex items-start gap-4 sm:flex-col sm:gap-0">
-              <span className="relative flex size-12 shrink-0 items-center justify-center rounded-full border border-brand/20 bg-white font-display text-xl font-light text-brand">
+            <li
+              key={s.n}
+              className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.06] p-4 sm:p-5"
+            >
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-[#aebcff]/30 bg-[#aebcff]/10 font-display text-base text-[#aebcff]">
                 {s.n}
               </span>
-              <FadeIn className="sm:mt-5">
-                <h3 className="font-display text-lg font-normal text-ink sm:text-xl">{s.title}</h3>
-                <p className="mt-1 text-base text-ink-soft">{s.desc}</p>
-              </FadeIn>
+              <h3 className="font-display text-base font-normal sm:text-lg">{s.title}</h3>
             </li>
           ))}
         </ol>

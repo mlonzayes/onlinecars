@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function PrivacidadPage() {
   return (
-    <LegalShell title="Política de Privacidad" lastUpdated="4 de noviembre de 2026">
+    <LegalShell title="Política de Privacidad" lastUpdated="21 de noviembre de 2026">
       <p>
         Esta Política de Privacidad describe cómo se tratan los datos personales en{" "}
         <strong>motorflow</strong> (la &quot;Plataforma&quot;), un servicio de software
@@ -210,14 +210,45 @@ export default function PrivacidadPage() {
         concesionarios. No recolectamos de forma intencional datos de menores de edad.
       </p>
 
-      <h2>12. Cambios en esta política</h2>
+      <h2>12. Uso de herramientas de inteligencia artificial</h2>
+      <p>
+        La Plataforma ofrece herramientas de inteligencia artificial para operar el panel
+        escribiendo, ya sea a través del asistente integrado o de asistentes externos
+        (como Claude o ChatGPT) que el usuario conecte a su cuenta. Estas herramientas
+        pueden cargar o modificar información, por ejemplo datos de vehículos, precios,
+        descripciones o gastos.
+      </p>
+      <p>
+        Los modelos de inteligencia artificial pueden cometer errores, interpretar mal una
+        instrucción o generar información incompleta o inexacta. Por eso:
+      </p>
+      <ul>
+        <li>
+          El usuario es el <strong>único responsable de revisar y verificar</strong> los datos
+          cargados o modificados mediante inteligencia artificial antes de confirmarlos y,
+          en especial, antes de cualquier tipo de publicación (en su sitio web, en
+          MercadoLibre u otros portales, o en documentos entregados a sus clientes).
+        </li>
+        <li>
+          motorflow <strong>no se responsabiliza</strong> por los datos erróneos, incompletos o
+          inexactos que una herramienta de inteligencia artificial pueda cargar, ni por las
+          consecuencias de publicarlos o utilizarlos sin la verificación previa del usuario.
+        </li>
+        <li>
+          Los cambios que el asistente propone se muestran para que el usuario los confirme
+          antes de aplicarse. Esa confirmación implica que el usuario revisó y aprobó la
+          información.
+        </li>
+      </ul>
+
+      <h2>13. Cambios en esta política</h2>
       <p>
         Podemos actualizar esta Política de Privacidad. Publicaremos la versión vigente en
         esta página con su fecha de última actualización. El uso continuado de la
         Plataforma implica la aceptación de los cambios.
       </p>
 
-      <h2>13. Contacto</h2>
+      <h2>14. Contacto</h2>
       <p>
         Por cualquier consulta sobre esta política o sobre el tratamiento de tus datos,
         escribinos a <a href="mailto:soporte@motorflowapp.com">soporte@motorflowapp.com</a>.

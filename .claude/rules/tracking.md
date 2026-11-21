@@ -258,6 +258,7 @@ Clarity (Configuración → Google Analytics en el panel de Clarity).
 |---|---|
 | [src/lib/google-analytics/config.ts](../../src/lib/google-analytics/config.ts) | `NEXT_PUBLIC_GA_MEASUREMENT_ID` validado (`G-XXXXXXXXXX`). Su presencia es el interruptor. |
 | [src/components/google-analytics/google-analytics.tsx](../../src/components/google-analytics/google-analytics.tsx) | Inyecta `gtag.js`. Server Component. |
+| [src/lib/google-analytics/client.ts](../../src/lib/google-analytics/client.ts) | `trackGaEvent` + lista cerrada `GA_EVENTS`. |
 
 Reglas:
 
@@ -266,5 +267,26 @@ Reglas:
 2. **Page views por "medición mejorada".** GA4 cuenta las navegaciones del App
    Router con "Cambios de página según el historial del navegador" (activo por
    default en el flujo web). Si se apaga en GA4, se pierden.
-3. **Las conversiones siguen yendo por Meta.** GA4 no reemplaza la deduplicación
-   pixel + CAPI.
+3. **GA4 no reemplaza a Meta.** Meta sigue con pixel + CAPI deduplicados; GA4
+   suma sus propios eventos para Google Ads.
+4. **Eventos (lista cerrada en `GA_EVENTS`):** `generate_lead` (form enviado, se
+   dispara recién con el OK del server), `whatsapp_click` y `phone_click` (param
+   `location`). Nunca PII en los params: GA4 lo prohíbe.
+5. **Google Ads usa estos eventos, sin tag propio.** En GA4 se marcan como
+   "eventos clave" y en Google Ads se importan como conversiones (Herramientas →
+   Conversiones → Importar → GA4), con las cuentas vinculadas. Optimizar por
+   `generate_lead`; los clicks como conversión secundaria.
+
+## Clicks a WhatsApp / teléfono (web principal)
+
+[`<ContactClickTracker>`](../../src/components/landing/contact-click-tracker.tsx)
+(montado en `(marketing)/layout.tsx`) escucha los clicks de TODA la web con un
+listener delegado y detecta por el href (`wa.me`, `api.whatsapp.com`, `tel:`).
+Cada click va a Meta (`Contact`, solo pixel), GA4 y Clarity — ver
+[`contact-click.ts`](../../src/lib/marketing/contact-click.ts).
+
+- **Link nuevo de WhatsApp o teléfono → se mide solo.** Sumale
+  `data-contact-location="<lugar>"` para saber desde dónde se tocó; sin el
+  atributo cuenta como `otro`.
+- Un click NO es un lead: no se sabe si la persona escribió. En las campañas,
+  optimizar por `Lead` / `generate_lead`.

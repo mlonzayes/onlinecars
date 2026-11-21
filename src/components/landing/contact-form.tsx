@@ -7,6 +7,7 @@ import { HONEYPOT_FIELD, HONEYPOT_STYLE } from "@/lib/honeypot";
 import { trackMetaEventWithId } from "@/lib/meta/client";
 import { META_EVENT_ID_FIELD } from "@/lib/meta/events";
 import { ATTRIBUTION_FIELD, readAttribution } from "@/lib/marketing/attribution";
+import { GA_EVENTS, trackGaEvent } from "@/lib/google-analytics/client";
 import { CLARITY_EVENTS, setClarityTag, trackClarityEvent } from "@/lib/clarity/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,6 +93,13 @@ export function LandingContactForm() {
       if (!res.ok) throw new Error("Error al enviar la consulta");
 
       trackClarityEvent(CLARITY_EVENTS.contactSent);
+      // GA4 recién con el OK del server (a diferencia del pixel): no tiene
+      // contraparte server-side que deduplicar y no queremos contar fallidos.
+      trackGaEvent(GA_EVENTS.generateLead, {
+        form: "contacto",
+        intent,
+        ...(plan ? { plan } : {}),
+      });
       setSent(true);
       toast.success("¡Consulta enviada! Te contactamos pronto.");
     } catch {

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import localFont from "next/font/local";
 import { AttributionCapture } from "@/components/landing/attribution-capture";
+import { ContactClickTracker } from "@/components/landing/contact-click-tracker";
 import { MetaPixel } from "@/components/meta/meta-pixel";
 import { getMainSitePixelId } from "@/lib/meta/config";
 import { MicrosoftClarity } from "@/components/clarity/microsoft-clarity";
@@ -57,6 +58,7 @@ export default function MarketingLayout({
       <Suspense fallback={null}>
         <AttributionCapture />
       </Suspense>
+      <ContactClickTracker />
       {/* "light": la web de marketing es siempre clara, aunque el sistema del
           visitante esté en modo oscuro (ver @custom-variant dark en globals.css). */}
       <div className={`light bg-paper text-ink ${outfit.variable}`}>{children}</div>

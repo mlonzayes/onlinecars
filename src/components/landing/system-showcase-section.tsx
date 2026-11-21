@@ -26,7 +26,7 @@ export function SystemShowcaseSection() {
         <SectionHeading title="Detrás, un sistema completo" subtitle="Stock, consultas, ventas y gastos por auto." />
 
         <FadeIn className="mt-10 grid gap-6 lg:grid-cols-12 lg:items-center lg:gap-10">
-          <div className="overflow-hidden rounded-xl border border-ink/10 shadow-xl shadow-ink/5 lg:col-span-8">
+          <div className="sd-zoom overflow-hidden rounded-xl border border-ink/10 shadow-xl shadow-ink/5 lg:col-span-8">
             <Image src={main.src} alt="Panel de motorflow: configuración del sitio web" width={1344} height={590} sizes="(max-width: 1024px) 100vw, 760px" quality={90} className="w-full" />
           </div>
           <div className="lg:col-span-4">
@@ -38,7 +38,7 @@ export function SystemShowcaseSection() {
         <div className="mt-12 grid gap-10 md:grid-cols-2 md:gap-8">
           {side.map((s) => (
             <FadeIn key={s.title}>
-              <div className="overflow-hidden rounded-xl border border-ink/10 shadow-xl shadow-ink/5">
+              <div className="sd-zoom overflow-hidden rounded-xl border border-ink/10 shadow-xl shadow-ink/5">
                 <Image src={s.src} alt={`${s.title} en el panel de motorflow`} width={1344} height={590} sizes="(max-width: 768px) 100vw, 560px" quality={90} className="w-full" />
               </div>
               <h3 className="mt-5 font-display text-xl font-light text-ink">{s.title}</h3>

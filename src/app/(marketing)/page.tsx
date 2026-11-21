@@ -2,12 +2,10 @@ import type { Metadata } from "next";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
 import { HeroAiSection } from "@/components/landing/hero-ai-section";
-import { ProblemStorySection } from "@/components/landing/problem-story-section";
 import { AiRequestsSection } from "@/components/landing/ai-requests-section";
 import { SystemShowcaseSection } from "@/components/landing/system-showcase-section";
 import { IntegrationsSection } from "@/components/landing/integrations-section";
 import { OnboardingStepsSection } from "@/components/landing/onboarding-steps-section";
-import { FounderSection } from "@/components/landing/founder-section";
 import { PricingSection } from "@/components/landing/pricing-section";
 import { FaqContactSection, getFaqs } from "@/components/landing/faq-contact-section";
 import { FinalCtaSection } from "@/components/landing/final-cta-section";
@@ -29,7 +27,8 @@ import { COUNTRIES, COUNTRY_LABELS } from "@/lib/constants";
  *   hero-section · problem-section · product-showcase · differentiators-section ·
  *   guarantees-section · solution-section · vehicle-types-section ·
  *   services-section (+ roadmap-*) · benefits-section · dealer-workflow-section ·
- *   mid-cta-section · testimonials-section (testimonios ficticios) · blog-section
+ *   mid-cta-section · testimonials-section (testimonios ficticios) · blog-section ·
+ *   founder-section · problem-story-section
  */
 
 export const metadata: Metadata = {
@@ -105,28 +104,26 @@ export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col bg-paper">
       <JsonLd data={buildStructuredData()} />
+      {/* Progreso de lectura: CSS scroll-driven, sin JS (globals.css) */}
+      <div aria-hidden className="scroll-progress" />
       <Navbar />
 
       <main className="flex-1">
         {/* 1. Hero — IA como diferencial + chat que carga un auto (LCP = titular) */}
         <HeroAiSection />
-        {/* 2. Problema — el mismo auto en tres lados, contado con detalles del rubro */}
-        <ProblemStorySection />
-        {/* 3. Qué le pedís a la IA — prueba del diferencial + CTA */}
+        {/* 2. Qué le pedís a la IA — prueba del diferencial + CTA */}
         <AiRequestsSection />
-        {/* 4. El sistema detrás — capturas reales del producto */}
+        {/* 3. El sistema detrás — capturas reales del producto */}
         <SystemShowcaseSection />
-        {/* 5. Integraciones — solo las que existen hoy */}
+        {/* 4. Integraciones — solo las que existen hoy */}
         <IntegrationsSection />
-        {/* 6. Cómo arrancás — el onboarding conecta la IA */}
+        {/* 5. Cómo arrancás — el onboarding conecta la IA */}
         <OnboardingStepsSection />
-        {/* 7. Quién está detrás + garantías (prueba honesta sin testimonios) */}
-        <FounderSection />
-        {/* 8. Precios */}
+        {/* 6. Precios */}
         <PricingSection />
-        {/* 9. FAQ + contacto secundario */}
+        {/* 7. FAQ + contacto secundario */}
         <FaqContactSection />
-        {/* 10. CTA final */}
+        {/* 8. CTA final */}
         <FinalCtaSection />
       </main>
 

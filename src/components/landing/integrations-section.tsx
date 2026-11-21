@@ -4,6 +4,7 @@ import type { IconType } from "react-icons";
 import { SiClaude, SiMeta, SiOpenai, SiWhatsapp } from "react-icons/si";
 import { PiChartBar, PiCurrencyDollar, PiMicrosoftExcelLogo, PiPlus } from "react-icons/pi";
 import { FadeIn } from "./fade-in";
+import { GlassBackdrop } from "./glass-backdrop";
 import { SectionHeading } from "./section-heading";
 
 /**
@@ -36,13 +37,14 @@ const INTEGRATIONS: Integration[] = [
 
 export function IntegrationsSection() {
   return (
-    <section id="integraciones" className="scroll-mt-20 bg-paper px-4 py-16 sm:px-6 sm:py-24">
+    <section id="integraciones" className="relative isolate scroll-mt-20 overflow-hidden bg-paper px-4 py-16 sm:px-6 sm:py-24">
+      <GlassBackdrop variant="lilac" />
       <div className="mx-auto max-w-6xl">
         <SectionHeading title="Se conecta con lo que ya usás" />
 
         <FadeIn className="mt-10 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {INTEGRATIONS.map(({ name, desc, plan, Icon, logo }) => (
-            <article key={name} className="group flex flex-col rounded-2xl border border-ink/10 bg-white p-4 transition hover:border-brand/30 sm:p-6">
+            <article key={name} className="glass-card group flex flex-col rounded-2xl p-4 transition hover:-translate-y-0.5 sm:p-6">
               <div className="flex items-center justify-between">
                 {logo ? (
                   <Image

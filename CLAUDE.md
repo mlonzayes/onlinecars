@@ -119,11 +119,13 @@ src/
 │   ├── providers.tsx                # Providers globales (theme, tooltip)
 │   ├── robots.ts / sitemap.ts       # SEO del dominio de MARKETING (no del tenant)
 │   ├── llms.txt/                    # Resumen del sitio para motores de IA
+│   ├── llms-full.txt/               # Texto completo del blog en Markdown (GEO)
 │   ├── (marketing)/                 # Web principal — motorflowapp.com
 │   │   ├── layout.tsx               # ⚠️ Monta el Meta Pixel de la web principal
 │   │   ├── page.tsx                 # Landing (hero, pricing, testimonios, FAQ, contacto)
 │   │   ├── precios/                 # Comparativa de planes
-│   │   ├── blog/                    # Listado + [slug]
+│   │   ├── software-para-concesionarias/  # Página pilar SEO ("software de gestión para concesionarias")
+│   │   ├── blog/                    # Listado + [slug] — las notas salen de la DB (BlogPost), ISR 1 h
 │   │   ├── terminos/ · privacidad/  # Legales
 │   ├── dashboard/                   # Panel del concesionario — gateado por NEXT_PUBLIC_ENABLE_LOGIN
 │   │   ├── vehiculos/ leads/ clientes/ ventas/ cotizaciones/
@@ -131,7 +133,7 @@ src/
 │   │   ├── configuracion/           # Settings (solapas por ?tab=)
 │   │   ├── vendedores/ portales/    # Usuarios del tenant · integración MercadoLibre
 │   │   └── contabilidad/ bancos/ pagos/
-│   ├── admin/                       # Panel SUPER-ADMIN (cuentas, trials, /admin/sitios)
+│   ├── admin/                       # Panel SUPER-ADMIN (cuentas, trials, /admin/sitios, /admin/blog)
 │   ├── (onboarding)/                # onboarding/ + aceptar-terminos/
 │   ├── sign-in/ · sign-up/          # Clerk (catch-all)
 │   ├── invite/ · cuenta-pausada/    # Alta por invitación · cuenta suspendida
@@ -205,6 +207,7 @@ src/
 ├── mercadolibre/{auth,auth/callback,status,webhooks}
 ├── dashboard/reviews/[id]
 ├── admin/{dealerships/[id],dealerships/[id]/pagos,impersonation}
+│   └── blog                      # POST + /[id] (PUT, DELETE) + /cover (portada) + /draft (borrador con IA)
 ├── cron/{expire-trials,sync-exchange-rate}
 ├── mcp                           # Servidor MCP para Claude/ChatGPT (OAuth de Clerk) — ver sección MCP
 ├── chat                          # GET/POST — asistente con IA del panel (cupo por plan) + /acciones/[id] — ver sección Chat
@@ -796,6 +799,7 @@ Ver schema completo en [prisma/schema.prisma](prisma/schema.prisma). Resumen:
 - **`SubscriptionPayment`** — pagos de la suscripción a la plataforma, cargados por el super-admin. Actualizan `Dealership.paidUntil`.
 - **`TermsAcceptance`** — registro de aceptación de términos por usuario.
 - **`MarketingLead`** — consulta del form de contacto de la WEB PRINCIPAL (prospecto del SaaS, sin FK a `Dealership`), con la atribución de la campaña: `utm*`, `fbclid`/`gclid`, `landingPage`, `referrer`. Se guarda antes del aviso a Telegram. La captura es last-touch en `localStorage` (`lib/marketing/attribution.ts` + `<AttributionCapture>` en el layout de marketing). Tabla: `marketing_leads`.
+- **`BlogPost`** — notas del blog de la WEB PRINCIPAL (sin FK a `Dealership`). Se escriben en `/admin/blog`; antes vivían en `src/data/posts.ts`. El cuerpo es Markdown simple (`lib/blog-markdown.ts`, parser propio: sin HTML crudo). `status: draft | published` + `publishedAt`: publicada con fecha futura = **programada**, no aparece en blog/sitemap/llms hasta esa hora (filtro en `lib/blog-posts.ts`, fuera de la cache). Toda mutación llama a `invalidateBlogPosts()`. Un `[DATO: …]` (lo deja el borrador de la IA donde falta un dato real) bloquea la publicación. Tabla: `blog_posts`.
 - **`AuditLog`** — quién cambió qué y desde qué canal (panel, MCP, chat). Sin FK a la entidad: sobrevive al borrado. Tabla: `audit_logs`.
 - **`Dealership.aiChatMonthlyMessages`** — mensajes EXTRA por mes del asistente con IA (packs de 100), que se suman al cupo del plan. 0 = solo lo del plan. Las conversaciones NO se guardan en DB: viven en Redis 24 h.
 
@@ -843,7 +847,6 @@ Cada concesionario se sirve desde su subdominio (`{slug}.motorflowapp.com`) o, e
 > home. En el catálogo va **sin query params** (`?page=`, `?brand=`, `?sort=`).
 
 **Gaps conocidos (pendientes):**
-- **`SITE_URL` no sanea un path**: [lib/seo.ts](src/lib/seo.ts) solo saca la barra final de `NEXT_PUBLIC_APP_URL`. Si esa env trae un path, se cuela en el `metadataBase` y todos los canonical/OG salen con ese prefijo.
 - **Search Console no está automatizado**: cada `{slug}.motorflowapp.com` es una propiedad aparte. A mano no escala; iría por la Search Console API en el alta del tenant.
 
 > **Nota SEO marketing (dominio principal):** `sitemap.ts`/`robots.ts` en la raíz de `app/` son SOLO del dominio de marketing (motorflowapp.com). Las constantes viven en [lib/seo.ts](src/lib/seo.ts) (`SITE_URL`, `SITE_PHONE`, `SITE_WHATSAPP`, `SITE_WHATSAPP_URL`) — fuente única del contacto público, usada por navbar/footer/FAB/schema.org.
@@ -979,6 +982,7 @@ RESEND_API_KEY=
 
 *Panel super-admin (`/admin`)*
 - Listado de cuentas, trials por vencer, registro de pagos, `/admin/sitios` (toggle de publicación, plantilla, preview cross-tenant) y modo plataforma para editar el sitio de un cliente.
+- `/admin/blog`: notas del blog de la web principal. Editor en Markdown simple con vista previa, fecha de salida (programadas), portada al bucket público y borrador con IA (OpenRouter, mismo modelo que el chat).
 
 *Plataforma*
 - **Servidor MCP** (`/api/mcp`) para operar el panel desde Claude/ChatGPT: vehículos y gastos, con OAuth de Clerk y cupo por plan.

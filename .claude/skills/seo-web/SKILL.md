@@ -157,7 +157,7 @@ Pensá la página dentro de un **topic cluster**: una página pilar enlaza a var
 de cluster y cada cluster vuelve al pilar. 2–5 enlaces internos contextuales con
 **anchor descriptivo** ("guía de financiación de autos", no "hacé clic acá").
 
-Acá el cluster natural es el **blog** ([data/posts](../../../src/data/)) apuntando
+Acá el cluster natural es el **blog** (notas en la DB, se escriben en `/admin/blog`) apuntando
 a `/precios` y a la home. En el tenant, la ficha de vehículo debe enlazar al
 catálogo y a la home del dealer con `basePath`.
 
@@ -337,14 +337,10 @@ omitirlo en silencio.
 
 ### Gaps abiertos del repo (arreglalos si tocás esa zona)
 
-1. **`SITE_URL` no sanea un path.** [lib/seo.ts](../../../src/lib/seo.ts) solo
-   saca la barra final de `NEXT_PUBLIC_APP_URL`. Si esa env trae un path (en
-   `.env.local` estaba como `http://localhost:3000/dashboard`), se cuela en el
-   `metadataBase` y TODOS los canonical y OG salen con ese prefijo.
-2. **Search Console sin automatizar.** Cada `{slug}.motorflowapp.com` es una
+1. **Search Console sin automatizar.** Cada `{slug}.motorflowapp.com` es una
    propiedad aparte. A mano no escala; iría por la Search Console API en el alta
    del tenant.
-3. **La política de privacidad solo cita la ley argentina**, con el producto ya
+2. **La política de privacidad solo cita la ley argentina**, con el producto ya
    habilitado en 6 países. Es tema de abogado, no de código.
 
 ### Ya resueltos (no los re-reportes)
@@ -356,6 +352,12 @@ omitirlo en silencio.
   `getTenantPublicUrl()`, y **cada sub-página declara el suyo** (catálogo,
   cotizar, opinión y ficha de vehículo) porque si no heredan el de la home.
 - `llms.txt` en las dos superficies.
+- `SITE_URL` usa solo el origen de `NEXT_PUBLIC_APP_URL` (un path en la env se
+  colaba en canonical, sitemap y llms.txt).
+- Blog para GEO: `llms-full.txt`, resumen ("En resumen"), FAQ + `FAQPage`,
+  fuentes, `updatedAt` → `dateModified`/sitemap, minutos de lectura calculados
+  y robots de marketing abierto a los crawlers de entrenamiento de IA (los
+  tenants los siguen bloqueando).
 - `BreadcrumbList` en las notas del blog y en la ficha de vehículo.
 - Botón de compartir en la ficha (`ShareButton`, Web Share API + copiar).
 - `addressCountry`/`areaServed` del tenant salían hardcodeados en "AR" → ahora

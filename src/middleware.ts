@@ -16,6 +16,7 @@ const isPublicRoute = createRouteMatcher([
   "/",
   // Marketing público (route group `(marketing)`)
   "/precios",
+  "/software-para-concesionarias",
   "/blog(.*)",
   "/terminos",
   "/privacidad",
@@ -34,6 +35,7 @@ const isPublicRoute = createRouteMatcher([
   "/robots.txt",
   "/sitemap.xml",
   "/llms.txt",
+  "/llms-full.txt",
   // Sitios de los concesionarios + endpoints sin sesión
   "/tenant(.*)",
   "/api/public/(.*)",

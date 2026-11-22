@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 const ADMIN_SECTIONS = [
   { href: "/admin", label: "Cuentas" },
   { href: "/admin/sitios", label: "Sitios" },
+  { href: "/admin/blog", label: "Blog" },
 ] as const;
 
 export function AdminNav() {

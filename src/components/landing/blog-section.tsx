@@ -2,7 +2,7 @@ import Link from "next/link";
 import { PiArrowRight } from "react-icons/pi";
 import { FadeIn } from "./fade-in";
 import { BlogCard } from "./blog-card";
-import { type BlogPost } from "@/data/posts";
+import type { BlogPost } from "@/data/post-types";
 
 interface BlogSectionProps {
   posts: BlogPost[];

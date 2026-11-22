@@ -2,19 +2,23 @@ import type { Metadata } from "next";
 import { Navbar } from "@/components/shared/navbar";
 import { Footer } from "@/components/shared/footer";
 import { BlogCard } from "@/components/landing/blog-card";
-import { getAllPosts } from "@/data/posts";
+import { getAllPosts } from "@/lib/blog-posts";
 
 // Sin la marca en el title: la agrega el `template` del root layout.
 // El canonical propio pisa el "/" que se hereda del root.
 export const metadata: Metadata = {
   title: "Notas y guías para concesionarias",
   description:
-    "Recursos para concesionarios: vender más, gestionar stock con menos fricción y aprovechar todo lo que motorflow puede hacer.",
+    "Guías para concesionarias de autos: cómo fotografiar el stock, calcular el precio de un usado, cargar autos online y conseguir más consultas.",
   alternates: { canonical: "/blog" },
 };
 
-export default function BlogIndexPage() {
-  const posts = getAllPosts();
+// ISR: las notas programadas salen solas con la regeneración (como mucho 1 h).
+// Al publicar desde el admin, invalidateBlogPosts() la regenera en el momento.
+export const revalidate = 3600;
+
+export default async function BlogIndexPage() {
+  const posts = await getAllPosts();
   const [featured, ...rest] = posts;
 
   return (
@@ -32,8 +36,8 @@ export default function BlogIndexPage() {
               Notas y guías
             </h1>
             <p className="mx-auto mt-3 max-w-xl text-sm text-gray-500 sm:text-base">
-              Recursos prácticos para que tu concesionario venda mejor y opere
-              con menos fricción. Actualizamos semanalmente.
+              Guías para concesionarias: fotos, precios, stock online y cómo
+              conseguir más consultas.
             </p>
           </header>
 

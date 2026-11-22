@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { type BlogPost, categoryLabel } from "@/data/posts";
+import { type BlogPost, categoryLabel } from "@/data/post-types";
+import { getReadingMinutes } from "@/lib/blog";
 
 interface BlogCardProps {
   post: BlogPost;
@@ -84,7 +85,7 @@ export function BlogCard({ post, variant = "default" }: BlogCardProps) {
             <span className="text-gray-300">·</span>
             <span>{formatDate(post.publishedAt)}</span>
             <span className="text-gray-300">·</span>
-            <span>{post.readingMinutes} min</span>
+            <span>{getReadingMinutes(post)} min</span>
           </div>
         </div>
       </div>

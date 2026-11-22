@@ -13,6 +13,8 @@ export const CACHE_TAGS = {
   salesStats: "sales-stats",
   customersStats: "customers-stats",
   quotationsStats: "quotations-stats",
+  // Notas del blog de la web principal. Lo invalida invalidateBlogPosts().
+  blogPosts: "blog-posts",
 } as const;
 
 /**

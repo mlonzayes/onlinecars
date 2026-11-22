@@ -21,19 +21,19 @@ const SERVICES: RoadmapItemProps[] = [
     icon: PiPackage,
     title: "Gestión de inventario",
     description:
-      "Cargá, editá y publicá tu stock en minutos. Estados, fotos y datos legales sin hojas de cálculo.",
+      "Cargá, editá y publicá tu stock desde el panel, con el estado, las fotos y los datos legales de cada auto. Sin planillas.",
   },
   {
     icon: PiGlobe,
     title: "Página web propia",
     description:
-      "Tu catálogo en un dominio personalizado, con tu branding. Profesional desde el día uno.",
+      "Tu catálogo en tuagencia.motorflowapp.com, con tu logo y tus colores.",
   },
   {
     icon: PiPlug,
     title: "Integraciones",
     description:
-      "Conectá MercadoLibre y otros canales. Publicá una vez, aparecé en todos lados.",
+      "Conectá tu cuenta de Mercado Libre y publicá desde el panel: el stock queda sincronizado con tu web.",
     highlighted: true,
   },
   {
@@ -85,8 +85,8 @@ export function ServicesSection() {
             Lo que ya tenés y lo que se viene
           </h2>
           <p className="mx-auto mt-2 max-w-xl text-sm text-gray-500 sm:text-base">
-            Todo lo que podés hacer hoy con motorflow, y las funciones nuevas
-            que estamos sumando para los próximos meses.
+            Arriba, lo que ya funciona. Abajo, lo que estamos armando para los
+            próximos meses.
           </p>
         </FadeIn>
 

@@ -14,7 +14,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Precios y planes para concesionarias",
   description:
-    "Planes desde $19.990 por mes para tu concesionaria: sitio web propio, catálogo ilimitado y gestión de leads. Sin comisiones por venta y cancelás cuando quieras.",
+    "Planes desde $23.990 por mes para tu concesionaria: sitio web propio, catálogo, consultas y asistente con IA. Sin comisión por venta y cancelás cuando quieras.",
   alternates: { canonical: "/precios" },
 };
 
@@ -37,8 +37,8 @@ export default function PreciosPage() {
                 Compará nuestros planes
               </h1>
               <p className="mt-4 text-lg font-light text-gray-600">
-                Elegí el plan que mejor se adapte a tu concesionario y empezá a
-                vender online.
+                Todos traen tu web, el panel y el asistente. Cambian la cantidad
+                de autos, los usuarios y las integraciones.
               </p>
             </div>
             <PricingTable />

@@ -16,7 +16,7 @@ const PLANS = [
   {
     key: "base",
     name: "Base",
-    price: "$19.990",
+    price: "$23.990",
     features: ["Tu web con tu logo", "Hasta 30 autos", "Asistente IA: 300 mensajes/mes", "1 usuario"],
     highlighted: false,
     ctaText: "Probar gratis",
@@ -24,7 +24,7 @@ const PLANS = [
   {
     key: "media",
     name: "Media",
-    price: "$49.990",
+    price: "$59.990",
     features: ["Hasta 100 autos", "3 usuarios", "Asistente IA: 600 mensajes/mes", "Mercado Libre", "WhatsApp, Meta y Clarity"],
     highlighted: true,
     ctaText: "Probar gratis",
@@ -32,7 +32,7 @@ const PLANS = [
   {
     key: "premium",
     name: "Premium",
-    price: "$99.990",
+    price: "$119.990",
     features: ["Autos ilimitados", "Usuarios ilimitados", "Asistente IA: 1.200 mensajes/mes", "Todo lo de Media", "Soporte prioritario"],
     highlighted: false,
     ctaText: "Probar gratis",

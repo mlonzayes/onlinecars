@@ -45,8 +45,8 @@ export function HeroAiSection() {
         <div className="mx-auto grid w-full max-w-6xl items-center gap-12 lg:grid-cols-12 lg:gap-10">
           <div className="hero-copy text-center lg:col-span-7 lg:text-left">
             <h1 className="mx-auto max-w-xl font-display text-[clamp(2.4rem,min(5.4vw,9svh),4.5rem)] font-light leading-[1.05] tracking-tight text-white text-balance lg:mx-0">
-              Manejá tu concesionaria de manera{" "}
-              <span className="font-normal text-[#aebcff]">inteligente</span>
+              Manejá tu concesionaria{" "}
+              <span className="font-normal text-[#aebcff]">escribiendo</span>
             </h1>
 
             <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-white/75 sm:text-lg lg:mx-0">

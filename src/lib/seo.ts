@@ -3,14 +3,14 @@
  * SITE_URL debe ser el dominio canónico (sin trailing slash). Lo tomamos de
  * NEXT_PUBLIC_APP_URL para que coincida con el resto de la app; fallback al apex.
  */
-export const SITE_URL = (
-  process.env.NEXT_PUBLIC_APP_URL ?? "https://motorflowapp.com"
-).replace(/\/$/, "");
+// Solo el ORIGEN: si la env trae un path (pasó con ".../dashboard" en
+// .env.local), se colaba en metadataBase, canonical, sitemap y llms.txt.
+export const SITE_URL = new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://motorflowapp.com").origin;
 
 export const SITE_NAME = "MotorFlow";
 
 export const SITE_DESCRIPTION =
-  "MotorFlow es la plataforma para que tu concesionario de autos tenga su propio sitio web profesional: catálogo de vehículos, gestión de stock, captación de leads y operatoria de venta. Sin comisiones y sin depender de portales.";
+  "MotorFlow es el sistema para concesionarias de autos: tu sitio web con catálogo, y el stock, las consultas y las ventas en un mismo panel. Sin comisión por venta y sin depender de los portales.";
 
 // Contacto público (coincide con el footer / data del negocio).
 export const SITE_EMAIL = "ventas@motorflowapp.com";
@@ -42,6 +42,10 @@ export const SITE_WHATSAPP_URL = `https://wa.me/${SITE_WHATSAPP}?text=${encodeUR
  * se desincronizó (el navbar leía el flag, el hero no).
  *
  * NEXT_PUBLIC_* se inlinea en build, así que sirve en Server y Client Components.
+ *
+ * El fallback es "/#contacto" y no "#contacto": el form vive en la home, y
+ * desde el blog o /software-para-concesionarias un ancla relativa no llevaba a
+ * ningún lado.
  */
 export function isSelfServeEnabled(): boolean {
   return process.env.NEXT_PUBLIC_ENABLE_LOGIN === "true";
@@ -54,12 +58,13 @@ export function isSelfServeEnabled(): boolean {
 export function getPrimaryCta(): { href: string; label: string; shortLabel: string } {
   return isSelfServeEnabled()
     ? { href: "/sign-up", label: "Probar 15 días gratis", shortLabel: "Probar gratis" }
-    : { href: "#contacto", label: "Quiero mi sitio", shortLabel: "Quiero mi sitio" };
+    : { href: "/#contacto", label: "Quiero mi sitio", shortLabel: "Quiero mi sitio" };
 }
 
 /**
- * Crawlers que juntan contenido para ENTRENAR modelos de IA. Se bloquean en los
- * robots.txt (marketing y tenants). Los de búsqueda/respuesta con cita
+ * Crawlers que juntan contenido para ENTRENAR modelos de IA. Se bloquean SOLO
+ * en el robots.txt de los tenants (el contenido es del dealer). En el dominio de
+ * marketing entran: queremos que los modelos conozcan motorflow. Los de búsqueda/respuesta con cita
  * (OAI-SearchBot, ChatGPT-User, PerplexityBot, Googlebot) siguen habilitados:
  * para eso existe el llms.txt.
  *

@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { isSuperAdmin } from "@/lib/super-admin";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { AppClerkProvider } from "@/components/auth/app-clerk-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 // Panel interno: nunca indexable.
 export const metadata: Metadata = {
@@ -40,6 +41,8 @@ export default async function AdminLayout({
 
         {children}
       </div>
+      {/* Sin esto los toast() del panel de plataforma no se veían. */}
+      <Toaster />
     </AppClerkProvider>
   );
 }

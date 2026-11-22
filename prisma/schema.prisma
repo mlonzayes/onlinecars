@@ -778,3 +778,35 @@ model QuotationCounter {
   @@unique([dealershipId, type])
   @@map("quotation_counters")
 }
+
+// Notas del blog de la web principal (motorflowapp.com). Se escriben desde
+// /admin/blog. Sin FK a Dealership: son de la plataforma, no de un concesionario.
+model BlogPost {
+  id               String    @id @default(cuid())
+  slug             String    @unique
+  title            String
+  excerpt          String
+  category         String    // ventas | marketing | stock | operativa | tendencias
+  // Markdown simple: ## y ### subtítulos, - y 1. listas, [texto](/ruta) y **negrita**.
+  body             String
+  tldr             String[]  @default([])
+  faqs             Json      @default("[]") // PostFaq[]
+  sources          Json      @default("[]") // PostSource[] — solo fuentes consultadas de verdad
+  coverImage       String?
+  authorName       String
+  authorInitials   String
+  authorType       String    @default("Person") // Person | Organization
+  authorUrl        String?
+  status           String    @default("draft") // draft | published
+  // Fecha de salida. Con status published y fecha futura, la nota está
+  // PROGRAMADA: no aparece en el blog, el sitemap ni llms.txt hasta ese momento.
+  publishedAt      DateTime?
+  // "Actualizado el" de la nota y dateModified del JSON-LD. Se carga a mano y
+  // solo cuando cambió el contenido (no en cada guardado: eso es `updatedAt`).
+  contentUpdatedAt DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([status, publishedAt])
+  @@map("blog_posts")
+}

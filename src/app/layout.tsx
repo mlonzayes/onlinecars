@@ -19,7 +19,7 @@ const dmSans = localFont({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} — Tu concesionario online`,
+    default: `Sistema de gestión para concesionarias | ${SITE_NAME}`,
     // Las sub-páginas (Precios, Blog, etc.) heredan el sufijo "| motorflow".
     template: `%s | ${SITE_NAME}`,
   },
@@ -52,12 +52,12 @@ export const metadata: Metadata = {
     locale: "es_AR",
     url: SITE_URL,
     siteName: SITE_NAME,
-    title: `${SITE_NAME} — Tu concesionario online`,
+    title: `Sistema de gestión para concesionarias | ${SITE_NAME}`,
     description: SITE_DESCRIPTION,
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_NAME} — Tu concesionario online`,
+    title: `Sistema de gestión para concesionarias | ${SITE_NAME}`,
     description: SITE_DESCRIPTION,
   },
 };

@@ -8,7 +8,7 @@ export function PricingSection() {
   return (
     <section id="planes" className="scroll-mt-20 bg-white px-4 py-16 sm:px-6 sm:py-24">
       <div className="mx-auto max-w-6xl">
-        <SectionHeading title="Precios simples" subtitle="Sin comisión por venta." />
+        <SectionHeading title="Un precio fijo por mes" subtitle="Sin comisión por venta." />
 
         <div className="mt-12">
           <PricingCards />

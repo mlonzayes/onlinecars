@@ -35,31 +35,31 @@ const PLANS: PlanCol[] = [
   {
     key: "base",
     name: "Base",
-    priceArs: 19990,
-    tagline: "Para arrancar con presencia online.",
+    priceArs: 23990,
+    tagline: "Tu web y hasta 30 autos publicados.",
     ctaLabel: "Anotarme",
   },
   {
     key: "media",
     name: "Media",
-    priceArs: 49990,
-    tagline: "Para concesionarios en crecimiento.",
+    priceArs: 59990,
+    tagline: "Hasta 100 autos y Mercado Libre.",
     highlighted: true,
-    highlightLabel: "Más elegida",
+    highlightLabel: "Recomendado",
     ctaLabel: "Anotarme",
   },
   {
     key: "premium",
     name: "Premium",
-    priceArs: 99990,
-    tagline: "Para operación media y alta.",
+    priceArs: 119990,
+    tagline: "Sin límite de autos ni de usuarios.",
     ctaLabel: "Anotarme",
   },
   {
     key: "enterprise",
     name: "Enterprise",
     priceArs: null,
-    tagline: "Soluciones a medida.",
+    tagline: "Desarrollo e integraciones a pedido.",
     ctaLabel: "Hablemos",
   },
 ];
@@ -75,7 +75,7 @@ const GROUPS: FeatureGroup[] = [
       },
       {
         label: "Fotos por vehículo",
-        hint: "Vender autos online es vender fotos.",
+        hint: "Cuántas fotos podés subir a cada auto.",
         values: { base: "8", media: "15", premium: "Ilimitadas", enterprise: "Ilimitadas" },
       },
       {
@@ -84,7 +84,7 @@ const GROUPS: FeatureGroup[] = [
       },
       {
         label: "Clientes en el CRM",
-        hint: "Sin tope. Tu histórico operativo es tuyo, no del plan.",
+        hint: "Sin tope en ningún plan.",
         values: { base: "Ilimitados", media: "Ilimitados", premium: "Ilimitados", enterprise: "Ilimitados" },
       },
     ],
@@ -248,7 +248,7 @@ export function PricingTable() {
                       {isHighlighted && (
                         <div className="absolute top-0 left-0 right-0 flex justify-center">
                           <span className="rounded-b-md bg-blue-600 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
-                            {plan.highlightLabel ?? "Más elegida"}
+                            {plan.highlightLabel ?? "Recomendado"}
                           </span>
                         </div>
                       )}

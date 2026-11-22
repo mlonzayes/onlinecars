@@ -32,9 +32,11 @@ import { COUNTRIES, COUNTRY_LABELS } from "@/lib/constants";
  */
 
 export const metadata: Metadata = {
-  title: { absolute: "Sistema para concesionarias que manejás con IA | motorflow" },
+  // "gestión" + "concesionarias" en el título: es como busca el dueño que no
+  // conoce la marca. "agencias de autos" va en la descripción por lo mismo.
+  title: { absolute: "Sistema de gestión para concesionarias, con IA | motorflow" },
   description:
-    "Tu web, tu stock, tus consultas y el margen de cada auto. Cargá un auto o un gasto escribiéndole al asistente con IA. Probalo 15 días gratis.",
+    "Software para concesionarias y agencias de autos: tu web, el stock, las consultas y el margen de cada auto en un panel. Cargá autos escribiéndole al asistente con IA.",
 };
 
 // Structured data (schema.org) — la leen Google (rich results / FAQ) y los
@@ -81,9 +83,9 @@ function buildStructuredData() {
         description: SITE_DESCRIPTION,
         publisher: { "@id": ORG_ID },
         offers: [
-          { "@type": "Offer", name: "Base", price: "19990", priceCurrency: "ARS" },
-          { "@type": "Offer", name: "Media", price: "49990", priceCurrency: "ARS" },
-          { "@type": "Offer", name: "Premium", price: "99990", priceCurrency: "ARS" },
+          { "@type": "Offer", name: "Base", price: "23990", priceCurrency: "ARS" },
+          { "@type": "Offer", name: "Media", price: "59990", priceCurrency: "ARS" },
+          { "@type": "Offer", name: "Premium", price: "119990", priceCurrency: "ARS" },
         ],
       },
       {

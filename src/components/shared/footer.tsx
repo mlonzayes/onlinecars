@@ -5,6 +5,7 @@ import { SITE_PHONE, SITE_PHONE_DISPLAY } from "@/lib/seo";
 
 const PRODUCT_LINKS = [
   { href: "/#producto", label: "El producto" },
+  { href: "/software-para-concesionarias", label: "Software para concesionarias" },
   { href: "/#integraciones", label: "Integraciones" },
   { href: "/precios", label: "Planes" },
   { href: "/blog", label: "Blog" },

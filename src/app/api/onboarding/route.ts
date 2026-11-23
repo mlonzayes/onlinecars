@@ -6,6 +6,7 @@ import { withLogger } from "@/lib/api-handler";
 import { logger } from "@/lib/logger";
 import { type PlanType } from "@/lib/plans";
 import { recordTermsAcceptance } from "@/lib/legal";
+import { trackRegistrationConversion } from "@/lib/meta/registration";
 
 const TRIAL_DAYS = 15;
 const VALID_PLANS: PlanType[] = ["base", "media", "premium", "enterprise"];
@@ -122,6 +123,23 @@ export const POST = withLogger(async (req, { requestId }) => {
     subscriptionStatus: dealership.subscriptionStatus,
     trialEndsAt: trialEndsAt?.toISOString() ?? null,
   });
+
+  // Conversión para Meta Ads. Solo las pruebas gratis: un plan asignado por el
+  // admin es un cliente que cerró por otro lado, no viene de un anuncio.
+  if (!assignedPlan) {
+    trackRegistrationConversion({
+      request: req,
+      requestId,
+      dealershipId: dealership.id,
+      email: clerkUser?.primaryEmailAddress?.emailAddress ?? parsed.data.email,
+      firstName: clerkUser?.firstName,
+      lastName: clerkUser?.lastName,
+      phone: parsed.data.whatsapp || parsed.data.phone,
+      city: parsed.data.city,
+      province: parsed.data.province,
+      country: parsed.data.country,
+    });
+  }
 
   return NextResponse.json(
     { data: { dealershipId: dealership.id, slug: dealership.slug } },

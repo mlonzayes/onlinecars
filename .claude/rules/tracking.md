@@ -95,6 +95,18 @@ El fallback a un uuid random cuando el campo no llega es correcto: significa que
 el pixel nunca corrió (adblocker), así que no hay nada con qué deduplicar — y
 ese es justamente el caso que la CAPI viene a cubrir.
 
+### Excepción: `CompleteRegistration` (alta de cuenta)
+
+Es **la conversión a optimizar** en las campañas de la web principal (el CTA de
+la landing es "Probar 15 días gratis"). Sale **solo por CAPI** desde
+`POST /api/onboarding` vía [`trackRegistrationConversion`](../../src/lib/meta/registration.ts):
+el onboarding no monta el pixel, así que no hay evento del browser con qué
+deduplicar y el `eventId` se genera en el server. La atribución al anuncio
+viaja en las cookies `_fbp`/`_fbc` que dejó el pixel en la landing.
+No se manda cuando la cuenta arranca con un plan asignado por el admin (no
+viene de un anuncio). Si algún día se monta el pixel en el onboarding, pasa a
+la regla general: `eventId` generado en el cliente.
+
 ---
 
 ## Por qué la CAPI no es opcional

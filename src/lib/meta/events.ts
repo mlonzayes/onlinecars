@@ -28,8 +28,10 @@ export type MetaEventName = (typeof META_STANDARD_EVENTS)[number];
  *
  * Web principal (motorflowapp.com — vendemos el SaaS):
  *   ViewContent  → visita a /precios (miró los planes)
- *   Lead         → mandó el form de contacto  ← LA conversión a optimizar
+ *   Lead         → mandó el form de contacto (salida secundaria)
  *   Contact      → tocó WhatsApp / teléfono (solo pixel, ver lib/marketing/contact-click.ts)
+ *   CompleteRegistration → terminó el onboarding y arrancó la prueba gratis
+ *                  ← LA conversión a optimizar. Solo CAPI (ver meta/registration.ts)
  *
  * Sitio del tenant (el concesionario vende autos):
  *   ViewContent  → abrió la ficha de un vehículo
